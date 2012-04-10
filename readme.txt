@@ -38,11 +38,12 @@ More information at [Easy Digital Downloads.com](http://easydigitaldownloads.com
 
 1. Activate the plugin
 2. Create a page to act as your downloads checkout page and place [download_checkout] in its content
-3. Create a page to act as your "successful purchase" page
-4. Go to Settings > Permalinks and click "Save Changes"
-5. Go to Downloads > Settings and configure the options
-6. Create downloads
-7. Insert purchase buttons for any download via the "Insert Download" button next the Upload Media buttons
+3. Create a page to act as the "your purchase history" for your users and place the [download_history] short code in its content
+4. Create a page to act as your "successful purchase" page
+5. Go to Settings > Permalinks and click "Save Changes"
+6. Go to Downloads > Settings and configure the options
+7. Create downloads
+8. Insert purchase buttons for any download via the "Insert Download" button next the Upload Media buttons
 
 
 == Changelog ==
