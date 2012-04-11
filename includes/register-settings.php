@@ -164,14 +164,14 @@ function edd_register_settings() {
 				),
 				array(
 					'id' => 'logged_in_only',
-					'name' => __('Logged-In Only', 'edd'),
+					'name' => __('Disable Guest Checkout', 'edd'),
 					'desc' => __('Require that users be logged-in to purchase files.', 'edd'),
 					'type' => 'checkbox'
 				),
 				array(
 					'id' => 'show_register_form',
-					'name' => __('Show Register Form?', 'edd'),
-					'desc' => __('Display the registration form for non-logged-in users', 'edd'),
+					'name' => __('Show Register / Login Form?', 'edd'),
+					'desc' => __('Display the registration and login forms on the checkout page for non-logged-in users', 'edd'),
 					'type' => 'checkbox',
 				),
 				array(
@@ -312,19 +312,19 @@ function edd_register_settings() {
 add_action('admin_init', 'edd_register_settings');
 
 function edd_settings_general_description_callback() {
-	echo __('Configure the settings below', 'edd');
+	//echo __('Configure the settings below', 'edd');
 }
 
 function edd_settings_gateways_description_callback() {
-	echo __('Configure the settings below', 'edd');
+	//echo __('Configure the settings below', 'edd');
 }
 
 function edd_settings_emails_description_callback() {
-	echo __('Configure the settings below', 'edd');
+	//echo __('Configure the settings below', 'edd');
 }
 
 function edd_settings_misc_description_callback() {
-	echo __('Configure the settings below', 'edd');
+	//echo __('Configure the settings below', 'edd');
 }
 
 // render header
