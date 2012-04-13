@@ -4,8 +4,10 @@ function edd_process_purchase_form() {
 	if(isset($_POST['edd-action']) && $_POST['edd-action'] == 'purchase' && wp_verify_nonce($_POST['edd-nonce'], 'edd-purchase-nonce')) {
 				
 		$user_id = isset($_POST['edd-user-id']) ? $_POST['edd-user-id'] : 0;
-		$user_email = $_POST['edd-email'];
-				
+		$user_email = $_POST['edd_email'];
+			
+		$need_new_user = false;
+		
 		if(isset($_POST['edd-discount']) && $_POST['edd-discount'] != '' && !edd_is_discount_valid($_POST['edd-discount'])) {
 			// check for valid discount
 			edd_set_error('invalid_discount', __('The discount you entered is invalid', 'edd'));
@@ -72,6 +74,11 @@ function edd_process_purchase_form() {
 			
 		} elseif(isset($_POST['edd-purchase-var'])) {
 			edd_set_error('login_register_error', __('Something has gone wrong, please try again', 'edd'));
+		} else {
+			if(!isset($_POST['edd_email']) || !is_email($_POST['edd_email'])) {
+				// check for valid discount
+				edd_set_error('invalid_email', __('You must enter a valid email address.', 'edd'));
+			}
 		}
 		
 		do_action('edd_checkout_error_checks', $_POST);
@@ -91,6 +98,7 @@ function edd_process_purchase_form() {
 						'role'				=> 'subscriber'
 					)
 				);
+				do_action('edd_insert_user', $user_id);
 				edd_log_user_in($user_id, $user_login, $user_pass);
 			}	
 			
