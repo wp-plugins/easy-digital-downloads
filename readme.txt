@@ -32,7 +32,7 @@ Features of the plugin include:
 
 More information at [Easy Digital Downloads.com](http://easydigitaldownloads.com/).
 
-[youtube http://www.youtube.com/watch?v=EZNygMxSK3w]
+[youtube http://www.youtube.com/watch?v=SjOeSZ08_IA]
 
 == Installation ==
 
