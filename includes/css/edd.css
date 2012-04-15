@@ -1,0 +1,193 @@
+/****************************************
+* Checkout form
+****************************************/
+
+.edd_clearfix:after { display: block; visibility: hidden; float: none; clear: both; text-indent: -9999px; content: "."; }
+
+/* cart contents */
+#edd_checkout_cart .edd_cart_total {  }
+
+/* checkout fields */
+#edd_purchase_form input.edd-input, 
+#edd_purchase_form input.edd-input { display: inline-block; width: 200px; }
+#edd_purchase_form input.edd-input.error { border-color: #c4554e; }
+#edd_purchase_form label { display: inline-block;  width: 200px; }
+#edd_purchase_form input.card-expiry-month { width: 30px; }
+#edd_purchase_form input.card-expiry-year { width: 60px; }
+#edd_purchase_form span.exp-divider {  }
+#edd_checkout_form_wrap img.payment-icon{ margin: 0 3px 0 0; }
+
+/****************************************
+* Cart Widget
+****************************************/
+
+/****************************************
+* Registration Form
+****************************************/
+
+#edd_registration_form .edd-input { display: inline-block; width: 200px; }
+#edd_registration_form label { display: inline-block; width: 200px; }
+
+/****************************************
+* Purchase buttons
+****************************************/
+
+/* general */
+.edd_button { 
+	display: inline-block; *display: block; zoom: 1; position: relative; 
+	height: 32px; line-height: 28px; text-decoration: none; color: #555; 
+}
+
+.edd_button_outer { 
+	padding: 0 0 0 5px; display: block; height: 32px; 
+	background: url(../images/button-start.png) no-repeat; 
+}
+.edd_button_outer br, .edd_button_outer p { display: none!important; }
+
+.edd_button_inner { 
+	display: block; height: 32px; background: url(../images/button-end.png) no-repeat right top; 
+	padding: 0 4px 0 0; 
+}
+.edd_button_text, input.edd_button_text, input#edd-purchase-button, input#edd_next_button { 
+	display: block; height: 32px; background: url(../images/button-mid.png) repeat-x; 
+	padding: 0 4px; margin: 0; border: none;  text-shadow: none; color: #555; 
+	-webkit-border-radius: 0; -moz-border-radius: 0; border-radius: 0;
+}
+input.edd_button_text, input#edd-purchase-button, input#edd_next_button  { padding: 0 4px 4px; }
+
+.edd_button:active, input.edd_button_text:active, input#edd-purchase-button:active, input#edd_next_button:active { line-height: 30px; }
+
+
+/* gray */
+.edd_button.edd_gray { color: #555; text-shadow: 0 0 1px #fff; }
+.edd_button.edd_gray:hover .edd_button_outer,
+.edd_button.edd_gray:hover .edd_button_text,
+.edd_button.edd_gray:hover  input#edd-purchase-button,
+.edd_button.edd_gray:hover input#edd_next_button { background-position: 0 -33px; }
+.edd_button.edd_gray:hover .edd_button_inner { background-position: right -33px; }
+.edd_button.edd_gray:active .edd_button_outer,
+.edd_button.edd_gray:active .edd_button_text,
+.edd_button.edd_gray:active  input#edd-purchase-button, 
+.edd_button.edd_gray:active  input#edd_next_button { background-position: 0 -65px; }
+.edd_button.edd_gray:active .edd_button_inner { background-position: right -65px; }
+
+/* pink */
+.edd_button.edd_pink { color: #913944; text-shadow: 0 0 1px #f9a0ad; }
+.edd_button.edd_pink .edd_button_outer,
+.edd_button.edd_pink .edd_button_text { background-position: 0 -98px; }
+.edd_button.edd_pink .edd_button_inner { background-position: right -98px; }
+.edd_button.edd_pink:hover .edd_button_outer,
+.edd_button.edd_pink:hover .edd_button_text { background-position: 0 -132px; }
+.edd_button.edd_pink:hover .edd_button_inner { background-position: right -132px; }
+.edd_button.edd_pink:active .edd_button_outer,
+.edd_button.edd_pink:active .edd_button_text { background-position: 0 -164px; }
+.edd_button.edd_pink:active .edd_button_inner { background-position: right -164px; }
+
+/* blue */
+.edd_button.edd_blue { color: #42788e; text-shadow: 0 0 1px #99cade; }
+.edd_button.edd_blue .edd_button_outer,
+.edd_button.edd_blue .edd_button_text { background-position: 0 -196px; }
+.edd_button.edd_blue .edd_button_inner { background-position: right -196px; }
+.edd_button.edd_blue:hover .edd_button_outer,
+.edd_button.edd_blue:hover .edd_button_text { background-position: 0 -230px; }
+.edd_button.edd_blue:hover .edd_button_inner { background-position: right -230px; }
+.edd_button.edd_blue:active .edd_button_outer,
+.edd_button.edd_blue:active .edd_button_text { background-position: 0 -262px; }
+.edd_button.edd_blue:active .edd_button_inner { background-position: right -262px; }
+
+/* green */
+.edd_button.edd_green { color: #5d7731; text-shadow: 0 0 1px #d0e5a4; }
+.edd_button.edd_green .edd_button_outer,
+.edd_button.edd_green .edd_button_text { background-position: 0 -294px; }
+.edd_button.edd_green .edd_button_inner { background-position: right -294px; }
+.edd_button.edd_green:hover .edd_button_outer,
+.edd_button.edd_green:hover .edd_button_text { background-position: 0 -328px; }
+.edd_button.edd_green:hover .edd_button_inner { background-position: right -328px; }
+.edd_button.edd_green:active .edd_button_outer,
+.edd_button.edd_green:active .edd_button_text { background-position: 0 -360px; }
+.edd_button.edd_green:active .edd_button_inner { background-position: right -360px; }
+
+/* teal */
+.edd_button.edd_teal { color: #437b7d; text-shadow: 0 0 1px #bef3f5; }
+.edd_button.edd_teal .edd_button_outer,
+.edd_button.edd_teal .edd_button_text { background-position: 0 -391px; }
+.edd_button.edd_teal .edd_button_inner { background-position: right -391px; }
+.edd_button.edd_teal:hover .edd_button_outer,
+.edd_button.edd_teal:hover .edd_button_text { background-position: 0 -424px; }
+.edd_button.edd_teal:hover .edd_button_inner { background-position: right -424px; }
+.edd_button.edd_teal:active .edd_button_outer,
+.edd_button.edd_teal:active .edd_button_text { background-position: 0 -457px; }
+.edd_button.edd_teal:active .edd_button_inner { background-position: right -457px; }
+
+/* black */
+.edd_button.edd_black { color: #fff; text-shadow: 0 0 1px #2f2f2f; }
+.edd_button.edd_black .edd_button_outer,
+.edd_button.edd_black .edd_button_text { background-position: 0 -489px; }
+.edd_button.edd_black .edd_button_inner { background-position: right -489px; }
+.edd_button.edd_black:hover .edd_button_outer,
+.edd_button.edd_black:hover .edd_button_text { background-position: 0 -521px; }
+.edd_button.edd_black:hover .edd_button_inner { background-position: right -521px; }
+.edd_button.edd_black:active .edd_button_outer,
+.edd_button.edd_black:active .edd_button_text { background-position: 0 -552px; }
+.edd_button.edd_black:active .edd_button_inner { background-position: right -552px; }
+
+/* dark gray */
+.edd_button.edd_dark_gray { color: #555; text-shadow: 0 0 1px #d6d6d6; }
+.edd_button.edd_dark_gray .edd_button_outer,
+.edd_button.edd_dark_gray .edd_button_text { background-position: 0 -584px; }
+.edd_button.edd_dark_gray .edd_button_inner { background-position: right -584px; }
+.edd_button.edd_dark_gray:hover .edd_button_outer,
+.edd_button.edd_dark_gray:hover .edd_button_text { background-position: 0 -617px; }
+.edd_button.edd_dark_gray:hover .edd_button_inner { background-position: right -617px; }
+.edd_button.edd_dark_gray:active .edd_button_outer,
+.edd_button.edd_dark_gray:active .edd_button_text { background-position: 0 -649px; }
+.edd_button.edd_dark_gray:active .edd_button_inner { background-position: right -649px; }
+
+/* orange */
+.edd_button.edd_orange { color: #996633; text-shadow: 0 0 1px #fedd9b; }
+.edd_button.edd_orange .edd_button_outer,
+.edd_button.edd_orange .edd_button_text { background-position: 0 -681px; }
+.edd_button.edd_orange .edd_button_inner { background-position: right -681px; }
+.edd_button.edd_orange:hover .edd_button_outer,
+.edd_button.edd_orange:hover .edd_button_text { background-position: 0 -713px; }
+.edd_button.edd_orange:hover .edd_button_inner { background-position: right -713px; }
+.edd_button.edd_orange:active .edd_button_outer,
+.edd_button.edd_orange:active .edd_button_text { background-position: 0 -745px; }
+.edd_button.edd_orange:active .edd_button_inner { background-position: right -745px; }
+
+/* purple */
+.edd_button.edd_purple { color: #7b5777; text-shadow: 0 0 1px #eacae6; }
+.edd_button.edd_purple .edd_button_outer,
+.edd_button.edd_purple .edd_button_text { background-position: 0 -776px; }
+.edd_button.edd_purple .edd_button_inner { background-position: right -776px; }
+.edd_button.edd_purple:hover .edd_button_outer,
+.edd_button.edd_purple:hover .edd_button_text { background-position: 0 -808px; }
+.edd_button.edd_purple:hover .edd_button_inner { background-position: right -808px; }
+.edd_button.edd_purple:active .edd_button_outer,
+.edd_button.edd_purple:active .edd_button_text { background-position: 0 -841px; }
+.edd_button.edd_purple:active .edd_button_inner { background-position: right -841px; }
+
+/* slate */
+.edd_button.edd_slate { color: #515f6a; text-shadow: 0 0 1px #c4d0da; }
+.edd_button.edd_slate .edd_button_outer,
+.edd_button.edd_slate .edd_button_text { background-position: 0 -873px; }
+.edd_button.edd_slate .edd_button_inner { background-position: right -873px; }
+.edd_button.edd_slate:hover .edd_button_outer,
+.edd_button.edd_slate:hover .edd_button_text { background-position: 0 -905px; }
+.edd_button.edd_slate:hover .edd_button_inner { background-position: right -905px; }
+.edd_button.edd_slate:active .edd_button_outer,
+.edd_button.edd_slate:active .edd_button_text { background-position: 0 -938px; }
+.edd_button.edd_slate:active .edd_button_inner { background-position: right -938px; }
+
+
+/****************************************
+* Downloads Short Code
+****************************************/
+.edd_downloads_list { margin: 0 0 20px; padding: 0; }
+.edd_downloads_list li { display: block; list-style: none; margin: 0 0 10px; }
+
+/****************************************
+* Misc styles
+****************************************/
+
+.edd-cart-ajax { margin: 0 8px 0 4px; position: relative; top: 2px; }
