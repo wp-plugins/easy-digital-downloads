@@ -3,6 +3,8 @@
 function edd_process_purchase_form() {
 	if(isset($_POST['edd-action']) && $_POST['edd-action'] == 'purchase' && wp_verify_nonce($_POST['edd-nonce'], 'edd-purchase-nonce')) {
 				
+		global $edd_options;	
+				
 		$user_id = isset($_POST['edd-user-id']) ? $_POST['edd-user-id'] : null;
 		$user_email = strip_tags($_POST['edd_email']);
 		$user_first = isset($_POST["edd_first"]) ? strip_tags($_POST["edd_first"]) : '';
@@ -14,6 +16,9 @@ function edd_process_purchase_form() {
 			// check for valid discount
 			edd_set_error('invalid_discount', __('The discount you entered is invalid', 'edd'));
 		}
+		if(isset($edd_options['show_agree_to_terms']) && ( !isset($_POST['edd_agree_to_terms']) || $_POST['edd_agree_to_terms'] != 1 ) ) {
+			edd_set_error('agree_to_terms', __('You must agree to the terms of use', 'edd'));
+		}
 		
 		if(isset($_POST['edd-purchase-var']) && $_POST['edd-purchase-var'] == 'needs-to-register') {
 			
@@ -21,6 +26,7 @@ function edd_process_purchase_form() {
 			
 			$user_login		= $_POST["edd_user_login"];	
 			$user_pass		= $_POST["edd_user_pass"];
+			$user_email		= $_POST['edd_email'];
 			$pass_confirm 	= $_POST["edd_user_pass_confirm"];
 			$need_new_user	= true;
 			
@@ -125,7 +131,9 @@ function edd_process_purchase_form() {
 				'post_data' => $_POST,
 				'cart_details' => edd_get_cart_content_details()
 			);
-						
+			
+			do_action('edd_checkout_before_gateway', $_POST, $user_info);
+			
 			// allow the purchase data to be modified before it is sent to the gateway
 			$purchase_data = apply_filters('edd_purchase_data_before_gateway', $purchase_data);
 			

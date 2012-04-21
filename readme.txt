@@ -5,8 +5,8 @@ Contributors: mordauk
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.2
-Tested up to: 3.3.1
-Stable Tag: 1.0.2
+Tested up to: 3.3.2
+Stable Tag: 1.0.3
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
 
@@ -26,7 +26,7 @@ Features of the plugin include:
 * Multiple files per downloadable product
 * Customizable purchase receipts
 * Earnings and sales charts
-* Details purchase and file download logs
+* Detailed purchase and file download logs
 * Extensible with many [add-ons](http://easydigitaldownloads.com/extensions/)
 * Developer friendly with dozens of actions and filters
 
@@ -84,6 +84,18 @@ To get rid of the 404 error when viewing a download, you need to resave your per
 
 == Changelog ==
 
+= 1.0.3 =
+
+* Added first and last name fields to the checkout registration form.
+* Improved country list formatting. 
+* Improved the price input field to make it more clear and help prevent improper price formats.
+* Added backwards compatibility for WP versions < 3.3. The rich editors in the settings pages could not be rendered in < 3.3.
+* Added option to include an "Agree to terms" to the checkout.
+* Added an option for the checkout cart template to be customized via the theme.
+* Fixed a potential bug with file downloads.
+* Added .epub files to accepted mime types.
+* Fixed a bug with a missing email field when using add-on gateways.
+
 = 1.0.2 =
 
 * Added an option to delete payments
@@ -123,6 +135,18 @@ To get rid of the 404 error when viewing a download, you need to resave your per
 * First offical release!
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+
+* Added first and last name fields to the checkout registration form.
+* Improved country list formatting. 
+* Improved the price input field to make it more clear and help prevent improper price formats.
+* Added backwards compatibility for WP versions < 3.3. The rich editors in the settings pages could not be rendered in < 3.3.
+* Added option to include an "Agree to terms" to the checkout.
+* Added an option for the checkout cart template to be customized via the theme.
+* Fixed a potential bug with file downloads.
+* Added .epub files to accepted mime types.
+* Fixed a bug with a missing email field when using add-on gateways.
 
 = 1.0.2 =
 

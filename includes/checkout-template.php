@@ -23,11 +23,22 @@ function edd_checkout_form() {
 		
 		<?php if(edd_get_cart_contents()) : ?>
 				
-			<?php echo edd_checkout_cart(); ?>
+			<?php edd_checkout_cart(); ?>
 			
 			<div id="edd_checkout_form_wrap" class="edd_clearfix">
-			
-				<?php 
+				<?php if(isset($edd_options['show_agree_to_terms'])) { ?>
+					<script type="text/javascript">
+						jQuery(document).ready(function($){
+							$('body').on('click', '.edd_terms_links', function(e) {
+								//e.preventDefault();
+								$('#edd_terms').slideToggle();
+								$('.edd_terms_links').toggle();
+								return false;
+							});
+						});
+					</script>
+				<?php
+				} 
 				$gateways = edd_get_enabled_payment_gateways();
 				if(count($gateways) > 1 && !isset($_GET['payment-mode'])) { ?>
 					<?php do_action('edd_payment_mode_top'); ?>
@@ -123,7 +134,27 @@ function edd_checkout_form() {
 								} else {
 									do_action('edd_cc_form');
 								}
-							?>					
+							?>			
+							
+							<?php if(isset($edd_options['show_agree_to_terms'])) { ?>
+								<fieldset id="edd_terms_agreement">
+									<p>
+										<div id="edd_terms" style="display:none;">
+											<?php 
+												do_action('edd_before_terms');
+												echo wpautop($edd_options['agree_text']); 
+												do_action('edd_after_terms');
+											?>
+										</div>
+										<div id="edd_show_terms">
+											<a href="#" class="edd_terms_links"><?php _e('Show Terms', 'edd'); ?></a>
+											<a href="#" class="edd_terms_links" style="display:none;"><?php _e('Hide Terms', 'edd'); ?></a>
+										</div>
+										<input name="edd_agree_to_terms" class="required" type="checkbox" id="edd_agree_to_terms" value="1"/>
+										<label for="edd_agree_to_terms"><?php echo isset($edd_options['agree_label']) ? $edd_options['agree_label'] : __('Agree to Terms?', 'edd'); ?></label>
+									</p>
+								</fieldset>
+							<?php } ?>	
 							<fieldset id="edd_purchase_submit">
 								<p>
 									<?php do_action('edd_purchase_form_before_submit'); ?>
@@ -179,10 +210,10 @@ function edd_get_cc_form() {
 			<input type="text" size="4" name="card_exp_year" placeholder="<?php _e('Year', 'edd'); ?>" class="card-expiry-year edd-input required"/>
 			<label class="edd-label"><?php _e('Expiration (MM/YYYY)', 'edd'); ?></label>
 		</p>
-		<?php do_action('edd_before_cc_expiration'); ?>
+		<?php do_action('edd_after_cc_expiration'); ?>
 	</fieldset>
 
-	<?php do_action('edd_cc_form_address_fields', 'edd_default_cc_address_fields'); ?>
+	<?php do_action('edd_cc_form_address_fields'); ?>
 
 	<?php do_action('edd_after_cc_fields'); ?>
 		
@@ -230,6 +261,18 @@ function edd_get_register_fields() {
 		<p>
 			<input name="edd_user_login" id="edd_user_login" class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="text" placeholder="<?php _e('Username', 'edd'); ?>" title="<?php _e('Username', 'edd'); ?>"/>
 			<label for="edd_user_Login"><?php _e('Username', 'edd'); ?></label>
+		</p>
+		<p>
+			<input name="edd_email" id="edd_email" class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="text" placeholder="<?php _e('Email', 'edd'); ?>" title="<?php _e('Email', 'edd'); ?>"/>
+			<label for="edd_email"><?php _e('Email', 'edd'); ?></label>
+		</p>
+		<p>
+			<input class="edd-input required" type="text" name="edd_first" placeholder="<?php _e('First Name', 'edd'); ?>" id="edd-first" value="<?php echo is_user_Logged_in() ? $user_data->user_firstname : ''; ?>"/>
+			<label class="edd-label" for="edd-first"><?php _e('First Name', 'edd'); ?></label>
+		</p>
+		<p>
+			<input class="edd-input" type="text" name="edd_last" id="edd-last" placeholder="<?php _e('Last name', 'edd'); ?>" value="<?php echo is_user_Logged_in() ? $user_data->user_lastname : ''; ?>"/>
+			<label class="edd-label" for="edd-last"><?php _e('Last Name', 'edd'); ?></label>
 		</p>
 		<p>
 			<input name="edd_user_pass" id="edd_user_pass" class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" placeholder="<?php _e('Password', 'edd'); ?>" type="password"/>

@@ -191,6 +191,31 @@ function edd_register_settings() {
 					'name' => __('Disable Redownload?', 'edd'),
 					'desc' => __('Check this if you do not want to allow users to redownload items from their purchase history', 'edd'),
 					'type' => 'checkbox',
+				),
+				array(
+					'id' => 'terms',
+					'name' => '<strong>' . __('Terms of Agreement', 'edd') . '</strong>',
+					'desc' => '',
+					'type' => 'header',
+				),
+				array(
+					'id' => 'show_agree_to_terms',
+					'name' => __('Agree to Terms', 'edd'),
+					'desc' => __('Check this to show an agree to terms on the checkout that users must agree to before purchasing', 'edd'),
+					'type' => 'checkbox',
+				),
+				array(
+					'id' => 'agree_label',
+					'name' => __('Agree to Terms Label', 'edd'),
+					'desc' => __('Label shown next to the agree to terms check box', 'edd'),
+					'type' => 'text',
+					'size' => 'regular'
+				),
+				array(
+					'id' => 'agree_text',
+					'name' => __('Agreement Text', 'edd'),
+					'desc' => __('If Agree to Terms is checked, enter the agreement terms here', 'edd'),
+					'type' => 'rich_editor',
 				)
 			)
 		)
@@ -417,11 +442,15 @@ function edd_select_callback($args) {
 // render rich editor fields
 function edd_rich_editor_callback($args) { 
  
-	global $edd_options;
-
+	global $edd_options, $wp_version;
+	
 	if(isset($edd_options[$args['id']])) { $value = $edd_options[$args['id']]; } else { $value = isset($args['std']) ? $args['std'] : ''; }
-    $html = wp_editor($value, 'edd_settings_' . $args['section'] . '[' . $args['id'] . ']', array('textarea_name' => 'edd_settings_' . $args['section'] . '[' . $args['id'] . ']'));
-    $html .= '<br/><label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
+    if($wp_version >= 3.3) {
+		$html = wp_editor($value, 'edd_settings_' . $args['section'] . '[' . $args['id'] . ']', array('textarea_name' => 'edd_settings_' . $args['section'] . '[' . $args['id'] . ']'));
+    } else {
+		$html = '<textarea class="large-text" rows="10" id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']">' . $value . '</textarea>';
+	}	
+	$html .= '<br/><label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
  
     echo $html;
  
