@@ -79,6 +79,4 @@ if(is_admin()) {
 	include_once(EDD_PLUGIN_DIR . 'includes/gateways/paypal.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/gateways/manual.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/login-register.php');
-}/manual.php');
-	include_once(EDD_PLUGIN_DIR . 'includes/login-register.php');
 }
