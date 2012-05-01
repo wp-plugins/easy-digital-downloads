@@ -28,7 +28,8 @@ function edd_email_download_link($payment_id, $admin_notice = true) {
 			
 		$download_list = '';	
 		foreach(maybe_unserialize($payment_data['downloads']) as $download) {
-			$download_list .= get_the_title($download) . "\n";
+			$id = isset($payment_data['cart_details']) ? $download['id'] : $download;
+			$download_list .= get_the_title($id) . "\n";
 		}
 		
 		$admin_message .= $download_list . "\n";
@@ -54,30 +55,42 @@ function edd_email_templage_tags($message, $payment_data) {
 	
 	$download_list = '<ul>';
 		foreach(maybe_unserialize($payment_data['downloads']) as $download) {
-			$download_list .= '<li>' . get_the_title($download) . '<br/>';
+			$id = isset($payment_data['cart_details']) ? $download['id'] : $download;
+			$download_list .= '<li>' . get_the_title($id) . '<br/>';
 			$download_list .= '<ul>';
-				$files = edd_get_download_files($download);
-				foreach($files as $filekey => $file) {
-					$download_list .= '<li>';
-						$file_url = edd_get_download_file_url($payment_data['key'], $payment_data['email'], $filekey, $download);
-						$download_list .= '<a href="' . $file_url . '">' . $file['name'] . '</a>';
-					$download_list .= '</li>';
+				$files = edd_get_download_files($id);
+				if($files) {
+					foreach($files as $filekey => $file) {
+						$download_list .= '<li>';
+							$file_url = edd_get_download_file_url($payment_data['key'], $payment_data['email'], $filekey, $id);
+							$download_list .= '<a href="' . $file_url . '">' . $file['name'] . '</a>';
+						$download_list .= '</li>';
+					}
 				}
 			$download_list .= '</ul></li>';
 		}
 	$download_list .= '</ul>';
 	
+	$price = $payment_data['amount'];	
+	
 	$message = str_replace('{name}', $name, $message);
 	$message = str_replace('{download_list}', $download_list, $message);
 	$message = str_replace('{date}', $payment_data['date'], $message);
 	$message = str_replace('{sitename}', get_bloginfo('name'), $message);
+	$message = str_replace('{price}', $price, $message);
 	$message = apply_filters('edd_email_template_tags', $message);
 	
 	return $message;
 }
 
+function edd_email_default_formatting($message) {
+	return wpautop($message);	
+}
+add_filter('edd_purchase_receipt', 'edd_email_default_formatting');
+
 function edd_resend_email_links($data) {
 	$purchase_id = $data['purchase_id'];
 	edd_email_download_link($purchase_id, false);
+	wp_redirect(add_query_arg('edd-message', 'email_sent', remove_query_arg('edd-action', remove_query_arg('purchase_id')))); exit;
 }
 add_action('edd_email_links', 'edd_resend_email_links');

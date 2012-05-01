@@ -35,7 +35,14 @@ function edd_checkout_form() {
 				do_action('edd_checkout_form_top');
 			
 				$gateways = edd_get_enabled_payment_gateways();
-				if(count($gateways) > 1 && !isset($_GET['payment-mode'])) { ?>
+				$show_gateways = false;
+				if(count($gateways) > 1 && !isset($_GET['payment-mode'])) {
+					$show_gateways = true;
+					if(edd_get_cart_amount() <= 0) {
+						$show_gateways = false;
+					}
+				}
+				if($show_gateways) { ?>
 					<?php do_action('edd_payment_mode_top'); ?>
 					<form id="edd_payment_mode" action="<?php echo $page_URL; ?>" method="GET">
 						<fieldset id="edd_payment_mode_select">
@@ -54,7 +61,14 @@ function edd_checkout_form() {
 						</fieldset>
 						<fieldset id="edd_payment_mode_submit">
 							<p>
-								<span class="edd_button edd_gray"><span class="edd_button_outer"><span class="edd_button_inner"><input type="submit" id="edd_next_button" class="edd_button_text edd-submit" value="<?php _e('Next', 'edd'); ?>"/></span></span></span>
+								<?php $color = isset($edd_options['checkout_color']) ? $edd_options['checkout_color'] : 'gray'; ?> 
+								<span class="edd_button edd_<?php echo $color; ?>">
+									<span class="edd_button_outer">
+										<span class="edd_button_inner">
+											<input type="submit" id="edd_next_button" class="edd_button_text edd-submit" value="<?php _e('Next', 'edd'); ?>"/>
+										</span>
+									</span>
+								</span>
 							</p>
 						</fieldset>
 					</form>
@@ -65,6 +79,9 @@ function edd_checkout_form() {
 					<?php					
 						foreach($gateways as $gateway_id => $gateway) :
 							$enabled_gateway = $gateway_id;
+							if(edd_get_cart_amount() <= 0) {
+								$enabled_gateway = 'manual'; // this allows a free download by filling in the info
+							}
 						endforeach;
 						$payment_mode = isset($_GET['payment-mode']) ? urldecode($_GET['payment-mode']) : $enabled_gateway;	
 					?>
@@ -159,7 +176,14 @@ function edd_checkout_form() {
 									<input type="hidden" name="edd-action" value="purchase"/>
 									<input type="hidden" name="edd-gateway" value="<?php echo $payment_mode; ?>" />
 									<input type="hidden" name="edd-nonce" value="<?php echo wp_create_nonce('edd-purchase-nonce'); ?>"/>
-									<span class="edd_button edd_gray"><span class="edd_button_outer"><span class="edd_button_inner"><input type="submit" class="edd_button_text edd-submit" id="edd-purchase-button" name="edd-purchase" value="<?php _e('Purchase', 'edd'); ?>"/></span></span></span>
+									<?php $color = isset($edd_options['checkout_color']) ? $edd_options['checkout_color'] : 'gray'; ?>
+									<span class="edd_button edd_<?php echo $color; ?>">
+										<span class="edd_button_outer">
+											<span class="edd_button_inner">
+												<input type="submit" class="edd_button_text edd-submit" id="edd-purchase-button" name="edd-purchase" value="<?php _e('Purchase', 'edd'); ?>"/>
+											</span>
+										</span>
+									</span>
 									<?php do_action('edd_purchase_form_after_submit'); ?>
 								</p>
 								<?php if(!edd_is_ajax_enabled()) { ?>

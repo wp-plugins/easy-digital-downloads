@@ -76,7 +76,7 @@ function edd_has_purchases($user_id) {
 * return mixed - array if purchase exists, false otherwise
 */
 function edd_get_downloads_of_purchase($payment_id, $payment_meta = null){
-	if(is_null($download_meta)) {
+	if(is_null($payment_meta)) {
 		$payment_meta = get_post_meta($payment_id, '_edd_payment_meta', true);
 	}
 	$downloads = maybe_unserialize($payment_meta['downloads']);
@@ -90,10 +90,15 @@ function edd_get_downloads_of_purchase($payment_id, $payment_meta = null){
 * this price includes any necessary discounts that were applied
 * @param int $download_id - the ID of the download
 * @param array $user_purchase_info - an array of all information for the payment
+* @param string $amount_override a custom amount taht over rides the 'edd_price' meta, used for variable prices
 * return string - the price of the download
 */
-function edd_get_download_final_price($download_id, $user_purchase_info) {
-	$original_price = get_post_meta($download_id, 'edd_price', true);
+function edd_get_download_final_price($download_id, $user_purchase_info, $amount_override = null) {
+	if(is_null($amount_override)) {
+		$original_price = get_post_meta($download_id, 'edd_price', true);
+	} else {
+		$original_price = $amount_override;
+	}
 	if(isset($user_purchase_info['discount']) && $user_purchase_info['discount'] != 'none') {
 		$price = edd_get_discounted_amount($user_purchase_info['discount'], $original_price);
 	} else {
@@ -176,7 +181,11 @@ function edd_record_download_in_log($download_id, $file_id, $user_info, $ip, $da
 	update_post_meta($download_id, '_edd_file_download_log', $log);
 }
 
-// returns the purchase price of a download
+/*
+* Returns the price of a download, but only for non-variable priced downloads
+* @param - $download_id INT the ID number of the download to retrieve a price for
+* @return string/int the price of the download
+*/
 function edd_get_download_price($download_id) {
 	$price = get_post_meta($download_id, 'edd_price', true);
 	if($price)
@@ -215,27 +224,16 @@ function edd_get_download_files($download_id) {
 
 // constructs the file download url for a specific file
 function edd_get_download_file_url($key, $email, $filekey, $download) {
-	$download_url = add_query_arg(
-		'download_key', 
-		$key,
-		add_query_arg(
-			'email',
-			urlencode($email),
-			add_query_arg(
-				'file',
-				$filekey,
-				add_query_arg(
-					'download',
-					$download,
-					add_query_arg(
-						'expire',
-						urlencode(base64_encode(strtotime('+1 day', time()))), // link valid for 24 hours
-						home_url()
-					)
-				)
-			)
-		)
-	);
+	
+	$params = array(
+		'download_key' => $key,
+		'email' => urlencode($email),
+		'file' => $filekey,
+		'download' => $download, 
+		'expire' => urlencode(base64_encode(strtotime('+1 day', time())))
+	);	
+	
+	$download_url = add_query_arg($params, home_url());
 	return $download_url;	
 }
 
@@ -260,12 +258,16 @@ function edd_verify_download_link($download_id, $key, $email, $expire) {
 		foreach($payments as $payment) {
 			$payment_meta = get_post_meta($payment->ID, '_edd_payment_meta', true);
 			$downloads = maybe_unserialize($payment_meta['downloads']);
-			//print_r($downloads); exit;
-			if(array_search($download_id, $downloads) !== false) {
-				if(time() < $expire) {
-					return true; // payment has been verified and link is still valid
+			if($downloads) {
+				foreach($downloads as $download) {
+					$id = isset($payment_meta['cart_details']) ? $download['id'] : $download;
+					if($id == $download_id) {
+						if(time() < $expire) {
+							return true; // payment has been verified and link is still valid
+						}
+						return false; // payment verified, but link is no longer valid
+					}
 				}
-				return false; // payment verified, but link is no longer valid
 			}
 		}
 	}
