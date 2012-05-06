@@ -29,6 +29,8 @@ function edd_load_scripts() {
 	if(isset($edd_options['jquery_validation']) && is_page($edd_options['purchase_page'])) {
 		wp_enqueue_script('jquery-validation', EDD_PLUGIN_URL . 'includes/js/jquery.validate.min.js');
 		wp_enqueue_script('edd-validation', EDD_PLUGIN_URL . 'includes/js/form-validation.js');
+		$required = array( 'firstname' => true, 'lastname' => true );
+		wp_localize_script('edd-validation', 'edd_scripts_validation', apply_filters('edd_scripts_validation',$required));
 	}
 }
 add_action('wp_enqueue_scripts', 'edd_load_scripts');
@@ -69,12 +71,16 @@ add_action('admin_enqueue_scripts', 'edd_load_admin_scripts', 100);
 
 // adds edd custom post type icon
 function edd_admin_downloads_icon() {
+    global $post_type;
 	$icon_url = EDD_PLUGIN_URL . 'includes/images/edd-icon.png';	
 	?>
 	<style type="text/css" media="screen">
 		body #adminmenu #menu-posts-download div.wp-menu-image { background:transparent url( "<?php echo $icon_url; ?>" ) no-repeat 7px -32px; }
 		body #adminmenu #menu-posts-download:hover div.wp-menu-image, 
-		body #adminmenu #menu-posts-download.wp-has-current-submenu div.wp-menu-image { background:transparent url( "<?php echo $icon_url; ?>" ) no-repeat 7px 0; }	
+		body #adminmenu #menu-posts-download.wp-has-current-submenu div.wp-menu-image { background:transparent url( "<?php echo $icon_url; ?>" ) no-repeat 7px 0; }
+		<?php if (( isset($_GET['post_type'])) && ($_GET['post_type'] == 'download') || ($post_type == 'download')) : ?>
+        #icon-edit { background:transparent url("<?php echo EDD_PLUGIN_URL .'includes/images/edd-cpt.png'; ?>") no-repeat; }		
+        <?php endif; ?>
 	</style>
     <?php
 }

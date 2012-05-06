@@ -28,18 +28,20 @@ function edd_get_cart_quantity() {
 */
 function edd_add_to_cart($download_id, $options = array()) {
 	$cart = edd_get_cart_contents();
-	if(is_array($cart)) {
-		$cart[] = array('id' => $download_id, 'options' => $options);
-	} else {
-		$cart = array(array('id' => $download_id, 'options' => $options));
+	if(!edd_item_in_cart($download_id)) {
+		if(is_array($cart)) {
+			$cart[] = array('id' => $download_id, 'options' => $options);
+		} else {
+			$cart = array(array('id' => $download_id, 'options' => $options));
+		}
+	
+		$_SESSION['edd_cart'] = $cart;
+	
+		// clear all the checkout errors, if any
+		edd_clear_errors();
+	
+		return count($cart) - 1;
 	}
-	
-	$_SESSION['edd_cart'] = $cart;
-	
-	// clear all the checkout errors, if any
-	edd_clear_errors();
-	
-	return count($cart) - 1;
 }
 
 /*
@@ -72,12 +74,14 @@ function edd_remove_from_cart($cart_key) {
 * return - array of updated cart items
 */
 function edd_item_in_cart($download_id) {
-	$cart = edd_get_cart_contents();
-	if(!is_array($cart)) {
+	$cart_items = edd_get_cart_contents();
+	if(!is_array($cart_items)) {
 		return false; // empty cart
 	} else {
-		if(in_array($download_id, $cart)) {
-			return true;
+		foreach($cart_items as $item) {
+			if($item['id'] == $download_id) {
+				return true;
+			}
 		}
 	}
 }
@@ -112,6 +116,26 @@ function edd_get_cart_item_price($item_id, $options = array()) {
 		}
 	}
 	return $price;
+}
+
+/*
+* Gets the name of the specified price option, for variable pricing only
+* @param - $item INT the download ID number
+* @param - $options array optional parameters, used for defining variable prices
+* Return - string - the name of the price option
+*/
+function edd_get_price_name($item_id, $options = array()) {
+	
+	$variable_pricing = get_post_meta($item_id, '_variable_pricing', true);
+	if($variable_pricing && !empty($options)) {
+		// if variable prices are enabled, retrieve the options
+		$prices = get_post_meta($item_id, 'edd_variable_prices', true);
+		if($prices) {
+			$name = $prices[$options['price_id']]['name'];
+		}
+		return $name;
+	}
+	return false;
 }
 
 /*
@@ -183,6 +207,38 @@ function edd_get_cart_content_details() {
 		return $details;
 	}
 	return false;
+}
+
+/*
+* Adds all downloads within a taxonomy term to the cart
+* @since v1.0.6
+* @param $taxonomy string - the name of the taxonomy
+* @param $terms mixed - the slug or id of the term from which to add ites, or an array of terms
+* @return array of IDs for each item added to the cart
+*/
+function edd_add_collection_to_cart($taxonomy, $terms) {
+	
+	if(!is_string($taxonomy)) return false;
+	
+	$field = is_int($terms) ? 'id' : 'slug';
+	
+	$cart_item_ids = array();	
+	
+	$args = array(
+		'post_type' => 'download',
+		'posts_per_page' => -1,
+		$taxonomy => $terms
+	);	
+	
+	$items = get_posts($args);
+	if($items) {
+
+		foreach($items as $item) {
+			edd_add_to_cart($item->ID);
+			$cart_item_ids[] = $item->ID;
+		}	
+	}
+	return $cart_item_ids;
 }
 
 /*

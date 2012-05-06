@@ -5,7 +5,7 @@ Plugin URI: http://easydigitaldownloads.com
 Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
-Version: 1.0.5
+Version: 1.0.6
 */
 
 ini_set('display_errors', 'on');
@@ -26,6 +26,12 @@ if(!defined('EDD_PLUGIN_DIR')) {
 if(!defined('EDD_PLUGIN_FILE')) {
 	define('EDD_PLUGIN_FILE', __FILE__);
 }
+
+
+/*************************************
+* globals
+*************************************/
+global $edd_options;
 
 /*****************************************
 load the languages
@@ -73,6 +79,7 @@ if(is_admin()) {
 	include_once(EDD_PLUGIN_DIR . 'includes/thickbox.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/graphing.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/payment-actions.php');
+	include_once(EDD_PLUGIN_DIR . 'includes/upload-functions.php');
 } else {
 	include_once(EDD_PLUGIN_DIR . 'includes/process-purchase.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/process-download.php');
