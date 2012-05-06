@@ -5,7 +5,7 @@
 			<?php do_action('edd_checkout_table_header_first'); ?>
 			<th><?php _e('Item Name', 'edd'); ?></th>
 			<th><?php _e('Item Price', 'edd'); ?></th>
-			<th><?php _e('Actions', 'edd'); ?></th>
+			<th class="edd_cart_actions"><?php _e('Actions', 'edd'); ?></th>
 			<?php do_action('edd_checkout_table_header_last'); ?>
 		</tr>
 	</thead>
@@ -23,11 +23,15 @@
 									echo get_the_post_thumbnail($item['id'], apply_filters('edd_checkout_image_size', array(25,25))); 
 								} 
 							}
-							echo '<span class="edd_checkout_cart_item_title">' . get_the_title($item['id']) . '</span>'; 
+							$item_title = get_the_title($item['id']);
+							if(!empty($item['options'])) {
+								$item_title .= ' - ' . edd_get_price_name($item['id'], $item['options']);							
+							}
+							echo '<span class="edd_checkout_cart_item_title">' . $item_title . '</span>'; 
 						?>
 					</td>
 					<td><?php echo edd_currency_filter(edd_get_cart_item_price($item['id'], $item['options'])); ?></td>
-					<td><a href="<?php echo edd_remove_item_url($key, $post); ?>"><?php _e('remove', 'edd'); ?></td>
+					<td class="edd_cart_actions"><a href="<?php echo edd_remove_item_url($key, $post); ?>"><?php _e('remove', 'edd'); ?></td>
 					<?php do_action('edd_checkout_table_body_last', $item); ?>
 				</tr>
 			<?php endforeach; ?>

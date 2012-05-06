@@ -1,13 +1,15 @@
 <?php
 // retrieve payments from the database
-function edd_get_payments( $offset = 0, $number = 20, $mode = 'live' ) {
+function edd_get_payments( $offset = 0, $number = 20, $mode = 'live', $orderby = 'ID', $order = 'DESC' ) {
 	$payment_args = array(
 		'post_type' => 'edd_payment', 
 		'posts_per_page' => $number, 
 		'post_status' => 'any', 
 		'offset' => $offset,
 		'meta_key' => '_edd_payment_mode',
-		'meta_value' => $mode
+		'meta_value' => $mode,
+		'order' => $order,
+		'orderby' => $orderby
 	);
 	$payments = get_posts($payment_args);
 	if($payments) {
@@ -60,7 +62,7 @@ function edd_insert_payment($payment_data = array()) {
 			'user_id' => $payment_data['user_info']['id']
 		);
 		// record the payment details
-		update_post_meta($payment, '_edd_payment_meta', apply_filters('edd_payment_meta', $payment_meta));
+		update_post_meta($payment, '_edd_payment_meta', apply_filters('edd_payment_meta', $payment_meta, $payment_data));
 		update_post_meta($payment, '_edd_payment_user_id', $payment_data['user_info']['id']);
 		update_post_meta($payment, '_edd_payment_user_email', $payment_data['user_email']);
 		update_post_meta($payment, '_edd_payment_purchase_key', $payment_data['purchase_key']);
