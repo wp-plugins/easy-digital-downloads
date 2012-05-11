@@ -8,9 +8,9 @@ function edd_checkout_form() {
 		$page_URL =  get_permalink($post->ID);
 	else :
 		$page_URL = 'http';
-		if ($_SERVER["HTTPS"] == "on") $pageURL .= "s";
+		if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") $pageURL .= "s";
 		$page_URL .= "://";
-		if ($_SERVER["SERVER_PORT"] != "80") $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+		if (isset($_SERVER["SERVER_PORT"]) && $_SERVER["SERVER_PORT"] != "80") $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
 		else $page_URL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
 	endif;	
 	
@@ -126,7 +126,7 @@ function edd_checkout_form() {
 								<?php do_action('edd_purchase_form_user_info'); ?>
 							</fieldset>				
 							<?php } ?>
-							<?php if(edd_get_discounts()) { // only show if we have at least one discount ?>
+							<?php if(edd_has_active_discounts()) { // only show if we have at least one active discount ?>
 							<fieldset id="edd_discount_code">
 								<p>
 									<input class="edd-input" type="text" id="edd-discount" name="edd-discount" placeholder="<?php _e('Enter discount', 'edd'); ?>"/>
@@ -305,7 +305,8 @@ function edd_get_register_fields() {
 			<label class="edd-label" for="edd-last"><?php _e('Last Name', 'edd'); ?></label>
 		</p>
 		<input type="hidden" name="edd-purchase-var" value="needs-to-register"/>		
-		<?php do_action('edd_purchase_form_register_fields'); ?>								
+		<?php do_action('edd_purchase_form_register_fields'); ?>
+		<?php do_action('edd_purchase_form_user_info');	?>				
 	</fieldset>
 	<?php
 	return ob_get_clean();
