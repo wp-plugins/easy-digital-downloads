@@ -41,9 +41,9 @@ function edd_insert_payment($payment_data = array()) {
 	}
 	
 	if(isset($payment_data['status'])) {
-		$status = 'pending';
+		$status = $payment_data['status'];
 	} else {
-		$status = 'publish';
+		$status = 'pending';
 	}
 	
 	// create a blank payment
@@ -61,10 +61,18 @@ function edd_insert_payment($payment_data = array()) {
 			'cart_details' => serialize($payment_data['cart_details']),
 			'user_id' => $payment_data['user_info']['id']
 		);
+		
+		if ($_SERVER['HTTP_X_FORWARD_FOR']) {
+			$ip = $_SERVER['HTTP_X_FORWARD_FOR'];
+		} else {
+			$ip = $_SERVER['REMOTE_ADDR'];
+		}
+		
 		// record the payment details
 		update_post_meta($payment, '_edd_payment_meta', apply_filters('edd_payment_meta', $payment_meta, $payment_data));
 		update_post_meta($payment, '_edd_payment_user_id', $payment_data['user_info']['id']);
 		update_post_meta($payment, '_edd_payment_user_email', $payment_data['user_email']);
+		update_post_meta($payment, '_edd_payment_user_ip', $ip);
 		update_post_meta($payment, '_edd_payment_purchase_key', $payment_data['purchase_key']);
 		$mode = edd_is_test_mode() ? 'test' : 'live';
 		update_post_meta($payment, '_edd_payment_mode', $mode);
@@ -72,7 +80,7 @@ function edd_insert_payment($payment_data = array()) {
 		// clear the user's purchased cache
 		delete_transient('edd_user_' . $payment_data['user_info']['id'] . '_purchases');
 		
-		do_action('edd_insert_payment', $payment_data);		
+		do_action('edd_insert_payment', $payment, $payment_data);		
 		
 		return $payment; // return the ID
 	}
@@ -89,6 +97,7 @@ function edd_update_payment_status($payment_id, $status = 'publish') {
 	
 	$payment = get_post($payment_id);
 	if($payment->post_status == 'publish') {
+		// for some reason this is occasionally coming back as true even when the payment is not		
 		return;
 	}
 	$payment_data = get_post_meta($payment_id, '_edd_payment_meta', true);
