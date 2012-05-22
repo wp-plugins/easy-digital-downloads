@@ -1,5 +1,25 @@
 <?php
-// retrieve payments from the database
+/**
+ * Payment Functions
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Payment Functions
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.0 
+*/
+
+
+/**
+ * Get Payments
+ *
+ * Retrieve payments from the database.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      object
+*/
+
 function edd_get_payments( $offset = 0, $number = 20, $mode = 'live', $orderby = 'ID', $order = 'DESC' ) {
 	$payment_args = array(
 		'post_type' => 'edd_payment', 
@@ -18,7 +38,17 @@ function edd_get_payments( $offset = 0, $number = 20, $mode = 'live', $orderby =
 	return false;
 }
 
-// returns the total number of payments recorded
+
+/**
+ * Count Payments
+ *
+ * Returns the total number of payments recorded.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      integer
+*/
+
 function edd_count_payments($mode) {
 	$payments = edd_get_payments(0, -1, $mode);
 	$count = 0;
@@ -27,6 +57,15 @@ function edd_count_payments($mode) {
 	}
 	return $count;
 }
+
+
+/**
+ * Insert Payment
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      void
+*/
 
 function edd_insert_payment($payment_data = array()) {
 
@@ -88,7 +127,17 @@ function edd_insert_payment($payment_data = array()) {
 	return false;
 }
 
-// updates a payment status, and performs all necessary functions to mark it as complete, and to finish a purchase
+
+/**
+ * Update Payment Status
+ *
+ * Updates a payment status, and performs all necessary functions to mark it as complete, and to finish a purchase.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      void
+*/
+
 function edd_update_payment_status($payment_id, $status = 'publish') {
 	
 	if($status == 'completed' || $status == 'complete') {
@@ -135,6 +184,15 @@ function edd_update_payment_status($payment_id, $status = 'publish') {
 	do_action('edd_update_payment_status', $payment_id, $status);
 }
 
+
+/**
+ * Check For Existing Payment
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      boolean
+*/
+
 function edd_check_for_existing_payment($payment_id) {
 	$payment = get_post($payment_id);
 	if($payment && $payment->post_status == 'publish') {
@@ -143,7 +201,17 @@ function edd_check_for_existing_payment($payment_id) {
 	return false; // this payment doesn't exist
 }
 
-// retrieves the status of a payment
+
+/**
+ * Get Payment Status
+ *
+ * Retrieves the status of a payment.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      string
+*/
+
 function edd_get_payment_status($payment = OBJECT) {
 	if(!is_object($payment))
 		return;
@@ -160,6 +228,14 @@ function edd_get_payment_status($payment = OBJECT) {
 	endswitch;
 }
 
+
+/**
+ * Get Earnings By Date
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      integer
+*/
 
 function edd_get_earnings_by_date($month_num, $year) {
 	$sales = get_posts(
@@ -182,3 +258,108 @@ function edd_get_earnings_by_date($month_num, $year) {
 	}
 	return $total;
 }
+
+
+/**
+ * Is Payment Complete
+ *
+ * Checks whether a payment has been marked as complete.
+ *
+ * @access      public
+ * @since       1.0.8
+ * @param       $payment_id INT the ID number of the payment to check
+ * @return      boolean true if complete, false otherwise
+*/
+
+function edd_is_payment_complete($payment_id) {
+	$payment = get_post($payment_id);
+	if( $payment )
+		if( $payment->post_status == 'publish' )
+			return true;
+	return false;
+}
+
+/**
+ * Get Users Purchases
+ *
+ * Retrieves a list of all purchases by a specific user.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      array
+*/
+
+function edd_get_users_purchases($user_id) {
+	
+	$purchases = get_transient('edd_user_' . $user_id . '_purchases');
+	if(false === $purchases || edd_is_test_mode()) {
+		$mode = edd_is_test_mode() ? 'test' : 'live';
+		$purchases = get_posts(
+			array(
+				'meta_query' => array(
+					'relation' => 'AND',
+					array(
+						'key' => '_edd_payment_mode',
+						'value' => $mode
+					),
+					array(
+						'key' => '_edd_payment_user_id',
+						'value' => $user_id
+					)
+				),
+				'post_type' => 'edd_payment', 
+				'posts_per_page' => -1
+			)
+		);
+		set_transient('edd_user_' . $user_id . '_purchases', $purchases, 7200);
+	}
+	if($purchases) {
+	    // return the download list
+		return $purchases;
+	}
+	
+	// no downloads	
+	return false;	
+}
+
+
+/**
+ * Has Purchases
+ *
+ * Checks to see if a user has purchased at least one item.
+ *
+ * @access      public
+ * @since       1.0 
+ * @param       $user_id int - the ID of the user to check
+ * @return      bool - true if has purchased, false other wise.
+*/
+
+function edd_has_purchases($user_id) {
+	if(edd_get_users_purchases($user_id)) {
+		return true; // user has at least one purchase
+	}
+	return false; // user has never purchased anything
+}
+
+
+/**
+ * Get Downloads Of Purchase
+ *
+ * Retrieves an array of all files purchased.
+ *
+ * @access      public
+ * @since       1.0 
+ * @param       int $payment_id - the ID number of the purchase
+ * @return      mixed - array if purchase exists, false otherwise
+*/
+
+function edd_get_downloads_of_purchase($payment_id, $payment_meta = null){
+	if(is_null($payment_meta)) {
+		$payment_meta = get_post_meta($payment_id, '_edd_payment_meta', true);
+	}
+	$downloads = maybe_unserialize($payment_meta['downloads']);
+	if($downloads)
+		return $downloads;
+	return false;
+}
+

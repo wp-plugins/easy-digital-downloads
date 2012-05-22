@@ -1,4 +1,24 @@
 <?php
+/**
+ * Process Download
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Process Download
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.0 
+*/
+
+
+/**
+ * Process Download
+ *
+ * Handles the file download process.
+ *
+ * @access      private
+ * @since       1.0 
+ * @return      void
+*/
 
 function edd_process_download() {
 	if(isset($_GET['download']) && isset($_GET['email']) && isset($_GET['file'])) {
@@ -10,7 +30,9 @@ function edd_process_download() {
 				
 
 		$payment = edd_verify_download_link($download, $key, $email, $expire);
-		$has_access = true; // defaulting this to true for now because the method below doesn't work well		
+		
+		 // defaulting this to true for now because the method below doesn't work well
+		$has_access = true;
 		//$has_access = ( edd_logged_in_only() && is_user_logged_in() ) || !edd_logged_in_only() ? true : false;
 		if($payment && $has_access) {
 			
