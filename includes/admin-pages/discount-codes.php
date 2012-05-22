@@ -1,4 +1,24 @@
 <?php
+/**
+ * Discount Codes
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Discount Codes
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.0 
+*/
+
+
+/**
+ * Discounts Page
+ *
+ * Renders the discount page contents.
+ *
+ * @access      private
+ * @since       1.0
+ * @return      void
+*/
 
 function edd_discounts_page() {
 	global $edd_options;	
@@ -64,7 +84,7 @@ function edd_discounts_page() {
 										if(isset($discount['max'])) {
 											echo $discount['max'] == '' ? __('unlimited', 'edd') : $discount['max'];  
 										} else {
-											echo __('unlimited', 'edd');
+											_e('unlimited', 'edd');
 										}
 									?>
 								</td>

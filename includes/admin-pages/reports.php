@@ -1,4 +1,24 @@
 <?php
+/**
+ * Admin Reports Page
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Admin Reports Page
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.0 
+*/
+
+
+/**
+ * Reports Page
+ *
+ * Renders the reports page contents.
+ *
+ * @access      private
+ * @since       1.0
+ * @return      void
+*/
 
 function edd_reports_page() {
 	global $edd_options;	
@@ -8,7 +28,7 @@ function edd_reports_page() {
 		<h2><?php _e('Reports', 'edd'); ?></h2>
 		<?php 
 			edd_show_download_sales_graph(); 
-			edd_show_download_eanings_graph(); 
+			edd_show_download_earnings_graph(); 
 			edd_show_monthly_eanings_graph();
 		?>
 		<p><?php _e('Transactions created while in test mode are not included on this page.', 'edd'); ?></p>

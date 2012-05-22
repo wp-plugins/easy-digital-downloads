@@ -1,4 +1,24 @@
 <?php
+/**
+ * Admin Add-ons
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Admin Add-ons
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.0 
+*/
+
+
+/**
+ * Add-ons Page
+ *
+ * Renders the add-ons page content.
+ *
+ * @access      private
+ * @since       1.0 
+ * @return      void
+*/
 
 function edd_add_ons_page() {
 
@@ -16,15 +36,4 @@ function edd_add_ons_page() {
 	</div>
 	<?php
 	echo ob_get_clean();
-}
-
-function toArray($xml) {
-	$array = json_decode(json_encode($xml), TRUE);
-	
-	foreach ( array_slice($array, 0) as $key => $value ) {
-		if ( empty($value) ) $array[$key] = NULL;
-		elseif ( is_array($value) ) $array[$key] = toArray($value);
-	}
-
-	return $array;
 }
