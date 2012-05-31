@@ -133,15 +133,9 @@ function edd_register_settings() {
 					'size' => 'regular'
 				),
 				array(
-					'id' => 'paypal_disable_curl',
-					'name' => __('Disable cURL for PayPal IPN', 'edd'),
-					'desc' => __('If payments are not getting marked as complete, check this option', 'edd'),
-					'type' => 'checkbox'
-				),
-				array(
 					'id' => 'paypal_alternate_verification',
 					'name' => __('Alternate PayPal Purchase Verification', 'edd'),
-					'desc' => __('If payments are not getting marked as complete, and disabling cURL does not fix the problem, then check this box', 'edd'),
+					'desc' => __('If payments are not getting marked as complete, then check this box. Note, this requires that buyers return to your site from PayPal.', 'edd'),
 					'type' => 'checkbox'
 				)
 			)
@@ -176,7 +170,20 @@ function edd_register_settings() {
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
-				)
+				),
+				/*array(
+					'id' => 'email_template',
+					'name' => __('Email Template', 'edd'),
+					'desc' => __('Choose a template. Click "Save Changes" then "Preview Purchase Receipt" to see the new template.', 'edd'),
+					'type' => 'select',
+					'options' => edd_get_email_templates()
+				),
+				array(
+					'id' => 'email_settings',
+					'name' => '',
+					'desc' => '',
+					'type' => 'hook',
+				)*/
 			)
 		),
 		'styles' => apply_filters('edd_settings_styles', 
@@ -223,7 +230,7 @@ function edd_register_settings() {
 					'type' => 'checkbox',
 				),
 				array(
-					'id' => 'uses_can_redownload',
+					'id' => 'disable_redownload',
 					'name' => __('Disable Redownload?', 'edd'),
 					'desc' => __('Check this if you do not want to allow users to redownload items from their purchase history', 'edd'),
 					'type' => 'checkbox',
@@ -618,6 +625,7 @@ function edd_select_callback($args) {
 		$selected = isset($edd_options[$args['id']]) ? selected($option, $edd_options[$args['id']], false) : '';
 		$html .= '<option value="' . $option . '" ' . $selected . '>' . $name . '</option>';
 	}
+	$html .= '</select>';
 	$html .= '<label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
  
     echo $html; 
@@ -648,6 +656,23 @@ function edd_rich_editor_callback($args) {
 	$html .= '<br/><label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
  
     echo $html;
+ 
+}
+
+
+/**
+ * Hook Callback
+ *
+ * Adds a do_action() hook in place of the field
+ *
+ * @access      private
+ * @since       1.0.8.2 
+ * @return      void
+*/
+
+function edd_hook_callback($args) { 
+ 	
+	do_action('edd_' . $args['id']);
  
 }
 
