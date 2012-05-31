@@ -5,8 +5,8 @@ Contributors: mordauk, sksmatt
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.2
-Tested up to: 3.3.2
-Stable Tag: 1.0.8
+Tested up to: 3.4
+Stable Tag: 1.0.8.2
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -25,7 +25,7 @@ Features of the plugin include:
 * Complete payment history
 * User purchase history and ability to redownload files
 * Multiple files per downloadable product
-* Variable prices for multiple price optiosn per product
+* Variable prices for multiple price options per product
 * Customizable purchase receipts
 * Earnings and sales charts
 * Detailed purchase and file download logs
@@ -36,11 +36,11 @@ More information at [Easy Digital Downloads.com](http://easydigitaldownloads.com
 
 [youtube http://www.youtube.com/watch?v=SjOeSZ08_IA]
 
-** Add an Affiliate System to Your Store **
+**Add an Affiliate System to Your Store**
 
 Easy Digital Downloads has an [integration pack for the awesome Affiliates Pro plugin](http://easydigitaldownloads.com/extension/affiliates-pro-integration-pack/), which gives you everything you need to build a complete affiliate system and dramatically boost your traffic and sales.
 
-** Build Up Your Email Subscribers **
+**Build Up Your Email Subscribers**
 
 With add-ons for both [Mail Chimp](http://easydigitaldownloads.com/extension/mail-chimp/) and [Campaign Monitor](http://easydigitaldownloads.com/extension/campaign-monitor/), Easy Digital Downloads can easily grow your email subscription lists while making you money at the same time.
 
@@ -124,6 +124,36 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.0.8.2 =
+
+* Added a number_format() check to the PayPal standard gateway
+* Added the Turkish Lira to supported currencies
+* Dramatically improved the default PayPal gateway, which should help prevent payments not getting verified
+* Added edd_get_ip() and updated the user IP detection. It previously failed if the server was running SSL
+* Added missing class name to the download history table
+* Fixed a misnamed class in the purchase history table
+* Updated purchase and download history to now show download links if redownload is disabled
+* Added a new conditional called edd_no_redownload() that theme devs can use to check if redownloading of files is permitted
+* Fixed problem with improper encoding of apostrphes in purchase receipt emails
+* Added new edd_hook_callback() function for settings field type callbacks
+* Updated default language files with new strings for translation
+
+= 1.0.8.1 =
+
+* Updated es_ES translation files
+* A lots of code documentation improvements
+* Completely rewrote the purchase processing functions to fix a couple of bugs and make the entire thing easier to debug and improve
+* Fixed a problem with user emails not being recorded for guest purchases
+* Improved the performance of the add-ons page with transients
+* Reorganized some functions into more appropriate files
+* Fixed translation domains on the login forms
+* Added a new option for marking a payment as "refunded". The refund process must be done through the payment gateway still. When payments are marked as "refunded", the sales and earnings stats will be adjusted accordingly.
+* Added an alert message to the "Delete Payment" link
+* Updated French language files
+* Added get_post_class() to the payments history page so that payment rows can be styled based on their status, post type, etc.
+* Updated admin CSS to add custom background color to refunded payments
+* Added new filter called "edd_payment_statuses", which can be used to register custom statuses
 
 = 1.0.8 =
 
@@ -272,6 +302,36 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * First offical release!
 
 == Upgrade Notice ==
+
+= 1.0.8.2 =
+
+* Added a number_format() check to the PayPal standard gateway
+* Added the Turkish Lira to supported currencies
+* Dramatically improved the default PayPal gateway, which should help prevent payments not getting verified
+* Added edd_get_ip() and updated the user IP detection. It previously failed if the server was running SSL
+* Added missing class name to the download history table
+* Fixed a misnamed class in the purchase history table
+* Updated purchase and download history to now show download links if redownload is disabled
+* Added a new conditional called edd_no_redownload() that theme devs can use to check if redownloading of files is permitted
+* Fixed problem with improper encoding of apostrphes in purchase receipt emails
+* Added new edd_hook_callback() function for settings field type callbacks
+* Updated default language files with new strings for translation
+
+= 1.0.8.1 =
+
+* Updated es_ES translation files
+* A lots of code documentation improvements
+* Completely rewrote the purchase processing functions to fix a couple of bugs and make the entire thing easier to debug and improve
+* Fixed a problem with user emails not being recorded for guest purchases
+* Improved the performance of the add-ons page with transients
+* Reorganized some functions into more appropriate files
+* Fixed translation domains on the login forms
+* Added a new option for marking a payment as "refunded". The refund process must be done through the payment gateway still. When payments are marked as "refunded", the sales and earnings stats will be adjusted accordingly.
+* Added an alert message to the "Delete Payment" link
+* Updated French language files
+* Added get_post_class() to the payments history page so that payment rows can be styled based on their status, post type, etc.
+* Updated admin CSS to add custom background color to refunded payments
+* Added new filter called "edd_payment_statuses", which can be used to register custom statuses
 
 = 1.0.8 =
 

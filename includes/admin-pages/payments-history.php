@@ -103,8 +103,12 @@ function edd_payment_history_page() {
 							foreach($payments as $payment) : ?>							
 								<?php 
 								$payment_meta = get_post_meta($payment->ID, '_edd_payment_meta', true);
-								$user_info = maybe_unserialize($payment_meta['user_info']); ?>
-								<tr class="edd_payment <?php if(edd_is_odd($i)) echo 'alternate'; ?>">
+								$user_info = maybe_unserialize($payment_meta['user_info']); 
+								$classes = array();
+								$classes[] = edd_is_odd($i) ? 'alternate' : '';
+								$payment_classes = get_post_class( apply_filters( 'edd_payment_row_classes', $classes ), $payment->ID );						
+								?>
+								<tr class="edd_payment <?php echo implode( ' ', $payment_classes ); ?>">
 									<td>
 										<?php echo $payment->ID; ?>
 									</td>
@@ -170,8 +174,8 @@ function edd_payment_history_page() {
 									</td>
 									<td style="text-transform:uppercase;"><?php echo edd_currency_filter( $payment_meta['amount']); ?></td>
 									<td><?php echo date(get_option('date_format'), strtotime($payment->post_date)); ?></td>
-									<td><?php echo isset($user_info['id']) ? get_user_by('id', $user_info['id'])->display_name : __('guest', 'edd'); ?></td>
-									<td><?php echo edd_get_payment_status($payment); ?></td>
+									<td><?php echo isset($user_info['id']) && $user_info['id'] != -1 ? get_user_by('id', $user_info['id'])->display_name : __('guest', 'edd'); ?></td>
+									<td><?php echo edd_get_payment_status($payment, true); ?></td>
 								</tr>
 							<?php
 							$i++;
