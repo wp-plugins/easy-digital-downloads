@@ -72,7 +72,8 @@ function edd_process_purchase_form() {
 		'date' => date( 'Y-m-d H:i:s' ),
 		'user_info' => $user_info,
 		'post_data' => $_POST,
-		'cart_details' => edd_get_cart_content_details()
+		'cart_details' => edd_get_cart_content_details(),
+		'gateway' => $valid_data['gateway']
 	);
 	
 	// add the user data for hooks
@@ -211,7 +212,7 @@ function edd_purchase_form_validate_discounts() {
 	// check for valid discount is present
 	if ( isset( $_POST['edd-discount'] ) && trim( $_POST['edd-discount'] ) != '' ) {
 		// clean discount
-		$discount = strip_tags( trim( $_POST['edd-discount'] ) );
+		$discount = sanitize_text_field( $_POST['edd-discount'] );
 		// check if validates
 		if (  edd_is_discount_valid( $discount ) ) {
 			// return clean discount
@@ -261,20 +262,25 @@ function edd_purchase_form_validate_logged_in_user() {
 		'user_id' => -1 
 	);
 	
-	// verify there is an user_ID
+	// verify there is a user_ID
 	if ( $user_ID > 0 ) {
 
 		// get the logged in user data
 		$user_data = get_userdata( $user_ID );
+
+		if( !is_email( $_POST['edd_email'] ) ) {
+			// if the user enters an email other than the stored email, we must verify it
+			edd_set_error( 'invalid_email', __( 'Please enter a valid email address.', 'edd' ) );
+		}
 
 		// verify data
 		if ( $user_data ) {
 			// collected logged in user data
 			$valid_user_data = array(
 				'user_id' 		=> $user_ID,
-				'user_email' 	=> $user_data->user_email,
-				'user_first' 	=> $user_data->user_firstname,
-				'user_last' 	=> $user_data->user_lastname,
+				'user_email' 	=> sanitize_email( $_POST['edd_email'] ),
+				'user_first' 	=> sanitize_text_field( $_POST['edd_first'] ),
+				'user_last' 	=> sanitize_text_field( $_POST['edd_last'] ),
 			);	
 		} else {
 			// set invalid user error
@@ -628,7 +634,8 @@ function edd_send_to_success_page($query_string = null) {
 	$redirect = get_permalink($edd_options['success_page']);
 	if($query_string)
 		$redirect .= $query_string;
-	wp_redirect($redirect); exit;
+			
+	wp_redirect( apply_filters('edd_success_page_redirect', $redirect, $_POST['edd-gateway'], $query_string) ); exit;
 }
 
 

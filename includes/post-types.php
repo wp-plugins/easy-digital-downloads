@@ -20,7 +20,7 @@
  * @return      void
 */
 
-function edd_setup_download_post_type() {
+function edd_setup_edd_post_types() {
 
 	$archives = true;
 	if(defined('EDD_DISABLE_ARCHIVE') && EDD_DISABLE_ARCHIVE == true) {
@@ -42,24 +42,28 @@ function edd_setup_download_post_type() {
 		$menu_position = EDD_MENU_POSITION;
 	}
 	
-	$download_labels = array(
-		'name' => _x('Downloads', 'post type general name', 'edd'),
-		'singular_name' => _x('Download', 'post type singular name', 'edd'),
+	$download_labels =  apply_filters('edd_download_labels', array(
+		'name' => '%2$s',
+		'singular_name' => '%1$s',
 		'add_new' => __('Add New', 'edd'),
-		'add_new_item' => __('Add New Download', 'edd'),
-		'edit_item' => __('Edit Download', 'edd'),
-		'new_item' => __('New Download', 'edd'),
-		'all_items' => __('All Downloads', 'edd'),
-		'view_item' => __('View Download', 'edd'),
-		'search_items' => __('Search Downloads', 'edd'),
-		'not_found' =>  __('No Downloads found', 'edd'),
-		'not_found_in_trash' => __('No Downloads found in Trash', 'edd'), 
+		'add_new_item' => __('Add New %1$s', 'edd'),
+		'edit_item' => __('Edit %1$s', 'edd'),
+		'new_item' => __('New %1$s', 'edd'),
+		'all_items' => __('All %2$s', 'edd'),
+		'view_item' => __('View %1$s', 'edd'),
+		'search_items' => __('Search %2$s', 'edd'),
+		'not_found' =>  __('No %2$s found', 'edd'),
+		'not_found_in_trash' => __('No %2$s found in Trash', 'edd'), 
 		'parent_item_colon' => '',
-		'menu_name' => __('Downloads', 'edd')
-	);
+		'menu_name' => __('%2$s', 'edd')
+	) );
+	
+	foreach ($download_labels as $key => $value) {
+	   $download_labels[$key] = sprintf( $value, edd_get_label_singular(), edd_get_label_plural() );
+	}
 	
 	$download_args = array(
-		'labels' => apply_filters('edd_download_labels', $download_labels),
+		'labels' => $download_labels,
 		'public' => true,
 		'publicly_queryable' => true,
 		'show_ui' => true, 
@@ -73,6 +77,9 @@ function edd_setup_download_post_type() {
 		'supports' => apply_filters('edd_download_supports', array( 'title', 'editor', 'thumbnail' ) ),
 	); 
 	register_post_type('download', $download_args);
+	
+	
+	/* payment post type */	
 	
 	$payment_labels = array(
 		'name' => _x('Payments', 'post type general name', 'edd'),
@@ -107,7 +114,52 @@ function edd_setup_download_post_type() {
 	register_post_type('edd_payment', $payment_args);
 	
 }
-add_action('init', 'edd_setup_download_post_type', 100);
+add_action('init', 'edd_setup_edd_post_types', 100);
+
+
+/**
+ * Get Default Label
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @return      array
+*/
+
+function edd_get_default_labels() {
+	$defaults = array(
+	   'singular' => __('Download','edd'),
+	   'plural' => __('Downloads','edd')
+	);
+	return apply_filters( 'edd_default_downloads_name', $defaults );
+}
+
+
+/**
+ * Get Label Singular
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @return      string
+*/
+
+function edd_get_label_singular($lowercase = false) {
+	$defaults = edd_get_default_labels();
+	return ($lowercase) ? strtolower($defaults['singular']) : $defaults['singular'];
+}
+
+
+/**
+ * Get Label Plural
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @return      string
+*/
+
+function edd_get_label_plural($lowercase = false) {
+	$defaults = edd_get_default_labels();
+	return ($lowercase) ? strtolower($defaults['plural']) : $defaults['plural'];
+}
 
 
 /**
