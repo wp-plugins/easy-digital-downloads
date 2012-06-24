@@ -22,7 +22,7 @@ function edd_email_templage_tags($message, $payment_data) {
 	
 	$user_info = maybe_unserialize($payment_data['user_info']);
 	
-	if(isset($user_info['id'])) {
+	if(isset($user_info['id']) && $user_info['id'] > 0) {
 		$user_data = get_userdata($user_info['id']);
 		$name = $user_data->display_name;
 	} elseif(isset($user_info['first_name'])) {
@@ -160,7 +160,14 @@ function edd_get_email_body_content( $payment_id, $payment_data ) {
 	
 	global $edd_options;	
 	
-	$email_body = edd_email_templage_tags($edd_options['purchase_receipt'], $payment_data);
+	$default_email_body = __("Dear", "edd") . " {name},\n\n";
+	$default_email_body .= __("Thank you for your purchase. Please click on the link(s) below to download your files.", "edd") . "\n\n";
+	$default_email_body .= "{download_list}\n\n";
+	$default_email_body .= "{sitename}";
+	
+	$email = isset($edd_options['purchase_receipt']) ? $edd_options['purchase_receipt'] : $default_email_body;
+	
+	$email_body = edd_email_templage_tags($email, $payment_data);
 	return apply_filters('edd_purchase_receipt', $email_body, $payment_id, $payment_data);
 }
 
@@ -194,9 +201,7 @@ function edd_get_email_body_footer() {
 */
 
 function edd_apply_email_template( $body, $payment_id, $payment_data ) {
-	
-	return $body; // this is so that the plain email is returned. Remove this once the template system is ready	
-	
+		
 	global $edd_options;	
 	
 	$template_name = isset( $edd_options['email_template'] ) ? $edd_options['email_template'] : 'default';
@@ -207,7 +212,9 @@ function edd_apply_email_template( $body, $payment_id, $payment_data ) {
 		
 		return $body; // return the plain email with no template	
 	}
+	
 	ob_start();
+		
 		do_action('edd_email_template_' . $template_name);
 	
 	$template = ob_get_clean();	
@@ -217,6 +224,9 @@ function edd_apply_email_template( $body, $payment_id, $payment_data ) {
 	
 	$email = str_replace('{email}', $body, $template );
 	
+	$first_p = strpos($email, '<p>');
+	$email = substr_replace($email, '<p style="margin-top:0;">', $first_p, 3);
+		
 	return $email;	
 	
 }
@@ -233,11 +243,12 @@ add_filter('edd_purchase_receipt', 'edd_apply_email_template', 10, 3);
 
 function edd_default_email_template() {	
 	
-	echo '<div style="width: 600px; border: 1px solid #ccc; background: #f0f0f0; padding: 8px 10px; margin: 0 auto;">';
+	echo '<div style="width: 550px; border: 1px solid #ccc; background: #f0f0f0; padding: 8px 10px; margin: 0 auto;">';
 		echo '<div id="edd-email-content" style="background: #fff; border: 1px solid #ccc; padding: 10px;">';
 			echo '{email}'; // this tag is required in order for the contents of the email to be shown
 		echo '</div>';	
 	echo '</div>';
+	
 }
 add_action('edd_email_template_default', 'edd_default_email_template');
 

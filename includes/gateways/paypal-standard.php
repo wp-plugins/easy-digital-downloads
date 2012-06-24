@@ -96,13 +96,13 @@ function edd_process_paypal_purchase( $purchase_data ) {
             'cmd'           => '_xclick', 
             'amount'        => $purchase_data['price'], 
             'business'      => $edd_options['paypal_email'], 
-            'item_name'     => $cart_summary, 
+            'item_name'     => stripslashes_deep( html_entity_decode( $cart_summary, ENT_COMPAT, 'UTF-8' ) ), 
             'email'         => $purchase_data['user_email'], 
             'no_shipping'   => '1', 
             'no_note'       => '1', 
             'currency_code' => $edd_options['currency'], 
             'item_number'   => $purchase_data['purchase_key'], 
-            'charset'       => 'UTF-8', 
+            'charset'       => get_bloginfo( 'charset' ), 
             'custom'        => $payment, 
             'rm'            => '2', 
             'return'        => $return_url, 
@@ -147,6 +147,7 @@ function edd_listen_for_paypal_ipn() {
         
     // alternate purchase verification  
     } else { 
+	
         if ( isset( $_GET['tx'] ) && isset( $_GET['st'] ) && isset( $_GET['amt'] ) && isset( $_GET['cc'] ) && isset( $_GET['cm'] ) && isset( $_GET['item_number'] ) ) {
             // we are using the alternate method of verifying PayPal purchases
             
@@ -202,16 +203,22 @@ function edd_process_paypal_ipn() {
     $post_data = false;
     
     // fallback just in case post_max_size is lower than needed
-    if ( ini_get( 'allow_url_fopen' ) )
-    $post_data = file_get_contents( 'php://input' );
-    
+    if ( ini_get( 'allow_url_fopen' ) ) {
+	 	$post_data = file_get_contents( 'php://input' );
+	 } else {
+	 	// if allow_url_fopen is not enabled, then make sure that post_max_size is large enough
+	 	ini_set('post_max_size', '12M');
+	 }
     // start the encoded data collection with notification command
     $encoded_data = 'cmd=_notify-validate';
+    
+    // get current arg separator
+    $arg_separator = edd_get_php_arg_separator_output();
     
     // verify there is a post_data
     if ( $post_data || strlen( $post_data ) > 0 ) {
         // append the data
-        $encoded_data .= '&'.$post_data;
+        $encoded_data .= $arg_separator.$post_data;
     } else {
         // check if POST is empty
         if ( empty( $_POST ) ) {
@@ -221,7 +228,7 @@ function edd_process_paypal_ipn() {
             // loop trough each POST
             foreach ( $_POST as $key => $value ) {
                 // encode the value and append the data
-                $encoded_data .= "&$key=" . urlencode( $value );
+                $encoded_data .= $arg_separator."$key=" . urlencode( $value );
             }
         }
     }
@@ -286,7 +293,7 @@ function edd_process_paypal_ipn() {
     if ( isset( $post_data_array['txn_type'] ) && $post_data_array['txn_type'] == 'web_accept' ) {
         
         $status = strtolower( $payment_status );
-        
+                
         if ( $status == 'completed' || edd_is_test_mode() ) {
             edd_update_payment_status( $payment_id, 'publish' );
         }

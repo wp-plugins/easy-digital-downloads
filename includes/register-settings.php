@@ -30,6 +30,7 @@ function edd_register_settings() {
 		  	$pages_options[$page->ID] = $page->post_title;
 		}
 	}
+	array_unshift($pages_options, ''); // blank option
 	
 	/* white list our settings, each in their respective section
 	   filters can be used to add more options to each section */
@@ -143,6 +144,19 @@ function edd_register_settings() {
 		'emails' => apply_filters('edd_settings_emails', 
 			array(
 				array(
+					'id' => 'email_template',
+					'name' => __('Email Template', 'edd'),
+					'desc' => __('Choose a template. Click "Save Changes" then "Preview Purchase Receipt" to see the new template.', 'edd'),
+					'type' => 'select',
+					'options' => edd_get_email_templates()
+				),
+				array(
+					'id' => 'email_settings',
+					'name' => '',
+					'desc' => '',
+					'type' => 'hook',
+				),
+				array(
 					'id' => 'from_name',
 					'name' => __('From Name', 'edd'),
 					'desc' => __('The name purchase receipts are said to come from. This should probably be your site or shop name.', 'edd'),
@@ -170,20 +184,7 @@ function edd_register_settings() {
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
-				),
-				/*array(
-					'id' => 'email_template',
-					'name' => __('Email Template', 'edd'),
-					'desc' => __('Choose a template. Click "Save Changes" then "Preview Purchase Receipt" to see the new template.', 'edd'),
-					'type' => 'select',
-					'options' => edd_get_email_templates()
-				),
-				array(
-					'id' => 'email_settings',
-					'name' => '',
-					'desc' => '',
-					'type' => 'hook',
-				)*/
+				)
 			)
 		),
 		'styles' => apply_filters('edd_settings_styles', 
@@ -206,9 +207,9 @@ function edd_register_settings() {
 		'misc' => apply_filters('edd_settings_misc', 
 			array(
 				array(
-					'id' => 'ajax_cart',
-					'name' => __('Enable Ajax', 'edd'),
-					'desc' => __('Check this to enable AJAX for the shopping cart.', 'edd'),
+					'id' => 'disable_ajax_cart',
+					'name' => __('Disable Ajax', 'edd'),
+					'desc' => __('Check this to disable AJAX for the shopping cart.', 'edd'),
 					'type' => 'checkbox'
 				),
 				array(

@@ -114,17 +114,31 @@ function edd_get_download_sales_stats($download_id) {
  * Get Download Sales Log
  *
  * Returns an array of sales and sale info for a download.
+ * 
+ * @param		 $download_id INT the ID number of the download to retrieve a log for
+ * @param		 $paginate bool whether to paginate the results or not
+ * @param		 $number int the number of results to return
+ * @param		 $offset int the number of items to skip
  *
  * @access      public
  * @since       1.0 
  * @return      array
 */
 
-function edd_get_download_sales_log($download_id) {
+function edd_get_download_sales_log($download_id, $paginate = false, $number = 10, $offset = 0) {
+	
 	$sales_log = get_post_meta($download_id, '_edd_sales_log', true);
 	if($sales_log) {
-		return $sales_log;
+		$sales_log = array_reverse( $sales_log );
+		$log = array();
+		$log['number'] = count( $sales_log );		
+		$log['sales'] = $sales_log;
+		if( $paginate ) {
+			$log['sales'] = array_slice( $sales_log, $offset, $number );
+		}
+		return $log;
 	}
+	
 	return false;
 }
 
@@ -136,13 +150,26 @@ function edd_get_download_sales_log($download_id) {
  *
  * @access      public
  * @since       1.0 
+ * 
+ * @param		 $download_id INT the ID number of the download to retrieve a log for
+ * @param		 $paginate bool whether to paginate the results or not
+ * @param		 $number int the number of results to return
+ * @param		 $offset int the number of items to skip
+ *
  * @return      array
 */
 
-function edd_get_file_download_log($download_id) {
+function edd_get_file_download_log($download_id, $paginate = false, $number = 10, $offset = 0) {
 	$download_log = get_post_meta($download_id, '_edd_file_download_log', true);
 	if($download_log) {
-		return $download_log;
+		$download_log = array_reverse( $download_log );
+		$log = array();
+		$log['number'] = count($download_log);		
+		$log['downloads'] = $download_log;
+		if( $paginate ) {
+			$log['downloads'] = array_slice($download_log, $offset, $number);
+		}
+		return $log;
 	}
 	return false;
 }
@@ -159,7 +186,7 @@ function edd_get_file_download_log($download_id) {
 */
 
 function edd_record_sale_in_log($download_id, $payment_id, $user_info, $date) {
-	$log = edd_get_download_sales_log($download_id);
+	$log = get_post_meta($download_id, '_edd_sales_log', true);
 	if(!$log) {
 		$log = array();
 	}
@@ -185,7 +212,7 @@ function edd_record_sale_in_log($download_id, $payment_id, $user_info, $date) {
 */
 
 function edd_record_download_in_log($download_id, $file_id, $user_info, $ip, $date) {
-	$log = edd_get_file_download_log($download_id);
+	$log = get_post_meta($download_id, '_edd_file_download_log', true);
 	if(!$log) {
 		$log = array();
 	}
@@ -291,7 +318,9 @@ function edd_increase_purchase_count($download_id) {
 
 function edd_decrease_purchase_count($download_id) {
 	$sales = edd_get_download_sales_stats($download_id);
-	$sales = $sales - 1;
+	if($sales > 0) // only decrease if not already zero
+		$sales = $sales - 1;
+	
 	if(update_post_meta($download_id, '_edd_download_sales', $sales))
 		return $sales;
 
@@ -332,7 +361,9 @@ function edd_increase_earnings($download_id, $amount) {
 
 function edd_decrease_earnings($download_id, $amount) {
 	$earnings = edd_get_download_earnings_stats($download_id);
-	$earnings = $earnings - $amount;
+	
+	if($earnings > 0) // only decrease if greater than zero
+		$earnings = $earnings - $amount;
 	
 	if(update_post_meta($download_id, '_edd_download_earnings', $earnings))
 		return $earnings;
@@ -379,6 +410,26 @@ function edd_get_download_file_url($key, $email, $filekey, $download) {
 	
 	$download_url = add_query_arg($params, home_url());
 	return $download_url;	
+}
+
+
+/**
+ * Outputs the download file
+ *
+ * Delivers the requested file to the user's browser
+ *
+ * @access      public
+ * @since       1.0.8.3 
+ * @return      string
+*/
+
+function edd_read_file( $file ) {
+	// some hosts do not allow files to be read via URL, so this permits that to be over written
+	if( defined('EDD_READ_FILE_MODE') && EDD_READ_FILE_MODE == 'header' ) {
+		header("Location: " . $file);
+	} else {
+		readfile($file);	
+	}
 }
 
 

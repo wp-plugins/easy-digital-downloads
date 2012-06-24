@@ -25,12 +25,11 @@ function edd_get_payment_gateways() {
 	// default, built-in gateways
 	$gateways = array(
 		'paypal' => array('admin_label' => 'PayPal', 'checkout_label' => 'PayPal'),
-		'manual' => array('admin_label' => __('Manual Payment', 'edd'), 'checkout_label' => __('Manual Payment', 'edd')),
+		'manual' => array('admin_label' => __('Test Payment', 'edd'), 'checkout_label' => __('Test Payment', 'edd')),
 	);
 	
-	$gateways = apply_filters('edd_payment_gateways', $gateways);
-	
-	return $gateways;
+	return apply_filters('edd_payment_gateways', $gateways);
+
 }
 
 
@@ -77,6 +76,22 @@ function edd_is_gateway_active($gateway) {
 	return false;
 }
 
+
+/**
+ * Get gateway admin label
+ *
+ * Returns the admin label for the specified gateway.
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @param       string - The ID name of the gateway to retrieve a label for
+ * @return      string
+*/
+
+function edd_get_gateway_admin_label($gateway) {
+	$gateways = edd_get_enabled_payment_gateways();
+	return $gateways[$gateway]['admin_label'];
+}
 
 /**
  * Send to Gateway
