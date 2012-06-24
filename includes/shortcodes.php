@@ -314,7 +314,9 @@ function edd_downloads_query($atts, $content = null) {
 			'tags' => '',
 			'relation' => 'OR',
 			'number' => 10,
+			'price' => 'yes',
 			'excerpt' => 'yes',
+			'full_content' => 'no',
 			'excerpt_length' => 30,
 			'buy_button' => 'yes',
 			'style' => 'button',
@@ -323,7 +325,9 @@ function edd_downloads_query($atts, $content = null) {
 			'columns' => 3,
 			'fallback' => false,
 			'thumbsize' => 'thumbnail',
-			'thumbnails' => 'true'
+			'thumbnails' => 'true',
+			'link_title' => 'yes',
+			'title_wrap' => 'h3'
 		), $atts )
 	);
 
@@ -367,7 +371,8 @@ function edd_downloads_query($atts, $content = null) {
 			<?php foreach($downloads as $download) : ?>
 				<div class="edd_download" style="width: <?php echo $column_width; ?>; float: left;">
 					<div class="edd_download_inner">
-						 <?php if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail($download->ID) && $thumbnails != 'false'): ?>
+						 
+						<?php if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail($download->ID) && $thumbnails != 'false'): ?>
 							<div class="edd_download_image">
 								<?php echo get_the_post_thumbnail($download->ID, $thumbsize); ?>
 							</div>
@@ -375,13 +380,27 @@ function edd_downloads_query($atts, $content = null) {
 							<div class="edd_download_image">
 								<img src="<?php echo $fallback; ?>" alt="<?php the_title(); ?>"/>
 							</div>
-						<?php endif ?>
-							
-						<h3 class="edd_download_title"><?php echo get_the_title($download->ID); ?></h3>
-						<?php 
-						if($excerpt == 'yes') {
-							echo wpautop( wp_trim_words( $download->post_content, (int)$excerpt_length ) ); 
+						<?php endif;
+						
+						$title = get_the_title($download->ID);
+						if($link_title == 'yes')
+							$title = '<a href="' . get_permalink( $download->ID ) . '">' . $title . '</a>';
+						
+						$title_before = '<' . $title_wrap . ' class="edd_download_title">';
+						$title_after = '</' . $title_wrap . '>';
+						
+						echo sprintf( '%s%s%s', $title_before, $title, $title_after);
+						
+						if($excerpt == 'yes' && $full_content != 'yes') {
+							echo apply_filters('edd_downloads_excerpt', wp_trim_words( $download->post_content, (int)$excerpt_length ) ); 
+						} else if($full_content == 'yes') {
+							echo apply_filters('edd_downloads_content', $download->post_content);
+						} 
+						
+						if($price == 'yes' && !edd_has_variable_prices($download->ID)) {
+							echo '<div class="edd_price">' . edd_price($download->ID) . '</div>';
 						}
+						
 						if($buy_button == 'yes') {
 							echo edd_get_purchase_link($download->ID, $text, $style, $color); 
 						}	
