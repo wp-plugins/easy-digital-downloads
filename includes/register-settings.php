@@ -24,13 +24,12 @@ function edd_register_settings() {
 	
 	// setup some default option sets
 	$pages = get_pages();	
-	$pages_options = array();
+	$pages_options = array(0 => ''); // blank option
 	if($pages) {
 		foreach ( $pages as $page ) {
 		  	$pages_options[$page->ID] = $page->post_title;
 		}
 	}
-	array_unshift($pages_options, ''); // blank option
 	
 	/* white list our settings, each in their respective section
 	   filters can be used to add more options to each section */
@@ -182,6 +181,7 @@ function edd_register_settings() {
 						'{name} - ' . __('The buyer\'s name', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
+						'{payment_method} - ' . __('The method of payment used for this purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
 				)

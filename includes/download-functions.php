@@ -255,16 +255,21 @@ function edd_get_download_price($download_id) {
  * @access      public
  * @since       1.0
  * @param       int $download_id the ID of the download price to show
- * @return      void
+ * @param		bool whether to echo or return the results
+* @return       void
 */
 
-function edd_price($download_id) {
+function edd_price($download_id, $echo = true) {
 	if(edd_has_variable_prices($download_id)) {
 		$prices = get_post_meta($download_id, 'edd_variable_prices', true);
-		echo edd_currency_filter($prices[0]['amount']); // show the first price option
+		$price = edd_currency_filter($prices[0]['amount']); // show the first price option
 	} else {
-		echo edd_currency_filter(edd_get_download_price($download_id));
+		$price = edd_currency_filter(edd_get_download_price($download_id));
 	}
+	if( $echo )
+		echo $price;
+	else
+		return $price;
 }
 
 
@@ -419,11 +424,22 @@ function edd_get_download_file_url($key, $email, $filekey, $download) {
  * Delivers the requested file to the user's browser
  *
  * @access      public
- * @since       1.0.8.3 
+ * @since       1.0.8.3
+ * @param		$file string the URL to the file 
  * @return      string
 */
 
 function edd_read_file( $file ) {
+	
+	if( strpos($file, home_url()) !== false) {
+		// this is a local file, convert the URL to a path
+
+		$upload_dir = wp_upload_dir();
+		
+		$file = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $file);	
+	
+	}
+	
 	// some hosts do not allow files to be read via URL, so this permits that to be over written
 	if( defined('EDD_READ_FILE_MODE') && EDD_READ_FILE_MODE == 'header' ) {
 		header("Location: " . $file);
@@ -489,23 +505,51 @@ function edd_verify_download_link($download_id, $key, $email, $expire) {
  * @since       1.0 
  * @param       int $user_id - the ID of the user to check
  * @param       int $download_Id - the ID of the download to check for
+ * @param       int $variable_price_id - the variable price ID to check for
  * @return      boolean - true if has purchased, false otherwise
 */
 
-function edd_has_user_purchased($user_id, $download_id) {
+function edd_has_user_purchased($user_id, $download_id, $variable_price_id = null) {
 	$users_purchases = edd_get_users_purchases($user_id);
+
+	$return = false;
+
 	if($users_purchases) {
 		foreach($users_purchases as $purchase) {
+
 			$purchase_meta = get_post_meta($purchase->ID, '_edd_payment_meta', true);
 			$purchased_files = maybe_unserialize($purchase_meta['downloads']);
+
 			if(is_array($purchased_files)) {
-				if(array_search($download_id, $purchased_files) !== false) {
-				    // user has purchased the download
-					return true;
+
+				foreach($purchased_files as $download) {
+
+					if($download['id'] == $download_id) {
+
+						if( !is_null( $variable_price_id ) && $variable_price_id !== false ) {
+
+							if( $variable_price_id == $download['options']['price_id'] ) {
+								
+								return true;
+							
+							} else {
+							
+								$return = false;
+							
+							}
+
+						} else {
+							
+							$return = true;
+						
+						}
+
+					}
+
 				}
+
 			}
 		}
 	}
-	// user has not purchased the download
-	return false;
+	return $return;
 }
