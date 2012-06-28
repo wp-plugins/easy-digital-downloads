@@ -114,17 +114,31 @@ function edd_get_download_sales_stats($download_id) {
  * Get Download Sales Log
  *
  * Returns an array of sales and sale info for a download.
+ * 
+ * @param		 $download_id INT the ID number of the download to retrieve a log for
+ * @param		 $paginate bool whether to paginate the results or not
+ * @param		 $number int the number of results to return
+ * @param		 $offset int the number of items to skip
  *
  * @access      public
  * @since       1.0 
  * @return      array
 */
 
-function edd_get_download_sales_log($download_id) {
+function edd_get_download_sales_log($download_id, $paginate = false, $number = 10, $offset = 0) {
+	
 	$sales_log = get_post_meta($download_id, '_edd_sales_log', true);
 	if($sales_log) {
-		return $sales_log;
+		$sales_log = array_reverse( $sales_log );
+		$log = array();
+		$log['number'] = count( $sales_log );		
+		$log['sales'] = $sales_log;
+		if( $paginate ) {
+			$log['sales'] = array_slice( $sales_log, $offset, $number );
+		}
+		return $log;
 	}
+	
 	return false;
 }
 
@@ -136,13 +150,26 @@ function edd_get_download_sales_log($download_id) {
  *
  * @access      public
  * @since       1.0 
+ * 
+ * @param		 $download_id INT the ID number of the download to retrieve a log for
+ * @param		 $paginate bool whether to paginate the results or not
+ * @param		 $number int the number of results to return
+ * @param		 $offset int the number of items to skip
+ *
  * @return      array
 */
 
-function edd_get_file_download_log($download_id) {
+function edd_get_file_download_log($download_id, $paginate = false, $number = 10, $offset = 0) {
 	$download_log = get_post_meta($download_id, '_edd_file_download_log', true);
 	if($download_log) {
-		return $download_log;
+		$download_log = array_reverse( $download_log );
+		$log = array();
+		$log['number'] = count($download_log);		
+		$log['downloads'] = $download_log;
+		if( $paginate ) {
+			$log['downloads'] = array_slice($download_log, $offset, $number);
+		}
+		return $log;
 	}
 	return false;
 }
@@ -159,7 +186,7 @@ function edd_get_file_download_log($download_id) {
 */
 
 function edd_record_sale_in_log($download_id, $payment_id, $user_info, $date) {
-	$log = edd_get_download_sales_log($download_id);
+	$log = get_post_meta($download_id, '_edd_sales_log', true);
 	if(!$log) {
 		$log = array();
 	}
@@ -185,7 +212,7 @@ function edd_record_sale_in_log($download_id, $payment_id, $user_info, $date) {
 */
 
 function edd_record_download_in_log($download_id, $file_id, $user_info, $ip, $date) {
-	$log = edd_get_file_download_log($download_id);
+	$log = get_post_meta($download_id, '_edd_file_download_log', true);
 	if(!$log) {
 		$log = array();
 	}
@@ -228,16 +255,21 @@ function edd_get_download_price($download_id) {
  * @access      public
  * @since       1.0
  * @param       int $download_id the ID of the download price to show
- * @return      void
+ * @param		bool whether to echo or return the results
+* @return       void
 */
 
-function edd_price($download_id) {
+function edd_price($download_id, $echo = true) {
 	if(edd_has_variable_prices($download_id)) {
 		$prices = get_post_meta($download_id, 'edd_variable_prices', true);
-		echo edd_currency_filter($prices[0]['amount']); // show the first price option
+		$price = edd_currency_filter($prices[0]['amount']); // show the first price option
 	} else {
-		echo edd_currency_filter(edd_get_download_price($download_id));
+		$price = edd_currency_filter(edd_get_download_price($download_id));
 	}
+	if( $echo )
+		echo $price;
+	else
+		return $price;
 }
 
 
@@ -291,7 +323,9 @@ function edd_increase_purchase_count($download_id) {
 
 function edd_decrease_purchase_count($download_id) {
 	$sales = edd_get_download_sales_stats($download_id);
-	$sales = $sales - 1;
+	if($sales > 0) // only decrease if not already zero
+		$sales = $sales - 1;
+	
 	if(update_post_meta($download_id, '_edd_download_sales', $sales))
 		return $sales;
 
@@ -332,7 +366,9 @@ function edd_increase_earnings($download_id, $amount) {
 
 function edd_decrease_earnings($download_id, $amount) {
 	$earnings = edd_get_download_earnings_stats($download_id);
-	$earnings = $earnings - $amount;
+	
+	if($earnings > 0) // only decrease if greater than zero
+		$earnings = $earnings - $amount;
 	
 	if(update_post_meta($download_id, '_edd_download_earnings', $earnings))
 		return $earnings;
@@ -379,6 +415,37 @@ function edd_get_download_file_url($key, $email, $filekey, $download) {
 	
 	$download_url = add_query_arg($params, home_url());
 	return $download_url;	
+}
+
+
+/**
+ * Outputs the download file
+ *
+ * Delivers the requested file to the user's browser
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @param		$file string the URL to the file 
+ * @return      string
+*/
+
+function edd_read_file( $file ) {
+	
+	if( strpos($file, home_url()) !== false) {
+		// this is a local file, convert the URL to a path
+
+		$upload_dir = wp_upload_dir();
+		
+		$file = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $file);	
+	
+	}
+	
+	// some hosts do not allow files to be read via URL, so this permits that to be over written
+	if( defined('EDD_READ_FILE_MODE') && EDD_READ_FILE_MODE == 'header' ) {
+		header("Location: " . $file);
+	} else {
+		readfile($file);	
+	}
 }
 
 
@@ -438,23 +505,51 @@ function edd_verify_download_link($download_id, $key, $email, $expire) {
  * @since       1.0 
  * @param       int $user_id - the ID of the user to check
  * @param       int $download_Id - the ID of the download to check for
+ * @param       int $variable_price_id - the variable price ID to check for
  * @return      boolean - true if has purchased, false otherwise
 */
 
-function edd_has_user_purchased($user_id, $download_id) {
+function edd_has_user_purchased($user_id, $download_id, $variable_price_id = null) {
 	$users_purchases = edd_get_users_purchases($user_id);
+
+	$return = false;
+
 	if($users_purchases) {
 		foreach($users_purchases as $purchase) {
+
 			$purchase_meta = get_post_meta($purchase->ID, '_edd_payment_meta', true);
 			$purchased_files = maybe_unserialize($purchase_meta['downloads']);
+
 			if(is_array($purchased_files)) {
-				if(array_search($download_id, $purchased_files) !== false) {
-				    // user has purchased the download
-					return true;
+
+				foreach($purchased_files as $download) {
+
+					if($download['id'] == $download_id) {
+
+						if( !is_null( $variable_price_id ) && $variable_price_id !== false ) {
+
+							if( $variable_price_id == $download['options']['price_id'] ) {
+								
+								return true;
+							
+							} else {
+							
+								$return = false;
+							
+							}
+
+						} else {
+							
+							$return = true;
+						
+						}
+
+					}
+
 				}
+
 			}
 		}
 	}
-	// user has not purchased the download
-	return false;
+	return $return;
 }

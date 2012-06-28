@@ -5,8 +5,8 @@ Contributors: mordauk, sksmatt
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.2
-Tested up to: 3.4
-Stable Tag: 1.0.8.2
+Tested up to: 3.4.1
+Stable Tag: 1.0.8.5
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -55,6 +55,7 @@ Easy Digital Downloads as been translated into the following languages:
 5. Italian
 6. Dutch
 7. European Portuguese
+8. Turkish
 
 Would you like to help translate the plugin into more langauges? [Contact Pippin](http://easydigitaldownloads.com/contact-developer/).
 
@@ -124,6 +125,58 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.0.8.5 =
+
+* Added {payment_method} to the list of email template tags for showing the method of payment used for a purchase
+* Removed the menu_position attribute from the "download" post type to help prevent menu conflicts
+* Fixed a bug with the page options in settings
+* Updated the edd_read_file() function to convert local URLs to absolute file paths
+* Fixed a bug with the [downloads] short code
+* Enhanced the function for checking if a user has purchased a download to add support for checking for specific price options
+* Fixed a bug with the function that checks if a user has purchased a specific download
+* Fixed a potential bug with the "settings updated" notice that could have caused duplicate messages to be shown
+
+= 1.0.8.4 =
+
+* Fixed a bug with download sale/earning stats going negative when reversing purchases
+* Removed some blank form action attributes that caused the HTML to invalidate
+* Added "Settings Updated" notification when saving plugin settings
+* Made some improvements to the default purchase receipt email template 
+* Renamed the "Manual Payment" gateway to "Test"
+* Added options for linking the download titles in the [downloads] short code
+* Removed the "You have already purchased this" message from the purchase link short code / template
+* Added a "price" parameter to the [downloads] short code
+* Improved the CSS on the variable price option forms
+* Add a parameter to the [downloads] short code for showing the complete content
+* Fixed a bug with free downloads
+* Moved the function that triggers the purchase receipt to its own function/hook so that it can be modified more easily
+* Added a few new action hooks
+* Updated Spanish language files
+
+= 1.0.8.3 =
+
+* Added a default purchase receipt email that is used if no custom email has been defined
+* Fixed a bug with the discount codes and their usage counts not getting recorded correctly
+* Fixed a bug with the install script
+* Fixed a problem with apostrophe encoding in the purchase summary sent to PayPal
+* Added pagination to the download/sale log on download Edit screens
+* Added new "edd_default_downloads_name" filter for changing the default singular and plural "download" labels used globally throughout the plugin
+* Adding new span.edd-cart-item-separator to the cart widget and short code
+* Added more support for the [downloads] short code, used to display a list or grid of digital products
+* Moved load_plugin_textdomain to an "init" hook in order to work better with translation plugins
+* Fixed a couple of undefined index errors
+* Added option to send purchase receipt when manually marked a payment as complete
+* Added new "edd_success_page_redirect" filter to the function that redirects a buyer to the success page
+* Changed the default charset in the PayPal standard gateway to that of the website
+* Added "Payment Method" to the "View Order Details" popup
+* Made ajax enabled by default
+* Reorganized the edd_complete_purchase() function to be more extensible
+* Added new constant EDD_READ_FILE_MODE for defining how download files are delivered
+* Added auto creation for .htaccess files in the uploads directory for EDD to help protect unauthorized file downloads
+* Added Turkish language files
+* Added detection for php.ini variables important to PayPal payment verification
+* Added a new short code for showing a list of active discounts: [download_discounts]
 
 = 1.0.8.2 =
 
@@ -302,6 +355,58 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * First offical release!
 
 == Upgrade Notice ==
+
+= 1.0.8.5 =
+
+* Added {payment_method} to the list of email template tags for showing the method of payment used for a purchase
+* Removed the menu_position attribute from the "download" post type to help prevent menu conflicts
+* Fixed a bug with the page options in settings
+* Updated the edd_read_file() function to convert local URLs to absolute file paths
+* Fixed a bug with the [downloads] short code
+* Enhanced the function for checking if a user has purchased a download to add support for checking for specific price options
+* Fixed a bug with the function that checks if a user has purchased a specific download
+* Fixed a potential bug with the "settings updated" notice that could have caused duplicate messages to be shown
+
+= 1.0.8.4 =
+
+* Fixed a bug with download sale/earning stats going negative when reversing purchases
+* Removed some blank form action attributes that caused the HTML to invalidate
+* Added "Settings Updated" notification when saving plugin settings
+* Made some improvements to the default purchase receipt email template 
+* Renamed the "Manual Payment" gateway to "Test"
+* Added options for linking the download titles in the [downloads] short code
+* Removed the "You have already purchased this" message from the purchase link short code / template
+* Added a "price" parameter to the [downloads] short code
+* Improved the CSS on the variable price option forms
+* Add a parameter to the [downloads] short code for showing the complete content
+* Fixed a bug with free downloads
+* Moved the function that triggers the purchase receipt to its own function/hook so that it can be modified more easily
+* Added a few new action hooks
+* Updated Spanish language files
+
+= 1.0.8.3 =
+
+* Added a default purchase receipt email that is used if no custom email has been defined
+* Fixed a bug with the discount codes and their usage counts not getting recorded correctly
+* Fixed a bug with the install script
+* Fixed a problem with apostrophe encoding in the purchase summary sent to PayPal
+* Added pagination to the download/sale log on download Edit screens
+* Added new "edd_default_downloads_name" filter for changing the default singular and plural "download" labels used globally throughout the plugin
+* Adding new span.edd-cart-item-separator to the cart widget and short code
+* Added more support for the [downloads] short code, used to display a list or grid of digital products
+* Moved load_plugin_textdomain to an "init" hook in order to work better with translation plugins
+* Fixed a couple of undefined index errors
+* Added option to send purchase receipt when manually marked a payment as complete
+* Added new "edd_success_page_redirect" filter to the function that redirects a buyer to the success page
+* Changed the default charset in the PayPal standard gateway to that of the website
+* Added "Payment Method" to the "View Order Details" popup
+* Made ajax enabled by default
+* Reorganized the edd_complete_purchase() function to be more extensible
+* Added new constant EDD_READ_FILE_MODE for defining how download files are delivered
+* Added auto creation for .htaccess files in the uploads directory for EDD to help protect unauthorized file downloads
+* Added Turkish language files
+* Added detection for php.ini variables important to PayPal payment verification
+* Added a new short code for showing a list of active discounts: [download_discounts]
 
 = 1.0.8.2 =
 
