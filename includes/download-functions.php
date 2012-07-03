@@ -75,6 +75,25 @@ function edd_get_download_final_price($download_id, $user_purchase_info, $amount
 
 
 /**
+ * Get Download Price Name
+ *
+ * retrieves the name of a variable price option
+ *
+ * @access      public
+ * @since       1.0.9
+ * @param       int $download_id - the ID of the download
+ * @param		int $price_id - the ID of the price option
+ * @return      string - the name of the price option
+*/
+
+function edd_get_price_option_name($download_id, $price_id) {
+	$prices = get_post_meta($download_id, 'edd_variable_prices', true);
+	$price_name = $prices[$price_id]['name'];
+	return $price_name;
+}
+
+
+/**
  * Get Download Earnings Stats
  *
  * Returns the total earnings for a download.
@@ -394,6 +413,26 @@ function edd_get_download_files($download_id) {
 
 
 /**
+ * Gets the Price ID that can download a file
+ *
+ * @access      public
+ * @since       1.0.9 
+ * @return      string - the price ID if restricted, "all" otherwise
+*/
+
+function edd_get_file_price_condition( $download_id, $file_key ) {
+	$files = edd_get_download_files( $download_id );
+	if( ! $files )
+		return false;
+		
+	$condition = isset($files[$file_key]['condition']) ? $files[$file_key]['condition'] : 'all';
+	
+	return $condition;
+	
+}
+
+
+/**
  * Get Download File Url
  *
  * Constructs the file download url for a specific file.
@@ -405,13 +444,19 @@ function edd_get_download_files($download_id) {
 
 function edd_get_download_file_url($key, $email, $filekey, $download) {
 	
+	global $edd_options;
+
+	$hours = isset($edd_options['download_link_expiration']) && is_numeric($edd_options['download_link_expiration']) ? absint($edd_options['download_link_expiration']) : 24;
+
 	$params = array(
 		'download_key' => $key,
 		'email' => urlencode($email),
 		'file' => $filekey,
 		'download' => $download, 
-		'expire' => urlencode(base64_encode(strtotime('+1 day', time())))
-	);	
+		'expire' => urlencode(base64_encode(strtotime('+' . $hours . 'hours', time())))
+	);
+
+	$params = apply_filters('edd_download_file_url_args', $params);
 	
 	$download_url = add_query_arg($params, home_url());
 	return $download_url;	
@@ -431,6 +476,11 @@ function edd_get_download_file_url($key, $email, $filekey, $download) {
 
 function edd_read_file( $file ) {
 	
+	// some hosts do not allow files to be read via URL, so this permits that to be over written
+	if( defined('EDD_READ_FILE_MODE') && EDD_READ_FILE_MODE == 'header' )
+		header("Location: " . $file);
+
+
 	if( strpos($file, home_url()) !== false) {
 		// this is a local file, convert the URL to a path
 
@@ -440,12 +490,7 @@ function edd_read_file( $file ) {
 	
 	}
 	
-	// some hosts do not allow files to be read via URL, so this permits that to be over written
-	if( defined('EDD_READ_FILE_MODE') && EDD_READ_FILE_MODE == 'header' ) {
-		header("Location: " . $file);
-	} else {
-		readfile($file);	
-	}
+	readfile($file);	
 }
 
 
@@ -459,7 +504,7 @@ function edd_read_file( $file ) {
  * @return      boolean
 */
 
-function edd_verify_download_link($download_id, $key, $email, $expire) {
+function edd_verify_download_link($download_id, $key, $email, $expire, $file_key) {
 
 	$meta_query = array(
 		'relation' => 'AND',
@@ -478,9 +523,25 @@ function edd_verify_download_link($download_id, $key, $email, $expire) {
 		foreach($payments as $payment) {
 			$payment_meta = get_post_meta($payment->ID, '_edd_payment_meta', true);
 			$downloads = maybe_unserialize($payment_meta['downloads']);
+			$cart_details = unserialize( $payment_meta['cart_details'] );
 			if($downloads) {
-				foreach($downloads as $download) {
+				foreach($downloads as $key => $download) {
+					
 					$id = isset($payment_meta['cart_details']) ? $download['id'] : $download;
+					
+					$price_options = $cart_details[$key]['item_number']['options'];
+
+					$file_condition = edd_get_file_price_condition( $id, $file_key );
+					
+					$variable_prices_enabled = get_post_meta($id, '_variable_pricing', true);
+							
+					// if this download has variable prices, we have to confirm that this file was included in their purchase
+					if( !empty( $price_options ) && $file_condition != 'all' && $variable_prices_enabled) {
+						
+						if( $file_condition !== $price_options['price_id'] )
+							return false;
+					}
+					
 					if($id == $download_id) {
 						if(time() < $expire) {
 							return true; // payment has been verified and link is still valid
@@ -493,63 +554,4 @@ function edd_verify_download_link($download_id, $key, $email, $expire) {
 	}
 	// payment not verified
 	return false;
-}
-
-
-/**
- * Has User Purchased
- *
- * Checks to see if a user has purchased a download.
- *
- * @access      public
- * @since       1.0 
- * @param       int $user_id - the ID of the user to check
- * @param       int $download_Id - the ID of the download to check for
- * @param       int $variable_price_id - the variable price ID to check for
- * @return      boolean - true if has purchased, false otherwise
-*/
-
-function edd_has_user_purchased($user_id, $download_id, $variable_price_id = null) {
-	$users_purchases = edd_get_users_purchases($user_id);
-
-	$return = false;
-
-	if($users_purchases) {
-		foreach($users_purchases as $purchase) {
-
-			$purchase_meta = get_post_meta($purchase->ID, '_edd_payment_meta', true);
-			$purchased_files = maybe_unserialize($purchase_meta['downloads']);
-
-			if(is_array($purchased_files)) {
-
-				foreach($purchased_files as $download) {
-
-					if($download['id'] == $download_id) {
-
-						if( !is_null( $variable_price_id ) && $variable_price_id !== false ) {
-
-							if( $variable_price_id == $download['options']['price_id'] ) {
-								
-								return true;
-							
-							} else {
-							
-								$return = false;
-							
-							}
-
-						} else {
-							
-							$return = true;
-						
-						}
-
-					}
-
-				}
-
-			}
-		}
-	}
-	return $return;
 }

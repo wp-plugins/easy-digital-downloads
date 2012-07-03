@@ -6,7 +6,7 @@ Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
 Contributors: mordauk, sksmatt
-Version: 1.0.8.5
+Version: 1.0.9
 
 Easy Digital Downloads is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -101,6 +101,7 @@ include_once(EDD_PLUGIN_DIR . 'includes/email-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/email-template.php');
 include_once(EDD_PLUGIN_DIR . 'includes/email-actions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/error-tracking.php');
+include_once(EDD_PLUGIN_DIR . 'includes/user-functions.php');
 if(is_admin()) {
 	include_once(EDD_PLUGIN_DIR . 'includes/admin-actions.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/metabox.php');

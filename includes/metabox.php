@@ -141,21 +141,40 @@ add_action('edd_meta_box_fields', 'edd_render_price_field', 10);
 */
 
 function edd_render_files_field($post_id) {
+	
 	// downloadable files
+	
 	$files = get_post_meta($post_id, 'edd_download_files', true);
+	$variable_pricing = get_post_meta($post_id, '_variable_pricing', true);
+	$prices = get_post_meta($post_id, 'edd_variable_prices', true);
+	$variable_display = $variable_pricing ? '' : ' style="display:none;"';
+	
 	echo '<tr id="edd_download_files" class="edd_table_row">';
 		echo '<th style="width:20%"><label for="edd_download_files">' . __('Download Files', 'edd') . '</label></th>';
 		echo '<td>';
-			$field_html = '<input type="hidden" id="edd_download_files" class="edd_repeatable_upload_name_field" value=""/>';
-			$field_html .= '<input type="hidden" class="edd_repeatable_upload_file_field" value=""/>';
+			$field_html = '<div class="edd_file_help_labels">';
+				$field_html	.= '<div class="edd_files_name_label">' . __('File Name', 'edd') . '</div>';
+				$field_html	.= '<div class="edd_files_src_label">' . __('File URL', 'edd') . '</div>';
+			$field_html .= '</div>';
+			$field_html .= '<input type="hidden" id="edd_download_files" class="edd_repeatable_upload_name_field" value=""/>';
+			
 			if(is_array($files)) {
 				$count = 1;
 				foreach($files as $key => $value) {
 					$field_html .= '<div class="edd_repeatable_upload_wrapper">';
 						$name = isset($files[$key]['name']) ? $files[$key]['name'] : '';
 						$file = isset($files[$key]['file']) ? $files[$key]['file'] : '';
+						$condition = isset($files[$key]['condition']) ? $files[$key]['condition'] : false;
 						$field_html .= '<input type="text" class="edd_repeatable_name_field" placeholder="' . __('file name', 'edd') . '" name="edd_download_files[' . $key . '][name]" id="edd_download_files[' . $key . '][name]" value="' . $name . '" size="20" style="width:20%" />';
-						$field_html .= '<input type="text" class="edd_repeatable_upload_field edd_upload_field" placeholder="' . __('file url', 'edd') . '" name="edd_download_files[' . $key . '][file]" id="edd_download_files[' . $key . '][file]" value="' . $file . '" size="30" style="width:50%" />';
+						$field_html .= '<input type="text" class="edd_repeatable_upload_field edd_upload_field" placeholder="' . __('file url', 'edd') . '" name="edd_download_files[' . $key . '][file]" id="edd_download_files[' . $key . '][file]" value="' . $file . '" size="30" style="width:30%" />';
+						$field_html .= '<select class="edd_repeatable_condition_field" name="edd_download_files[' . $key . '][condition]" id="edd_download_files[' . $key . '][condition]" ' . $variable_display . '>';
+							$field_html .= '<option value="all">' . __('All Prices', 'edd') . '</option>';
+							if($prices) {
+								foreach($prices as $price_key => $price) {
+									$field_html .= '<option value="' . $price_key . '" ' . selected($price_key, $condition, false) . '>' . $prices[$price_key]['name'] . '</option>';
+								}
+							}
+						$field_html .= '</select>';
 						$field_html .= '<button class="button-secondary edd_upload_image_button">' . __('Upload File', 'edd') . '</button>';
 					if($count > 1) {
 						$field_html .= '<a href="#" class="edd_remove_repeatable button-secondary">x</a><br/>';
@@ -293,7 +312,7 @@ function edd_render_meta_notes($post_id) {
 	// short code
 	echo '<tr>';
 		echo '<th style="width:20%"><label>' . __('Short Code', 'edd') . '</label></th>';
-		echo '<td><em>[purchase_link id="' . $post_id . '" text="' . __('Purchase', 'edd') . '" style="button" color="gray"]</em><br/>' . __('This short code can be placed anywhere on your site', 'edd') . '</td>';
+		echo '<td><em>[purchase_link id="' . $post_id . '" text="' . __('Purchase', 'edd') . '" style="button" color="' . get_post_meta( $post_id, '_edd_purchase_color', true ) . '"]</em><br/>' . __('This short code can be placed anywhere on your site', 'edd') . '</td>';
 	echo '</tr>';
 }
 add_action('edd_meta_box_fields', 'edd_render_meta_notes', 70);
