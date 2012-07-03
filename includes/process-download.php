@@ -29,7 +29,7 @@ function edd_process_download() {
 		$expire = urldecode(base64_decode($_GET['expire']));
 				
 
-		$payment = edd_verify_download_link($download, $key, $email, $expire);
+		$payment = edd_verify_download_link($download, $key, $email, $expire, $file_key);
 		
 		 // defaulting this to true for now because the method below doesn't work well
 		$has_access = true;
@@ -85,9 +85,9 @@ function edd_process_download() {
 			header("Robots: none");
 			header("Content-Type: " . $ctype . "");
 			header("Content-Description: File Transfer");	
-		   header("Content-Disposition: attachment; filename=\"" . basename($requested_file) . "\";");
+		    header("Content-Disposition: attachment; filename=\"" . basename($requested_file) . "\";");
 			header("Content-Transfer-Encoding: binary");
-			readfile($requested_file);
+			edd_read_file( $requested_file );			
 			exit;
 			
 		} else {

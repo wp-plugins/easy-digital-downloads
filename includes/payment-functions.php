@@ -101,7 +101,7 @@ function edd_insert_payment($payment_data = array()) {
 			'user_id' => $payment_data['user_info']['id']
 		);
 		
-		if ($_SERVER['HTTP_X_FORWARD_FOR']) {
+		if ( isset( $_SERVER['HTTP_X_FORWARD_FOR'] ) ) {
 			$ip = $_SERVER['HTTP_X_FORWARD_FOR'];
 		} else {
 			$ip = $_SERVER['REMOTE_ADDR'];
@@ -115,6 +115,9 @@ function edd_insert_payment($payment_data = array()) {
 		update_post_meta($payment, '_edd_payment_purchase_key', $payment_data['purchase_key']);
 		$mode = edd_is_test_mode() ? 'test' : 'live';
 		update_post_meta($payment, '_edd_payment_mode', $mode);
+		
+		$gateway = isset( $_POST['edd-gateway'] ) ? $_POST['edd-gateway'] : ''; 
+		update_post_meta($payment, '_edd_payment_gateway', $gateway);
 		
 		// clear the user's purchased cache
 		delete_transient('edd_user_' . $payment_data['user_info']['id'] . '_purchases');
@@ -138,53 +141,26 @@ function edd_insert_payment($payment_data = array()) {
  * @return      void
 */
 
-function edd_update_payment_status($payment_id, $status = 'publish') {
+function edd_update_payment_status($payment_id, $new_status = 'publish') {
 	
-	if($status == 'completed' || $status == 'complete') {
-		$status = 'publish';
+	if($new_status == 'completed' || $new_status == 'complete') {
+		$new_status = 'publish';
 	}
 	
 	$payment = get_post($payment_id);
-	if($payment->post_status == 'publish') {
-		// for some reason this is occasionally coming back as true even when the payment is not		
-		return;
-	}
-	$payment_data = get_post_meta($payment_id, '_edd_payment_meta', true);
-	$downloads = maybe_unserialize($payment_data['downloads']);
-	$user_info = maybe_unserialize($payment_data['user_info']);
-	$cart_details = maybe_unserialize($payment_data['cart_details']);
-	
-	wp_update_post(array('ID' => $payment_id, 'post_status' => $status));
-	
-	if(!edd_is_test_mode()) {
-		// increase purchase count and earnings
-		foreach($downloads as $download) {
-			
-			edd_record_sale_in_log($download['id'], $payment_id, $user_info, $payment_data['date']);
-			edd_increase_purchase_count($download['id']);
-			$amount = null;
-			if(is_array($cart_details)) {
-				$cart_item_id = array_search($download['id'], $cart_details);
-				$amount = isset($cart_details[$cart_item_id]['price']) ? $cart_details[$cart_item_id]['price'] : null;
-			}
-			$amount = edd_get_download_final_price($download['id'], $user_info, $amount);
-			edd_increase_earnings($download['id'], $amount);
-			
-		}
-	
-		if(isset($payment_data['user_info']['discount'])) {
-			edd_increase_discount_usage($payment_data['user_info']['discount']);
-		}
+	if($payment->post_status == 'publish') {		
+		//return;
 	}
 	
-	// send email with secure download link
-	edd_email_purchase_receipt($payment_id);
+	$old_status = $payment->post_status;	
 	
-	// empty the shopping cart
-	edd_empty_cart();
+	do_action('edd_before_payment_status_change', $payment_id, $new_status, $old_status);	
 	
-	do_action('edd_update_payment_status', $payment_id, $status);
+	wp_update_post(array('ID' => $payment_id, 'post_status' => $new_status));
+	
+	do_action('edd_update_payment_status', $payment_id, $new_status, $old_status);
 }
+
 
 
 /**
@@ -341,68 +317,6 @@ function edd_is_payment_complete($payment_id) {
 		if( $payment->post_status == 'publish' )
 			return true;
 	return false;
-}
-
-/**
- * Get Users Purchases
- *
- * Retrieves a list of all purchases by a specific user.
- *
- * @access      public
- * @since       1.0 
- * @return      array
-*/
-
-function edd_get_users_purchases($user_id) {
-	
-	$purchases = get_transient('edd_user_' . $user_id . '_purchases');
-	if(false === $purchases || edd_is_test_mode()) {
-		$mode = edd_is_test_mode() ? 'test' : 'live';
-		$purchases = get_posts(
-			array(
-				'meta_query' => array(
-					'relation' => 'AND',
-					array(
-						'key' => '_edd_payment_mode',
-						'value' => $mode
-					),
-					array(
-						'key' => '_edd_payment_user_id',
-						'value' => $user_id
-					)
-				),
-				'post_type' => 'edd_payment', 
-				'posts_per_page' => -1
-			)
-		);
-		set_transient('edd_user_' . $user_id . '_purchases', $purchases, 7200);
-	}
-	if($purchases) {
-	    // return the download list
-		return $purchases;
-	}
-	
-	// no downloads	
-	return false;	
-}
-
-
-/**
- * Has Purchases
- *
- * Checks to see if a user has purchased at least one item.
- *
- * @access      public
- * @since       1.0 
- * @param       $user_id int - the ID of the user to check
- * @return      bool - true if has purchased, false other wise.
-*/
-
-function edd_has_purchases($user_id) {
-	if(edd_get_users_purchases($user_id)) {
-		return true; // user has at least one purchase
-	}
-	return false; // user has never purchased anything
 }
 
 
