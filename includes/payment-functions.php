@@ -20,42 +20,38 @@
  * @return      object
 */
 
-function edd_get_payments( $offset = 0, $number = 20, $mode = 'live', $orderby = 'ID', $order = 'DESC' ) {
+function edd_get_payments( $offset = 0, $number = 20, $mode = 'live', $orderby = 'ID', $order = 'DESC', $user = null, $status = 'any' ) {
 	$payment_args = array(
 		'post_type' => 'edd_payment', 
 		'posts_per_page' => $number, 
-		'post_status' => 'any', 
 		'offset' => $offset,
 		'meta_key' => '_edd_payment_mode',
 		'meta_value' => $mode,
 		'order' => $order,
-		'orderby' => $orderby
+		'orderby' => $orderby,
+		'post_status' => $status
 	);
+
+	if( !is_null( $user ) ) {
+		if( is_numeric( $user ) ) {
+			$user_key = '_edd_payment_user_id';
+		} else {
+			$user_key = '_edd_payment_user_email';
+		}
+		$payment_args['meta_query'] = array(
+			array(
+				'key' => $user_key,
+				'value' => $user
+			)
+		);
+	}
+
+
 	$payments = get_posts($payment_args);
 	if($payments) {
 		return $payments;
 	}
 	return false;
-}
-
-
-/**
- * Count Payments
- *
- * Returns the total number of payments recorded.
- *
- * @access      public
- * @since       1.0 
- * @return      integer
-*/
-
-function edd_count_payments($mode) {
-	$payments = edd_get_payments(0, -1, $mode);
-	$count = 0;
-	if($payments) {
-		$count = count($payments);
-	}
-	return $count;
 }
 
 
@@ -86,7 +82,7 @@ function edd_insert_payment($payment_data = array()) {
 	}
 	
 	// create a blank payment
-	$payment = wp_insert_post( array('post_title' => $payment_title, 'post_status' => $status, 'post_type' => 'edd_payment'));
+	$payment = wp_insert_post( array('post_title' => $payment_title, 'post_status' => $status, 'post_type' => 'edd_payment', 'post_date' => $payment_data['date']));
 	
 	if($payment) {
 		$payment_meta = array( 
@@ -268,6 +264,20 @@ function edd_get_payment_statuses() {
 	return apply_filters( 'edd_payment_statuses', $payment_statuses ); 
 	
 }
+
+/**
+ * Registers custom statuses
+ *
+ * @access      public
+ * @since       1.0.9.1
+ * @return      integer
+*/
+
+function edd_register_payment_status() {
+	register_post_status('refunded');
+}
+add_action( 'init', 'edd_register_payment_status' );
+
 
 /**
  * Get Earnings By Date

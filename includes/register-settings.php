@@ -188,6 +188,7 @@ function edd_register_settings() {
 						'{name} - ' . __('The buyer\'s name', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
+						'{receipt_id} - ' . __('The unique ID number for this purchase receipt', 'edd') . '<br/>' .
 						'{payment_method} - ' . __('The method of payment used for this purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
@@ -428,11 +429,11 @@ function edd_register_settings() {
 	}
 	
 	// creates our settings in the options table
-	register_setting('edd_settings_general', 'edd_settings_general');
-	register_setting('edd_settings_gateways', 'edd_settings_gateways');
-	register_setting('edd_settings_emails', 'edd_settings_emails');
-	register_setting('edd_settings_styles', 'edd_settings_styles');
-	register_setting('edd_settings_misc', 'edd_settings_misc');
+	register_setting('edd_settings_general', 'edd_settings_general', 'edd_settings_sanitize');
+	register_setting('edd_settings_gateways', 'edd_settings_gateways', 'edd_settings_sanitize');
+	register_setting('edd_settings_emails', 'edd_settings_emails', 'edd_settings_sanitize');
+	register_setting('edd_settings_styles', 'edd_settings_styles', 'edd_settings_sanitize');
+	register_setting('edd_settings_misc', 'edd_settings_misc', 'edd_settings_sanitize');
 }
 add_action('admin_init', 'edd_register_settings');
 
@@ -676,6 +677,31 @@ function edd_rich_editor_callback($args) {
 
 
 /**
+ * Upload Callback
+ *
+ * Renders upload fields.
+ *
+ * @access      private
+ * @since       1.0 
+ * @return      void
+*/
+
+function edd_upload_callback($args) { 
+ 
+	global $edd_options;
+
+	if(isset($edd_options[$args['id']])) { $value = $edd_options[$args['id']]; } else { $value = isset($args['std']) ? $args['std'] : ''; }
+	$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+    $html = '<input type="text" class="' . $args['size'] . '-text edd_upload_field" id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" value="' . $value . '"/>';   
+    $html .= '&nbsp;<input type="button" class="edd_upload_image_button button-secondary" value="' . __('Upload File', 'edd') . '"/>';
+    $html .= '<label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
+ 
+    echo $html; 
+ 
+}
+
+
+/**
  * Hook Callback
  *
  * Adds a do_action() hook in place of the field
@@ -689,6 +715,24 @@ function edd_hook_callback($args) {
  	
 	do_action('edd_' . $args['id']);
  
+}
+
+
+
+/**
+ * Settings Sanitization
+ *
+ * Adds a settings error (for the updated message)
+ * At some point this will validate input
+ *
+ * @access      private
+ * @since       1.0.8.2 
+ * @return      void
+*/
+
+function edd_settings_sanitize( $input ) {
+	add_settings_error('edd-notices', '', __('Settings Updated', 'edd'), 'updated');
+	return $input;
 }
 
 

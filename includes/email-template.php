@@ -53,12 +53,15 @@ function edd_email_templage_tags($message, $payment_data, $payment_id) {
 	
 	$gateway = edd_get_gateway_checkout_label( get_post_meta($payment_id, '_edd_payment_gateway', true) );
 
+	$receipt_id = $payment_data['key'];
+
 	$message = str_replace('{name}', $name, $message);
 	$message = str_replace('{download_list}', $download_list, $message);
 	$message = str_replace('{date}', $payment_data['date'], $message);
 	$message = str_replace('{sitename}', get_bloginfo('name'), $message);
 	$message = str_replace('{price}', $price, $message);
 	$message = str_replace('{payment_method}', $gateway, $message);
+	$message = str_replace('{receipt_id}', $receipt_id, $message);
 	$message = apply_filters('edd_email_template_tags', $message, $payment_data);
 	
 	return $message;
@@ -88,12 +91,15 @@ function edd_email_preview_templage_tags( $message ) {
 	
 	$gateway = edd_get_gateway_checkout_label( get_post_meta($payment_id, '_edd_payment_gateway', true) );
 
+	$receipt_id = strtolower( md5( uniqid() ) );
+
 	$message = str_replace('{name}', 'John Doe', $message);
 	$message = str_replace('{download_list}', $download_list, $message);
 	$message = str_replace('{date}', date( get_option('date_format'), time() ), $message);
 	$message = str_replace('{sitename}', get_bloginfo('name'), $message);
 	$message = str_replace('{price}', $price, $message);
 	$message = str_replace('{payment_method}', $gateway, $message);
+	$message = str_replace('{receipt_id}', $receipt_id, $message);
 	
 	return wpautop($message);
 	
@@ -228,12 +234,9 @@ function edd_apply_email_template( $body, $payment_id, $payment_data ) {
 	if(is_admin()) 
 		$body = edd_email_preview_templage_tags($body);	
 
-	$email = str_replace('{email}', $body, $template );
-	
-	$email = apply_filters('edd_purchase_receipt_' . $template_name, $email);
+	$body = apply_filters('edd_purchase_receipt_' . $template_name, $body);
 
-	$first_p = strpos($email, '<p>');
-	$email = substr_replace($email, '<p style="margin-top:0;">', $first_p, 3);
+	$email = str_replace('{email}', $body, $template );
 		
 	return $email;	
 	
@@ -259,6 +262,24 @@ function edd_default_email_template() {
 	
 }
 add_action('edd_email_template_default', 'edd_default_email_template');
+
+
+/**
+ * Default Email Template Styling Extras
+ *
+ * @access     private
+ * @since      1.0.9.1
+ * @return     string
+*/
+
+function edd_default_email_styling( $email_body ) {
+
+	$first_p = strpos($email_body, '<p>');
+	$email_body = substr_replace($email_body, '<p style="margin-top:0;">', $first_p, 3);
+
+	return $email_body;
+}
+add_filter('edd_purchase_receipt_default', 'edd_default_email_styling');
 
 
 /**
