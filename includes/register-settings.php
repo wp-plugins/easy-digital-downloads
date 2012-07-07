@@ -24,7 +24,7 @@ function edd_register_settings() {
 	
 	// setup some default option sets
 	$pages = get_pages();	
-	$pages_options = array();
+	$pages_options = array(0 => ''); // blank option
 	if($pages) {
 		foreach ( $pages as $page ) {
 		  	$pages_options[$page->ID] = $page->post_title;
@@ -111,12 +111,13 @@ function edd_register_settings() {
 					'name' => __('Accepted Payment Method Icons', 'edd'),
 					'desc' => __('Display icons for the selected payment methods', 'edd') . '<br/>' . __('You will also need to configure your gateway settings if you are accepting credit cards', 'edd'),
 					'type' => 'multicheck',
-					'options' => array(
-						'Mastercard',
-						'Visa',
-						'American Express',
-						'Discover',
-						'PayPal'
+					'options' => apply_filters('edd_accepted_payment_icons', array(
+							'mastercard' => 'Mastercard',
+							'visa' => 'Visa',
+							'americanexpress' => 'American Express',
+							'discover' => 'Discover',
+							'paypal' => 'PayPal'
+						)
 					)
 				),
 				array(
@@ -137,11 +138,30 @@ function edd_register_settings() {
 					'name' => __('Alternate PayPal Purchase Verification', 'edd'),
 					'desc' => __('If payments are not getting marked as complete, then check this box. Note, this requires that buyers return to your site from PayPal.', 'edd'),
 					'type' => 'checkbox'
+				),
+				array(
+					'id' => 'disable_paypal_verification',
+					'name' => __('Disable PayPal IPN Verification', 'edd'),
+					'desc' => __('If payments are not getting marked as complete, then check this box. This forces the site to use a slightly less secure method of verifiyin purchases.', 'edd'),
+					'type' => 'checkbox'
 				)
 			)
 		),
 		'emails' => apply_filters('edd_settings_emails', 
 			array(
+				array(
+					'id' => 'email_template',
+					'name' => __('Email Template', 'edd'),
+					'desc' => __('Choose a template. Click "Save Changes" then "Preview Purchase Receipt" to see the new template.', 'edd'),
+					'type' => 'select',
+					'options' => edd_get_email_templates()
+				),
+				array(
+					'id' => 'email_settings',
+					'name' => '',
+					'desc' => '',
+					'type' => 'hook',
+				),
 				array(
 					'id' => 'from_name',
 					'name' => __('From Name', 'edd'),
@@ -168,22 +188,11 @@ function edd_register_settings() {
 						'{name} - ' . __('The buyer\'s name', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
+						'{receipt_id} - ' . __('The unique ID number for this purchase receipt', 'edd') . '<br/>' .
+						'{payment_method} - ' . __('The method of payment used for this purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
-				),
-				/*array(
-					'id' => 'email_template',
-					'name' => __('Email Template', 'edd'),
-					'desc' => __('Choose a template. Click "Save Changes" then "Preview Purchase Receipt" to see the new template.', 'edd'),
-					'type' => 'select',
-					'options' => edd_get_email_templates()
-				),
-				array(
-					'id' => 'email_settings',
-					'name' => '',
-					'desc' => '',
-					'type' => 'hook',
-				)*/
+				)
 			)
 		),
 		'styles' => apply_filters('edd_settings_styles', 
@@ -206,9 +215,9 @@ function edd_register_settings() {
 		'misc' => apply_filters('edd_settings_misc', 
 			array(
 				array(
-					'id' => 'ajax_cart',
-					'name' => __('Enable Ajax', 'edd'),
-					'desc' => __('Check this to enable AJAX for the shopping cart.', 'edd'),
+					'id' => 'disable_ajax_cart',
+					'name' => __('Disable Ajax', 'edd'),
+					'desc' => __('Check this to disable AJAX for the shopping cart.', 'edd'),
 					'type' => 'checkbox'
 				),
 				array(
@@ -226,13 +235,20 @@ function edd_register_settings() {
 				array(
 					'id' => 'show_register_form',
 					'name' => __('Show Register / Login Form?', 'edd'),
-					'desc' => __('Display the registration and login forms on the checkout page for non-logged-in users', 'edd'),
+					'desc' => __('Display the registration and login forms on the checkout page for non-logged-in users.', 'edd'),
 					'type' => 'checkbox',
+				),
+				array(
+					'id' => 'download_link_expiration',
+					'name' => __('Download Link Expiration', 'edd'),
+					'desc' => __('How long should download links be valid for? Default is 24 hours from the time they are generated. Enter a time in hours.', 'edd'),
+					'type' => 'text',
+					'size' => 'small'
 				),
 				array(
 					'id' => 'disable_redownload',
 					'name' => __('Disable Redownload?', 'edd'),
-					'desc' => __('Check this if you do not want to allow users to redownload items from their purchase history', 'edd'),
+					'desc' => __('Check this if you do not want to allow users to redownload items from their purchase history.', 'edd'),
 					'type' => 'checkbox',
 				),
 				array(
@@ -244,20 +260,20 @@ function edd_register_settings() {
 				array(
 					'id' => 'show_agree_to_terms',
 					'name' => __('Agree to Terms', 'edd'),
-					'desc' => __('Check this to show an agree to terms on the checkout that users must agree to before purchasing', 'edd'),
+					'desc' => __('Check this to show an agree to terms on the checkout that users must agree to before purchasing.', 'edd'),
 					'type' => 'checkbox',
 				),
 				array(
 					'id' => 'agree_label',
 					'name' => __('Agree to Terms Label', 'edd'),
-					'desc' => __('Label shown next to the agree to terms check box', 'edd'),
+					'desc' => __('Label shown next to the agree to terms check box.', 'edd'),
 					'type' => 'text',
 					'size' => 'regular'
 				),
 				array(
 					'id' => 'agree_text',
 					'name' => __('Agreement Text', 'edd'),
-					'desc' => __('If Agree to Terms is checked, enter the agreement terms here', 'edd'),
+					'desc' => __('If Agree to Terms is checked, enter the agreement terms here.', 'edd'),
 					'type' => 'rich_editor',
 				)
 			)
@@ -413,11 +429,11 @@ function edd_register_settings() {
 	}
 	
 	// creates our settings in the options table
-	register_setting('edd_settings_general', 'edd_settings_general');
-	register_setting('edd_settings_gateways', 'edd_settings_gateways');
-	register_setting('edd_settings_emails', 'edd_settings_emails');
-	register_setting('edd_settings_styles', 'edd_settings_styles');
-	register_setting('edd_settings_misc', 'edd_settings_misc');
+	register_setting('edd_settings_general', 'edd_settings_general', 'edd_settings_sanitize');
+	register_setting('edd_settings_gateways', 'edd_settings_gateways', 'edd_settings_sanitize');
+	register_setting('edd_settings_emails', 'edd_settings_emails', 'edd_settings_sanitize');
+	register_setting('edd_settings_styles', 'edd_settings_styles', 'edd_settings_sanitize');
+	register_setting('edd_settings_misc', 'edd_settings_misc', 'edd_settings_sanitize');
 }
 add_action('admin_init', 'edd_register_settings');
 
@@ -661,6 +677,31 @@ function edd_rich_editor_callback($args) {
 
 
 /**
+ * Upload Callback
+ *
+ * Renders upload fields.
+ *
+ * @access      private
+ * @since       1.0 
+ * @return      void
+*/
+
+function edd_upload_callback($args) { 
+ 
+	global $edd_options;
+
+	if(isset($edd_options[$args['id']])) { $value = $edd_options[$args['id']]; } else { $value = isset($args['std']) ? $args['std'] : ''; }
+	$size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+    $html = '<input type="text" class="' . $args['size'] . '-text edd_upload_field" id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" value="' . $value . '"/>';   
+    $html .= '&nbsp;<input type="button" class="edd_upload_image_button button-secondary" value="' . __('Upload File', 'edd') . '"/>';
+    $html .= '<label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
+ 
+    echo $html; 
+ 
+}
+
+
+/**
  * Hook Callback
  *
  * Adds a do_action() hook in place of the field
@@ -674,6 +715,24 @@ function edd_hook_callback($args) {
  	
 	do_action('edd_' . $args['id']);
  
+}
+
+
+
+/**
+ * Settings Sanitization
+ *
+ * Adds a settings error (for the updated message)
+ * At some point this will validate input
+ *
+ * @access      private
+ * @since       1.0.8.2 
+ * @return      void
+*/
+
+function edd_settings_sanitize( $input ) {
+	add_settings_error('edd-notices', '', __('Settings Updated', 'edd'), 'updated');
+	return $input;
 }
 
 

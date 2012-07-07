@@ -6,7 +6,7 @@ Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
 Contributors: mordauk, sksmatt
-Version: 1.0.8.2
+Version: 1.1.0
 
 Easy Digital Downloads is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,7 +63,10 @@ global $edd_options;
 |--------------------------------------------------------------------------
 */
 
-load_plugin_textdomain( 'edd', false, dirname( plugin_basename( EDD_PLUGIN_FILE ) ) . '/languages/' );
+function edd_textdomain() {
+	load_plugin_textdomain( 'edd', false, dirname( plugin_basename( EDD_PLUGIN_FILE ) ) . '/languages/' );
+}
+add_action('init', 'edd_textdomain');
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +78,7 @@ include_once(EDD_PLUGIN_DIR . 'includes/register-settings.php');
 $edd_options = edd_get_settings();
 include_once(EDD_PLUGIN_DIR . 'includes/install.php');
 include_once(EDD_PLUGIN_DIR . 'includes/actions.php');
+include_once(EDD_PLUGIN_DIR . 'includes/deprecated-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/template-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/checkout-template.php');
 include_once(EDD_PLUGIN_DIR . 'includes/cart-template.php');
@@ -87,6 +91,7 @@ include_once(EDD_PLUGIN_DIR . 'includes/gateway-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/discount-actions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/discount-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/payment-functions.php');
+include_once(EDD_PLUGIN_DIR . 'includes/payment-actions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/misc-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/download-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/scripts.php');
@@ -96,6 +101,7 @@ include_once(EDD_PLUGIN_DIR . 'includes/email-functions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/email-template.php');
 include_once(EDD_PLUGIN_DIR . 'includes/email-actions.php');
 include_once(EDD_PLUGIN_DIR . 'includes/error-tracking.php');
+include_once(EDD_PLUGIN_DIR . 'includes/user-functions.php');
 if(is_admin()) {
 	include_once(EDD_PLUGIN_DIR . 'includes/admin-actions.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/metabox.php');
@@ -109,7 +115,6 @@ if(is_admin()) {
 	include_once(EDD_PLUGIN_DIR . 'includes/dashboard-columns.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/thickbox.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/graphing.php');
-	include_once(EDD_PLUGIN_DIR . 'includes/payment-actions.php');
 	include_once(EDD_PLUGIN_DIR . 'includes/upload-functions.php');
 } else {
 	include_once(EDD_PLUGIN_DIR . 'includes/process-purchase.php');

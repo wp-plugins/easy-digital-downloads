@@ -26,6 +26,7 @@ function edd_download_columns($download_columns){
 		'title' => __('Name', 'edd'),
 		'download_category' => __('Categories', 'edd'),
 		'download_tag' => __('Tags', 'edd'),
+		'price' => __('Price', 'edd'),
 		'sales' => __('Sales', 'edd'),
 		'earnings' => __('Earnings', 'edd'),
 		'shortcode' => __('Short Code', 'edd'),
@@ -59,6 +60,9 @@ function edd_render_download_columns($column_name, $post_id) {
 			case 'download_tag':
 				echo get_the_term_list($post_id, 'download_tag', '', ', ', '');
 				break;
+			case 'price':
+				echo edd_price($post_id, false);
+				break;
 			case 'sales':
 				echo $sales;
 				break;
@@ -66,7 +70,7 @@ function edd_render_download_columns($column_name, $post_id) {
 				echo edd_currency_filter($earnings);
 				break;
 			case 'shortcode':
-				echo '[purchase_link id="' . $post_id . '" text="' . __('Purchase', 'edd') . '" style="button" color="gray"]';
+				echo '[purchase_link id="' . $post_id . '" text="' . __('Purchase', 'edd') . '" style="button" color="' . get_post_meta( $post_id, '_edd_purchase_color', true ) . ']';
 				break;
 		}
 	}
