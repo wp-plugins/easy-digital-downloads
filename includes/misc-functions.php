@@ -20,9 +20,10 @@
 
 function edd_is_test_mode() {
 	global $edd_options;
-	if(isset($edd_options['test_mode']))
-		return true;
-	return false;
+	if( !isset($edd_options['test_mode']) || is_null($edd_options['test_mode']) ) {
+		return false;
+	}
+	return true;
 }
 
 
@@ -62,7 +63,7 @@ function edd_logged_in_only() {
  * Disable Redownload
  *
  * @access      public
- * @since       1.08.2
+ * @since       1.0.8.2
  * @return      boolean
 */
 
@@ -77,7 +78,7 @@ function edd_no_redownload() {
  * Get Menu Access Level 
  *
  * Returns the access level required to access 
- * the downloads menu. Currently not not changeable,
+ * the downloads menu. Currently not changeable,
  * but here for a future update.
  *
  * @access      public
@@ -123,6 +124,29 @@ function edd_get_file_extension($str)
 }
 
 
+function edd_string_is_image_url($str) {
+	$ext = edd_get_file_extension($str);
+
+	switch( strtolower($ext) )  {
+		case 'jpg';
+			$return = true;
+			break;
+		case 'png';
+			$return = true;
+			break;
+		case 'gif';
+			$return = true;
+			break;
+		default:
+			$return = false;
+		break;
+	}
+
+	return $return;
+}
+
+
+
 /**
  * Get User IP
  *
@@ -135,17 +159,14 @@ function edd_get_file_extension($str)
 
 function edd_get_ip()
 {
-    if (!empty($_SERVER['HTTP_CLIENT_IP']))   //check ip from share internet
-    {
-      $ip=$_SERVER['HTTP_CLIENT_IP'];
-    }
-    elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))   //to check ip is pass from proxy
-    {
-      $ip=$_SERVER['HTTP_X_FORWARDED_FOR'];
-    }
-    else
-    {
-      $ip=$_SERVER['REMOTE_ADDR'];
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    	//check ip from share internet
+      $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    	//to check ip is pass from proxy
+      $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } else {
+      $ip = $_SERVER['REMOTE_ADDR'];
     }
     return $ip;
 }
@@ -515,6 +536,19 @@ function edd_get_country_list() {
 function edd_month_num_to_name($n)
 {
     $timestamp = mktime(0, 0, 0, $n, 1, 2005);
-    
     return date("M", $timestamp);
 }
+
+
+/**
+ * Get PHP Arg Seaparator Ouput
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @return      string
+*/
+
+function edd_get_php_arg_separator_output() {
+    return ini_get('arg_separator.output');
+}
+
