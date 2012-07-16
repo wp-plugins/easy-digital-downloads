@@ -121,6 +121,7 @@ function edd_checkout_form() {
 						} elseif(!isset($edd_options['logged_in_only'])) {
 							$can_checkout = true;
 						}
+						$can_checkout = true;
 						if($can_checkout) { ?>
 							<?php if(isset($edd_options['show_register_form']) && !is_user_logged_in() && !isset($_GET['login'])) { ?>
 								<div id="edd_checkout_login_register"><?php echo edd_get_register_fields(); ?></div>
@@ -129,6 +130,7 @@ function edd_checkout_form() {
 							<?php } ?>
 							<?php if( (!isset($_GET['login']) && is_user_logged_in()) || !isset($edd_options['show_register_form'])) { ?>											
 							<fieldset id="edd_checkout_user_info">
+								<legend><?php _e('Personal Info', 'edd'); ?></legend>
 								<?php do_action('edd_purchase_form_before_email'); ?>
 								<p id="edd-email-wrap">
 									<input class="edd-input required" type="email" name="edd_email" placeholder="<?php _e('Email address', 'edd'); ?>" id="edd-email" value="<?php echo is_user_logged_in() ? $user_data->user_email : ''; ?>"/>
@@ -144,20 +146,21 @@ function edd_checkout_form() {
 									<label class="edd-label" for="edd-last"><?php _e('Last Name', 'edd'); ?></label>
 								</p>	
 								<?php do_action('edd_purchase_form_user_info'); ?>
-							</fieldset>				
-							<?php } ?>
-							<?php if(edd_has_active_discounts()) { // only show if we have at least one active discount ?>
-							<fieldset id="edd_discount_code">
-								<p id="edd-discount-code-wrap">
-									<input class="edd-input" type="text" id="edd-discount" name="edd-discount" placeholder="<?php _e('Enter discount', 'edd'); ?>"/>
-									<label class="edd-label" for="edd-discount">
-										<?php _e('Discount', 'edd'); ?>
-										<?php if(edd_is_ajax_enabled()) { ?>
-											- <a href="#" class="edd-apply-discount"><?php _e('Apply Discount', 'edd'); ?></a>
-										<?php } ?>
-									</label>
-								</p>
+								<?php if(edd_has_active_discounts()) { // only show if we have at least one active discount ?>
+								<fieldset id="edd_discount_code">
+									<p id="edd-discount-code-wrap">
+										<input class="edd-input" type="text" id="edd-discount" name="edd-discount" placeholder="<?php _e('Enter discount', 'edd'); ?>"/>
+										<label class="edd-label" for="edd-discount">
+											<?php _e('Discount', 'edd'); ?>
+											<?php if(edd_is_ajax_enabled()) { ?>
+												- <a href="#" class="edd-apply-discount"><?php _e('Apply Discount', 'edd'); ?></a>
+											<?php } ?>
+										</label>
+									</p>
+								</fieldset>	
+								<?php } ?>
 							</fieldset>	
+							<?php do_action('edd_purchase_form_after_user_info'); ?>		
 							<?php } ?>
 							<?php 
 								// load the credit card form and allow gateways to load their own if they wish
@@ -238,7 +241,9 @@ function edd_get_cc_form() {
 	ob_start(); ?>
 	
 	<?php do_action('edd_before_cc_fields'); ?>
+
 	<fieldset id="edd_cc_fields">
+		<legend><?php _e('Credit Card Info', 'edd'); ?></legend>
 		<p>
 			<input type="text" autocomplete="off" name="card_name" class="card-name edd-input required" placeholder="<?php _e('Card name', 'edd'); ?>" />
 			<label class="edd-label"><?php _e('Name on the Card', 'edd'); ?></label>
@@ -258,10 +263,10 @@ function edd_get_cc_form() {
 			<input type="text" size="4" name="card_exp_year" placeholder="<?php _e('Year', 'edd'); ?>" class="card-expiry-year edd-input required"/>
 			<label class="edd-label"><?php _e('Expiration (MM/YYYY)', 'edd'); ?></label>
 		</p>
-		<?php do_action('edd_after_cc_expiration'); ?>
-	</fieldset>
 
-	<?php do_action('edd_cc_form_address_fields'); ?>
+		<?php do_action('edd_after_cc_expiration'); ?>
+	
+	</fieldset>
 
 	<?php do_action('edd_after_cc_fields'); ?>
 		
@@ -284,7 +289,6 @@ add_action('edd_cc_form', 'edd_get_cc_form');
 function edd_default_cc_address_fields() {
 	ob_start(); ?>
 	<fieldset id="edd_cc_address" class="cc-address">
-		<legend><?php _e('Credit Card Info', 'edd'); ?></legend>
 		<p>
 			<input type="text" name="card_address" class="card-address edd-input required" placeholder="<?php _e('Address line 1', 'edd'); ?>"/>
 			<label class="edd-label"><?php _e('Billing Address', 'edd'); ?></label>
@@ -309,7 +313,7 @@ function edd_default_cc_address_fields() {
 	<?php
 	echo ob_get_clean();
 }
-add_action('edd_cc_form_address_fields', 'edd_default_cc_address_fields');
+add_action('edd_after_cc_expiration', 'edd_default_cc_address_fields');
 
 
 /**

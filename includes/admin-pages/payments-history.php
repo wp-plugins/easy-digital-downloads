@@ -96,6 +96,9 @@ function edd_payment_history_page() {
 					<a href="<?php echo add_query_arg('status', 'trash'); ?>" <?php echo isset( $_GET['status'] ) && $_GET['status'] == 'trash' ? 'class="current"' : ''; ?>><?php _e('Deleted', 'edd'); ?> <span class="count">(<?php echo $payment_count->trash; ?>)</span></a>
 				</li>
 			</ul>
+			<ul class="subsubsub edd-export-payments">
+				<li> | <?php _e('Export', 'edd'); ?>: <a href="<?php echo add_query_arg('export', 'csv'); ?>">CSV</a></li>
+			</ul>	
 			<form id="payments-filter" action="<?php echo admin_url('edit.php'); ?>" method="get" style="float: right; margin-bottom: 5px;">
 				<label for="edd-mode"><?php _e('Payment mode', 'edd'); ?></label>
 				<select name="mode" id="edd-mode">
