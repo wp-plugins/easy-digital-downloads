@@ -94,13 +94,17 @@ function edd_checkout_form() {
 			
 				<?php } else { ?>
 		
-					<?php					
-						foreach($gateways as $gateway_id => $gateway) :
-							$enabled_gateway = $gateway_id;
-							if(edd_get_cart_amount() <= 0) {
-								$enabled_gateway = 'manual'; // this allows a free download by filling in the info
-							}
-						endforeach;
+					<?php
+						if(count($gateways) > 1 && !isset($_GET['payment-mode'])) {					
+							foreach($gateways as $gateway_id => $gateway) :
+								$enabled_gateway = $gateway_id;
+								if(edd_get_cart_amount() <= 0) {
+									$enabled_gateway = 'manual'; // this allows a free download by filling in the info
+								}
+							endforeach;
+						} else if(edd_get_cart_amount() <= 0) {
+							$enabled_gateway = 'manual';
+						}
 						$payment_mode = isset($_GET['payment-mode']) ? urldecode($_GET['payment-mode']) : $enabled_gateway;	
 					?>
 					
@@ -300,6 +304,17 @@ function edd_default_cc_address_fields() {
 		<p>
 			<input type="text" name="card_city" class="card-city edd-input required" placeholder="<?php _e('City', 'edd'); ?>"/>
 			<label class="edd-label"><?php _e('Billing City', 'edd'); ?></label>
+		</p>
+		<p>
+			<select name="billing_country" class="billing-country edd-select required">
+				<?php 
+				$countries = edd_get_country_list();
+				foreach($countries as $country_code => $country) {
+				  echo '<option value="' . $country_code . '">' . $country . '</option>';
+				}
+				?>
+			</select>
+			<label class="edd-label"><?php _e('Billing State / Province', 'edd'); ?></label>
 		</p>
 		<p>
 			<input type="text" size="6" name="card_state" class="card-state edd-input required" placeholder="<?php _e('State / Province', 'edd'); ?>"/>

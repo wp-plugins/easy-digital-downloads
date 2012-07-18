@@ -490,8 +490,17 @@ function edd_read_file( $file ) {
 		$file = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $file);	
 	
 	}
+
+	set_time_limit(0);
+	$file = @fopen($file,"rb");
+	while(!feof($file))
+	{
+		print(@fread($file, 1024*8));
+		ob_flush();
+		flush();
+	}
 	
-	readfile($file);	
+	//readfile($file);	
 }
 
 
@@ -525,6 +534,9 @@ function edd_verify_download_link($download_id, $key, $email, $expire, $file_key
 			$payment_meta = get_post_meta($payment->ID, '_edd_payment_meta', true);
 			$downloads = maybe_unserialize($payment_meta['downloads']);
 			$cart_details = unserialize( $payment_meta['cart_details'] );
+			if( $payment->post_status != 'publish' && $payment->post_status != 'complete' )
+				return false;
+
 			if($downloads) {
 				foreach($downloads as $key => $download) {
 					
