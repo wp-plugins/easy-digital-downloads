@@ -11,6 +11,80 @@
 
 
 /**
+ * Complete a purchase
+ *
+ * Performs all necessary actions to complete a purchase. 
+ * Triggered by the edd_update_payment_status() function.
+ *
+ * @param		 int $payment_id the ID number of the payment
+ * @param		 string $new_status the status of the payment, probably "publish"
+ * @param		 string $old_status the status of the payment prior to being marked as "complete", probably "pending"
+ * @access      private
+ * @since       1.0.8.3
+ * @return      void
+*/
+
+function edd_complete_purchase($payment_id, $new_status, $old_status) {
+
+	if( $old_status == 'publish' || $old_status == 'complete')
+		return; // make sure that payments are only completed once
+	
+	if( ! edd_is_test_mode() ) {
+				
+		$payment_data 	= get_post_meta($payment_id, '_edd_payment_meta', true);
+		$downloads 		= maybe_unserialize($payment_data['downloads']);
+		$user_info 		= maybe_unserialize($payment_data['user_info']);
+		$cart_details 	= maybe_unserialize($payment_data['cart_details']);				
+								
+		// increase purchase count and earnings
+		foreach($downloads as $download) {
+			
+			edd_record_sale_in_log($download['id'], $payment_id, $user_info, $payment_data['date']);
+			edd_increase_purchase_count($download['id']);
+			$amount = null;
+			if(is_array($cart_details)) {
+				$cart_item_id = array_search($download['id'], $cart_details);
+				$amount = isset($cart_details[$cart_item_id]['price']) ? $cart_details[$cart_item_id]['price'] : null;
+			}
+			$amount = edd_get_download_final_price($download['id'], $user_info, $amount);
+			edd_increase_earnings($download['id'], $amount);
+			
+		}
+		
+		if(isset($user_info['discount'])) {
+			edd_increase_discount_usage($user_info['discount']);
+		}
+	}
+	
+	// empty the shopping cart
+	edd_empty_cart();	
+	
+}
+add_action('edd_update_payment_status', 'edd_complete_purchase', 10, 3);
+
+
+/**
+ * Trigger Purchase Receipt
+ *
+ * Causes the purchase receipt to be emailed. 
+ *
+ * @access      private
+ * @since       1.0.8.4 
+ * @return      void
+*/
+
+function edd_trigger_purchase_receipt($payment_id, $new_status, $old_status) {
+
+	if( $old_status == 'publish' || $old_status == 'complete')
+		return;
+
+	// send email with secure download link
+	edd_email_purchase_receipt($payment_id);
+
+}
+add_action('edd_update_payment_status', 'edd_trigger_purchase_receipt', 10, 3);
+
+/**
  * Update Edited Purchase
  *
  * Updates the purchase data for a payment. 
@@ -73,6 +147,10 @@ function edd_update_edited_purchase($data) {
 			
 		}
 		
+		if( $_POST['edd-payment-status'] == 'publish' && isset( $_POST['edd-payment-send-email'] ) ) {
+			// send the purchase receipt
+			edd_email_purchase_receipt( $payment_id, false );
+		}
 	}
 	
 }
