@@ -21,7 +21,7 @@
 */
 
 function edd_get_cart_contents() {
-	return isset($_SESSION['edd_cart']) ? $_SESSION['edd_cart'] : false;
+	return isset($_SESSION['edd_cart']) ? apply_filters( 'edd_cart_contents', $_SESSION['edd_cart'] ) : false;
 }
 
 
@@ -326,7 +326,7 @@ function edd_get_cart_content_details() {
 				'id' => $item['id'],
 				'item_number' => $item,
 				'price' => edd_get_cart_item_price($item['id'], $item['options']),
-				'quantity' => 1
+				'quantity' => 1,
 			);
 		}
 	}
@@ -408,6 +408,22 @@ add_action('edd_after_download_content', 'edd_show_added_to_cart_messages');
 function edd_get_checkout_uri() {
     global $edd_options;
     return isset( $edd_options['purchase_page'] ) ? get_permalink( $edd_options['purchase_page'] ) : NULL;
+}
+
+
+/**
+ * Checks if on checkout page
+ *
+ * Determines if the current page is the checkout page
+ *
+ * @access      public
+ * @since       1.1.2
+ * @return      bool - true if on the page, false otherwise
+*/
+
+function edd_is_checkout() {
+    global $edd_options;
+    return isset( $edd_options['purchase_page'] ) ? is_page( $edd_options['purchase_page'] ) : false;
 }
 
 

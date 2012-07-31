@@ -24,23 +24,25 @@ function edd_process_download() {
 	if(isset($_GET['download']) && isset($_GET['email']) && isset($_GET['file'])) {
 		$download = urldecode($_GET['download']);
 		$key = urldecode($_GET['download_key']);
-		$email = urldecode($_GET['email']);
+		$email = rawurldecode($_GET['email']);
 		$file_key = urldecode($_GET['file']);
 		$expire = urldecode(base64_decode($_GET['expire']));
 				
 
-		$payment = edd_verify_download_link($download, $key, $email, $expire);
+		$payment = edd_verify_download_link($download, $key, $email, $expire, $file_key);
 		
 		 // defaulting this to true for now because the method below doesn't work well
 		$has_access = true;
 		//$has_access = ( edd_logged_in_only() && is_user_logged_in() ) || !edd_logged_in_only() ? true : false;
 		if($payment && $has_access) {
 			
+			do_action('edd_process_verified_download', $download, $email);;
+
 			// payment has been verified, setup the download
 			$download_files = get_post_meta($download, 'edd_download_files', true);
 			
-			$requested_file = $download_files[$file_key]['file'];
-			
+			$requested_file = apply_filters('edd_requested_file', $download_files[$file_key]['file'] );
+		
 			$user_info = array();
 			$user_info['email'] = $email;
 			if(is_user_logged_in()) {
@@ -76,7 +78,9 @@ function edd_process_download() {
                 default: $ctype = "application/force-download";
             endswitch;
 			
-			set_time_limit(0);
+			if( !ini_get('safe_mode') ){ 
+				set_time_limit(0);
+			}
 			set_magic_quotes_runtime(0);
 				
 			header("Pragma: no-cache");
@@ -85,9 +89,9 @@ function edd_process_download() {
 			header("Robots: none");
 			header("Content-Type: " . $ctype . "");
 			header("Content-Description: File Transfer");	
-		   header("Content-Disposition: attachment; filename=\"" . basename($requested_file) . "\";");
+		    header("Content-Disposition: attachment; filename=\"" . apply_filters('edd_requested_file_name', basename($requested_file) ) . "\";");
 			header("Content-Transfer-Encoding: binary");
-			readfile($requested_file);
+			edd_read_file( $requested_file );			
 			exit;
 			
 		} else {
