@@ -29,7 +29,7 @@ function edd_email_purchase_receipt($payment_id, $admin_notice = true) {
 
 		$message .= edd_get_email_body_content( $payment_id, $payment_data );
 		
-	$message .= edd_get_email_body_header();	
+	$message .= edd_get_email_body_footer();	
 	
 	$from_name = isset($edd_options['from_name']) ? $edd_options['from_name'] : get_bloginfo('name');
 	$from_email = isset($edd_options['from_email']) ? $edd_options['from_email'] : get_option('admin_email');
@@ -37,7 +37,7 @@ function edd_email_purchase_receipt($payment_id, $admin_notice = true) {
 	$headers = "From: " . stripslashes_deep( html_entity_decode( $from_name, ENT_COMPAT, 'UTF-8' ) ) . " <$from_email>\r\n";
 	$headers .= "Reply-To: ". $from_email . "\r\n";
 	$headers .= "MIME-Version: 1.0\r\n";
-	$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";	
+	$headers .= "Content-Type: text/html; charset=utf-8\r\n";	
 		
 	wp_mail( $payment_data['email'], $edd_options['purchase_subject'], $message, $headers);
 	
@@ -56,7 +56,7 @@ function edd_email_purchase_receipt($payment_id, $admin_notice = true) {
 		$gateway = edd_get_gateway_admin_label( get_post_meta($payment_id, '_edd_payment_gateway', true) );
 		
 		$admin_message .= $download_list . "\n";
-		$admin_message .= __('Amount: ', 'edd') . " " . html_entity_decode(edd_currency_filter($payment_data['amount'])) . "\n\n";
+		$admin_message .= __('Amount: ', 'edd') . " " . html_entity_decode(edd_currency_filter($payment_data['amount']), ENT_COMPAT, 'UTF-8') . "\n\n";
 		$admin_message .= __('Payment Method: ', 'edd') . " " . $gateway . "\n\n";
 		$admin_message .= __('Thank you', 'edd');
 		$admin_message = apply_filters('edd_admin_purchase_notification', $admin_message, $payment_id, $payment_data);

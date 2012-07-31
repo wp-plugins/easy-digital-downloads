@@ -24,7 +24,7 @@ function edd_process_download() {
 	if(isset($_GET['download']) && isset($_GET['email']) && isset($_GET['file'])) {
 		$download = urldecode($_GET['download']);
 		$key = urldecode($_GET['download_key']);
-		$email = urldecode($_GET['email']);
+		$email = rawurldecode($_GET['email']);
 		$file_key = urldecode($_GET['file']);
 		$expire = urldecode(base64_decode($_GET['expire']));
 				
@@ -78,7 +78,9 @@ function edd_process_download() {
                 default: $ctype = "application/force-download";
             endswitch;
 			
-			set_time_limit(0);
+			if( !ini_get('safe_mode') ){ 
+				set_time_limit(0);
+			}
 			set_magic_quotes_runtime(0);
 				
 			header("Pragma: no-cache");

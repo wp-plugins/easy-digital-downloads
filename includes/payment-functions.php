@@ -309,6 +309,31 @@ function edd_get_earnings_by_date($month_num, $year) {
 	return $total;
 }
 
+/**
+ * Get Sales of By Date
+ *
+ * @access      public
+ * @author      Sunny Ratilal
+ * @since       1.1.4.0
+ * @return      int
+*/
+
+function edd_get_sales_by_date( $month_num, $year ) {
+	$sales = get_posts(
+		array(
+			'post_type' => 'edd_payment', 
+			'posts_per_page' => -1, 
+			'year' => $year, 
+			'monthnum' => $month_num
+		)
+	);
+	$total = 0;
+	if( $sales ) {
+		$total = count( $sales );
+	}
+	return $total;
+}
+
 
 /**
  * Is Payment Complete
@@ -350,4 +375,3 @@ function edd_get_downloads_of_purchase($payment_id, $payment_meta = null){
 		return $downloads;
 	return false;
 }
-
