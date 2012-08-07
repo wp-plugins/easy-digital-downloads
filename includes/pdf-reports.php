@@ -69,15 +69,16 @@ function edd_generate_pdf( $data ) {
 		$pdf->Cell( 45, 6, __('Number of Sales', 'edd'), 1, 0, 'L', true );
 		$pdf->Cell( 35, 6, __('Earnings to Date', 'edd'), 1, 1, 'L', true );
 
-		$pdf->SetWidths( array( 70, 30, 50, 50, 45, 35 ) );
 		$year = date('Y');
 		$downloads = get_posts( array( 'post_type' => 'download', 'year' => $year ) );
 		if ( $downloads ) :
+			$pdf->SetWidths( array( 70, 30, 50, 50, 45, 35 ) );
+
 			foreach ( $downloads as $download ) :
 
 				$pdf->SetFillColor( 255, 255, 255 );
 				
-				$title = get_the_title( $download->ID );
+				$title = utf8_decode( get_the_title( $download->ID ) );
 				
 				if ( edd_has_variable_prices( $download->ID ) ) {
 					$prices = get_post_meta( $download->ID, 'edd_variable_prices', true );
@@ -102,6 +103,10 @@ function edd_generate_pdf( $data ) {
 				
 				$pdf->Row( array( $title, $price, $categories, $tags, $sales, $earnings ) );
 			endforeach;
+		else:
+			$pdf->SetWidths( array( 280 ) );
+			$title = __('No Downloads found.', 'edd');
+			$pdf->Row( array($title) );
 		endif;
 		
 		$pdf->Ln();
