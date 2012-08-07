@@ -12,6 +12,7 @@
 */
 
 
+
 /**
  * AJAX enabled
  *
@@ -19,17 +20,17 @@
  *
  * @access      private
  * @since       1.0
+ * @deprecated  1.0.8.3
  * @return      boolean
 */
 
 function edd_is_ajax_enabled() {
 	global $edd_options;
-	if(isset($edd_options['ajax_cart'])) {
+	if( ! isset($edd_options['disable_ajax_cart'])) {
 		return true;
 	}
 	return false;
 }
-
 
 /**
  * AJAX Remove From Cart
@@ -68,7 +69,11 @@ function edd_ajax_add_to_cart() {
 		if(!edd_item_in_cart($_POST['download_id'])) {
 			$options = is_numeric($_POST['price_id']) ? array('price_id' => $_POST['price_id']) : array();
 			$key = edd_add_to_cart($_POST['download_id'], $options);
-			$cart_item = edd_get_cart_item_template($key, $_POST['download_id'], true);
+			$item = array(
+				'id' => $_POST['download_id'],
+				'options' => $options
+			);
+			$cart_item = edd_get_cart_item_template($key, $item, true);
 			echo $cart_item;
 		} else {
 			echo 'incart';
