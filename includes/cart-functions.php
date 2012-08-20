@@ -21,7 +21,7 @@
 */
 
 function edd_get_cart_contents() {
-	return isset($_SESSION['edd_cart']) ? $_SESSION['edd_cart'] : false;
+	return isset($_SESSION['edd_cart']) ? apply_filters( 'edd_cart_contents', $_SESSION['edd_cart'] ) : false;
 }
 
 
@@ -326,7 +326,7 @@ function edd_get_cart_content_details() {
 				'id' => $item['id'],
 				'item_number' => $item,
 				'price' => edd_get_cart_item_price($item['id'], $item['options']),
-				'quantity' => 1
+				'quantity' => 1,
 			);
 		}
 	}
@@ -376,6 +376,25 @@ function edd_add_collection_to_cart($taxonomy, $terms) {
 
 
 /**
+ * Remove Item URL
+ *
+ * Returns the URL to remove an item.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      string
+*/
+
+function edd_remove_item_url($cart_key, $post, $ajax = false) {
+	global $post;
+	$current_page = edd_get_current_page_url();
+	$remove_url = add_query_arg( array('cart_item' => $cart_key, 'edd_action' => 'remove' ), $current_page);
+	return apply_filters('edd_remove_item_url', $remove_url);
+}
+
+
+
+/**
  * Show Added To Cart Messages
  *
  * Renders the added to cart messages.
@@ -412,6 +431,22 @@ function edd_get_checkout_uri() {
 
 
 /**
+ * Checks if on checkout page
+ *
+ * Determines if the current page is the checkout page
+ *
+ * @access      public
+ * @since       1.1.2
+ * @return      bool - true if on the page, false otherwise
+*/
+
+function edd_is_checkout() {
+    global $edd_options;
+    return isset( $edd_options['purchase_page'] ) ? is_page( $edd_options['purchase_page'] ) : false;
+}
+
+
+/**
  * Empty Cart
  *
  * Empties the cart.
@@ -423,6 +458,37 @@ function edd_get_checkout_uri() {
 
 function edd_empty_cart() {
 	$_SESSION['edd_cart'] = NULL;
+}
+
+
+/**
+ * Store Purchase Data in Sessions
+ *
+ * Used for storing info about purchase
+ *
+ * @access      public
+ * @since       1.1.5
+ * @return      void
+*/
+
+function edd_set_purchase_session( $purchase_data ) {
+	$_SESSION['edd_purchase_info'] = $purchase_data;
+}
+
+
+/**
+ * Retrieve Purchase Data from Session
+ *
+ * Used for retrieving info about purchase
+ * after completing a purchase
+ *
+ * @access      public
+ * @since       1.1.5
+ * @return      array / false
+*/
+
+function edd_get_purchase_session() {
+	return isset( $_SESSION['edd_purchase_info'] ) ? $_SESSION['edd_purchase_info'] : false;
 }
 
 
