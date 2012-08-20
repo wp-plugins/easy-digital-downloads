@@ -96,13 +96,14 @@ function edd_process_paypal_purchase( $purchase_data ) {
             'cmd'           => '_xclick', 
             'amount'        => $purchase_data['price'], 
             'business'      => $edd_options['paypal_email'], 
-            'item_name'     => $cart_summary, 
+            'item_name'     => stripslashes_deep( html_entity_decode( $cart_summary, ENT_COMPAT, 'UTF-8' ) ), 
             'email'         => $purchase_data['user_email'], 
             'no_shipping'   => '1', 
+            'shipping'      => '0',
             'no_note'       => '1', 
             'currency_code' => $edd_options['currency'], 
             'item_number'   => $purchase_data['purchase_key'], 
-            'charset'       => 'UTF-8', 
+            'charset'       => get_bloginfo( 'charset' ), 
             'custom'        => $payment, 
             'rm'            => '2', 
             'return'        => $return_url, 
@@ -110,7 +111,7 @@ function edd_process_paypal_purchase( $purchase_data ) {
          );
 
         // build query
-        $paypal_redirect .= http_build_query( $paypal_args );
+        $paypal_redirect .= http_build_query( apply_filters('edd_paypal_redirect_args', $paypal_args, $purchase_data ) );
         
         // get rid of cart contents
         edd_empty_cart();
@@ -147,6 +148,7 @@ function edd_listen_for_paypal_ipn() {
         
     // alternate purchase verification  
     } else { 
+	
         if ( isset( $_GET['tx'] ) && isset( $_GET['st'] ) && isset( $_GET['amt'] ) && isset( $_GET['cc'] ) && isset( $_GET['cm'] ) && isset( $_GET['item_number'] ) ) {
             // we are using the alternate method of verifying PayPal purchases
             
@@ -164,7 +166,7 @@ function edd_listen_for_paypal_ipn() {
             if ( $currency != $edd_options['currency'] ) {
                 return; // the currency code is invalid
             }
-            if ( $paypal_amount != $payment_amount ) {
+            if ( number_format((float)$paypal_amount, 2) != $payment_amount ) {
                 return; // the prices don't match
             }
             if ( $purchase_key != $payment_meta['key'] ) {
@@ -202,16 +204,22 @@ function edd_process_paypal_ipn() {
     $post_data = false;
     
     // fallback just in case post_max_size is lower than needed
-    if ( ini_get( 'allow_url_fopen' ) )
-    $post_data = file_get_contents( 'php://input' );
-    
+    if ( ini_get( 'allow_url_fopen' ) ) {
+	 	$post_data = file_get_contents( 'php://input' );
+	 } else {
+	 	// if allow_url_fopen is not enabled, then make sure that post_max_size is large enough
+	 	ini_set('post_max_size', '12M');
+	 }
     // start the encoded data collection with notification command
     $encoded_data = 'cmd=_notify-validate';
+    
+    // get current arg separator
+    $arg_separator = edd_get_php_arg_separator_output();
     
     // verify there is a post_data
     if ( $post_data || strlen( $post_data ) > 0 ) {
         // append the data
-        $encoded_data .= '&'.$post_data;
+        $encoded_data .= $arg_separator.$post_data;
     } else {
         // check if POST is empty
         if ( empty( $_POST ) ) {
@@ -221,7 +229,7 @@ function edd_process_paypal_ipn() {
             // loop trough each POST
             foreach ( $_POST as $key => $value ) {
                 // encode the value and append the data
-                $encoded_data .= "&$key=" . urlencode( $value );
+                $encoded_data .= $arg_separator."$key=" . urlencode( $value );
             }
         }
     }
@@ -248,22 +256,22 @@ function edd_process_paypal_ipn() {
 	if( is_wp_error( $api_response) )
 		return; // something went wrong   
    
-   if ($api_response['body'] !== 'VERIFIED')
-   	return; // response not okay
+   if ($api_response['body'] !== 'VERIFIED' && !isset($edd_options['disable_paypal_verification']) )
+		return; // response not okay
    	 
    // convert collected post data to an array
    parse_str( $post_data, $post_data_array );   
    	 
     // check if $post_data_array has been populated
-    if ( ! is_array( $post_data_array ) && ! empty( $post_data_array ) )
+    if ( ! is_array( $encoded_data_array ) && ! empty( $encoded_data_array ) )
     return;
     
     // collect payment details
-    $payment_id     = $post_data_array['custom'];
-    $purchase_key   = $post_data_array['item_number'];
-    $paypal_amount  = $post_data_array['mc_gross'];
-    $payment_status = $post_data_array['payment_status'];
-    $currency_code  = strtolower( $post_data_array['mc_currency'] );
+    $payment_id     = $encoded_data_array['custom'];
+    $purchase_key   = $encoded_data_array['item_number'];
+    $paypal_amount  = $encoded_data_array['mc_gross'];
+    $payment_status = $encoded_data_array['payment_status'];
+    $currency_code  = strtolower( $encoded_data_array['mc_currency'] );
     
     // retrieve the meta info for this payment
     $payment_meta = get_post_meta( $payment_id, '_edd_payment_meta', true );
@@ -274,7 +282,7 @@ function edd_process_paypal_ipn() {
         // the currency code is invalid
         return;
     }
-    if ( number_format($paypal_amount) != number_format($payment_amount) ) {
+    if ( number_format((float)$paypal_amount, 2) != $payment_amount ) {
         // the prices don't match
        return;
     }
@@ -283,17 +291,17 @@ function edd_process_paypal_ipn() {
         return;
     }
          
-    if ( isset( $post_data_array['txn_type'] ) && $post_data_array['txn_type'] == 'web_accept' ) {
+    if ( isset( $encoded_data_array['txn_type'] ) && $encoded_data_array['txn_type'] == 'web_accept' ) {
         
         $status = strtolower( $payment_status );
-        
+                
         if ( $status == 'completed' || edd_is_test_mode() ) {
             edd_update_payment_status( $payment_id, 'publish' );
         }
         
     }
 }
-add_action( 'init', 'edd_process_paypal_ipn' );
+add_action( 'edd_verify_paypal_ipn', 'edd_process_paypal_ipn' );
 
 
 /**

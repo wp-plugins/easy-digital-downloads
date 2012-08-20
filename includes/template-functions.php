@@ -42,9 +42,16 @@ add_filter('the_content', 'edd_append_purchase_link');
  * @return      string
 */
 
-function edd_get_purchase_link($download_id = null, $link_text = null, $style = null, $color = null) {
+function edd_get_purchase_link($download_id = null, $link_text = null, $style = null, $color = null, $class = '') {
 	global $edd_options, $post, $user_ID;
 
+	if(!isset($edd_options['purchase_page'])){
+		edd_set_error( 'set_checkout', __( 'No checkout page has been configured.', 'edd' ) );
+		edd_print_errors(); // Not really how edd_print_errors was intended to be used but didn't want to add hook 
+		// Potentially this error could be hidden from customers as a html comment just to give the developer a hint
+		// It will confuse customers that can't find the purchase link but we don't want to much info about the backend to them either. 
+		return false;
+	}
 	$page = get_permalink($post->ID); // current page
 	$link_args = array('download_id' => $download_id, 'edd_action' => 'add_to_cart');
 	$link = add_query_arg($link_args, $page);
@@ -61,7 +68,7 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 		$color = get_post_meta($post->ID, '_edd_purchase_color', true) ? str_replace(' ', '_', get_post_meta($post->ID, '_edd_purchase_color', true)) : 'blue';
 	}
 	
-	$purchase_form = '<form id="edd_purchase_' . $download_id . '" class="edd_download_purchase_form" action="" method="POST">';
+	$purchase_form = '<form id="edd_purchase_' . $download_id . '" class="edd_download_purchase_form" method="POST">';
 		
 		if($variable_pricing) {
 			$prices = get_post_meta($download_id, 'edd_variable_prices', true);
@@ -81,10 +88,6 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 		
 		$purchase_form .= '<div class="edd_purchase_submit_wrapper">';
 		
-			if(edd_has_user_purchased($user_ID, $download_id)) {
-				do_action('edd_has_purchased_item_message', $user_ID, $download_id);
-			}
-				
 			$data_variable = $variable_pricing ? ' data-variable-price="yes"' : '';
 			
 			if( edd_item_in_cart($download_id) ) {
@@ -100,7 +103,7 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 				$purchase_button = '<span class="edd_button edd_add_to_cart_wrap edd_' . $color . '"' . $button_display . '>';
 					$purchase_button .= '<span class="edd_button_outer">';
 						$purchase_button .= '<span class="edd_button_inner">';
-							$purchase_button .= '<input type="submit" class="edd_button_text edd-submit edd-add-to-cart" name="edd_purchase_download" value="' . $link_text . '" data-action="edd_add_to_cart" data-download-id="' . $download_id . '"' . $data_variable . '/>';
+							$purchase_button .= '<input type="submit" class="edd_button_text edd-submit edd-add-to-cart ' . $class . '" name="edd_purchase_download" value="' . $link_text . '" data-action="edd_add_to_cart" data-download-id="' . $download_id . '"' . $data_variable . '/>';
 						$purchase_button .= '</span>';
 					$purchase_button .= '</span>';
 				$purchase_button .= '</span>';
@@ -115,7 +118,7 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 				
 			} else {
 				
-				$purchase_text = '<input type="submit" class="edd_submit_plain edd-add-to-cart" name="edd_purchase_download" value="' . $link_text . '" data-action="edd_add_to_cart" data-download-id="' . $download_id . '"' . $data_variable . ' ' . $button_display . '/>';
+				$purchase_text = '<input type="submit" class="edd_submit_plain edd-add-to-cart ' . $class . '" name="edd_purchase_download" value="' . $link_text . '" data-action="edd_add_to_cart" data-download-id="' . $download_id . '"' . $data_variable . ' ' . $button_display . '/>';
 				
 				$checkout_link = '<a href="' . $checkout_url . '" class="edd_go_to_checkout edd_button edd_' . $color . '" ' . $checkout_display . '>';
 				 	$checkout_link .= __('Checkout', 'edd');
@@ -123,7 +126,7 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 				
 				$purchase_form .= $purchase_text . $checkout_link;
 			}
-			if(edd_is_ajax_enabled()) {
+			if( edd_is_ajax_enabled()) {
 				$purchase_form .= '<div class="edd-cart-ajax-alert"><img src="' . EDD_PLUGIN_URL . 'includes/images/loading.gif" class="edd-cart-ajax" style="display: none;"/>';
 				$purchase_form .= '&nbsp;<span style="display:none;" class="edd-cart-added-alert">' . __('added to your cart', 'edd') . '</span></div>';
 			}
@@ -134,24 +137,6 @@ function edd_get_purchase_link($download_id = null, $link_text = null, $style = 
 	$purchase_form .= '</form><!--end #edd_purchase_' . $download_id . '-->';
 		
 	return apply_filters('edd_purchase_download_form', $purchase_form, $download_id, $link_text, $style, $color);
-}
-
-
-/**
- * Remove Item URL
- *
- * Returns the URL to remove an item.
- *
- * @access      public
- * @since       1.0 
- * @return      string
-*/
-
-function edd_remove_item_url($cart_key, $post, $ajax = false) {
-	global $post;
-	$current_page = ($ajax || !isset($post->ID)) ? home_url() : get_permalink($post->ID);
-	$remove_url = add_query_arg('cart_item', $cart_key, add_query_arg('edd_action', 'remove', $current_page));
-	return apply_filters('edd_remove_item_url', $remove_url);
 }
 
 
@@ -178,7 +163,6 @@ function edd_after_download_content($content) {
 }
 add_filter('the_content', 'edd_after_download_content');
 
-
 /**
  * Filter Success Page Content
  *
@@ -198,7 +182,25 @@ function edd_filter_success_page_content($content) {
 		if(has_filter('edd_payment_confirm_' . $_GET['payment-confirmation'])) {
 			$content = apply_filters('edd_payment_confirm_' . $_GET['payment-confirmation'], $content);
 		}
+
 	}
+
+	if(isset($edd_options['success_page']) && is_page($edd_options['success_page'])) {
+
+		if( isset( $edd_options['show_links_on_success'] ) ) {
+
+			// show download links to non logged-in users
+			$purchase_data = edd_get_purchase_session();
+			if( $purchase_data ) {
+
+				$content .= edd_get_purchase_download_links( $purchase_data );
+
+			}
+
+		}
+
+	}
+
 	return $content;
 }
 add_filter('the_content', 'edd_filter_success_page_content');
@@ -241,7 +243,79 @@ function edd_get_button_colors() {
  * @return      void
 */
 
-function edd_show_has_purchased_item_message($user_id, $download_id) {
-	echo '<p class="edd_has_purchased">' . __('You have already purchased this item, but you may purchase it again.', 'edd') . '</p>';
+function edd_show_has_purchased_item_message( $download_id ) {
+	global $user_ID;
+	if(edd_has_user_purchased($user_ID, $download_id)) {
+		echo '<p class="edd_has_purchased">' . __('You have already purchased this item, but you may purchase it again.', 'edd') . '</p>';
+	}
 }
-add_action('edd_has_purchased_item_message', 'edd_show_has_purchased_item_message', 10, 2);
+add_action('edd_after_download_content', 'edd_show_has_purchased_item_message');
+
+
+/**
+ * Default formatting for download excerpts
+ *
+ * This excerpt is primarily used in the [downloads] short code
+ *
+ * @access      private
+ * @since       1.0.8.4
+ * @return      string
+*/
+
+function edd_downloads_default_excerpt( $excerpt ) {
+	return do_shortcode( wpautop( $excerpt ) );
+}
+add_filter('edd_downloads_excerpt', 'edd_downloads_default_excerpt');
+
+
+/**
+ * Default formatting for full download content
+ *
+ * This is primarily used in the [downloads] short code
+ *
+ * @access      private
+ * @since       1.0.8.4
+ * @return      string
+*/
+
+function edd_downloads_default_content( $content ) {
+	return do_shortcode( wpautop( $content ) );
+}
+add_filter('edd_downloads_content', 'edd_downloads_default_content');
+
+
+/**
+ * Gets the download links for each item purchased
+ *
+ * @access      private
+ * @since       1.1.5
+ * @return      string
+*/
+
+function edd_get_purchase_download_links( $purchase_data ) {
+
+	$links = '';
+
+	$links .= '<ul class="edd_download_links">';
+	foreach( $purchase_data['downloads'] as $download ) {
+
+		$links .= '<li>';
+			$links .= '<h3 class="edd_download_link_title">' . get_the_title( $download['id'] ) . '</h3>';
+			$price_id = isset( $download['options'] ) && isset( $download['options']['price_id'] ) ? $download['options']['price_id'] : null;
+			$files = edd_get_download_files( $download['id'], $price_id );
+			if( is_array( $files ) ) {
+				foreach( $files as $filekey => $file ) {
+					$links .= '<div class="edd_download_link_file">';
+						$links .= '<a href="' . edd_get_download_file_url( $purchase_data['purchase_key'], $purchase_data['user_email'], $filekey, $download['id'] ) . '">';
+							$links .= $file['name'];
+						$links .= '</a>';
+					$links .= '</div>';
+				}
+			}
+		$links .= '</li>';
+
+	}
+	$links .= '</ul>';
+
+	return $links;
+}
