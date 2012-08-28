@@ -24,23 +24,25 @@ function edd_process_download() {
 	if(isset($_GET['download']) && isset($_GET['email']) && isset($_GET['file'])) {
 		$download = urldecode($_GET['download']);
 		$key = urldecode($_GET['download_key']);
-		$email = urldecode($_GET['email']);
+		$email = rawurldecode($_GET['email']);
 		$file_key = urldecode($_GET['file']);
 		$expire = urldecode(base64_decode($_GET['expire']));
 				
 
-		$payment = edd_verify_download_link($download, $key, $email, $expire);
+		$payment = edd_verify_download_link($download, $key, $email, $expire, $file_key);
 		
 		 // defaulting this to true for now because the method below doesn't work well
 		$has_access = true;
 		//$has_access = ( edd_logged_in_only() && is_user_logged_in() ) || !edd_logged_in_only() ? true : false;
 		if($payment && $has_access) {
 			
+			do_action('edd_process_verified_download', $download, $email);;
+
 			// payment has been verified, setup the download
 			$download_files = get_post_meta($download, 'edd_download_files', true);
 			
-			$requested_file = $download_files[$file_key]['file'];
-			
+			$requested_file = apply_filters('edd_requested_file', $download_files[$file_key]['file'] );
+		
 			$user_info = array();
 			$user_info['email'] = $email;
 			if(is_user_logged_in()) {
@@ -55,39 +57,64 @@ function edd_process_download() {
 			$file_extension = edd_get_file_extension($requested_file);
 
             switch ($file_extension) :
-                case "pdf": $ctype = "application/pdf"; break;
-                case "exe": $ctype = "application/octet-stream"; break;
-                case "zip": $ctype = "application/zip"; break;
-                case "doc": $ctype = "application/msword"; break;
-                case "xls": $ctype = "application/vnd.ms-excel"; break;
-                case "ppt": $ctype = "application/vnd.ms-powerpoint"; break;
-                case "gif": $ctype = "image/gif"; break;
-                case "png": $ctype = "image/png"; break;
-                case "jpe": $ctype="image/jpg"; break;
-                case "jpeg": $ctype="image/jpg"; break;
-                case "jpg": $ctype="image/jpg"; break;
-                case 'mp3': $ctype="audio/mpeg"; break;
-                case 'wav': $ctype="audio/x-wav"; break;
-                case 'mpeg': $ctype="video/mpeg"; break;
-                case 'mpg': $ctype="video/mpeg"; break;
-                case 'mpe': $ctype="video/mpeg"; break;
-                case 'mov': $ctype="video/quicktime"; break;
-                case 'avi': $ctype="'video/x-msvideo"; break;
-                default: $ctype = "application/force-download";
+                case "pdf": $ctype 	= "application/pdf"; break;
+                case "exe": $ctype 	= "application/octet-stream"; break;
+                case "zip": $ctype 	= "application/zip"; break;
+                case "doc": $ctype 	= "application/msword"; break;
+                case "xls": $ctype 	= "application/vnd.ms-excel"; break;
+                case "ppt": $ctype 	= "application/vnd.ms-powerpoint"; break;
+                case "gif": $ctype 	= "image/gif"; break;
+                case "png": $ctype 	= "image/png"; break;
+                case "jpe": $ctype 	= "image/jpg"; break;
+                case "jpeg": $ctype = "image/jpg"; break;
+                case "jpg": $ctype 	= "image/jpg"; break;
+                case 'mp3': $ctype 	= "audio/mpeg"; break;
+                case 'wav': $ctype 	= "audio/x-wav"; break;
+                case 'mpeg': $ctype = "video/mpeg"; break;
+                case 'mpg': $ctype 	= "video/mpeg"; break;
+                case 'mpe': $ctype 	= "video/mpeg"; break;
+                case 'mov': $ctype 	= "video/quicktime"; break;
+                case 'avi': $ctype 	= "video/x-msvideo"; break;
+                default: $ctype 	= "application/force-download";
             endswitch;
 			
-			set_time_limit(0);
-			set_magic_quotes_runtime(0);
-				
+			if( !ini_get('safe_mode') ){ 
+				set_time_limit(0);
+			}
+			if( function_exists('get_magic_quotes_runtime') && get_magic_quotes_runtime() ) {
+				set_magic_quotes_runtime(0);
+			}
 			header("Pragma: no-cache");
 			header("Expires: 0");
 			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 			header("Robots: none");
 			header("Content-Type: " . $ctype . "");
 			header("Content-Description: File Transfer");	
-		   header("Content-Disposition: attachment; filename=\"" . basename($requested_file) . "\";");
+		    header("Content-Disposition: attachment; filename=\"" . apply_filters('edd_requested_file_name', basename($requested_file) ) . "\";");
 			header("Content-Transfer-Encoding: binary");
-			readfile($requested_file);
+			
+			if( strpos( $requested_file, home_url() ) !== false) {
+				// local file
+				$upload_dir = wp_upload_dir();
+					
+				$requested_file = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $requested_file);	
+					
+				$requested_file = realpath( $requested_file );
+
+				header("Content-Length: " . @filesize( $requested_file ) );
+
+				$requested_file = @fopen( $requested_file, "rb" );
+				while( !feof( $requested_file ) ) {
+					print( @fread( $requested_file, 1024*8 ) );
+					ob_flush();
+					flush();
+				}
+
+			} else {
+				// this is a remote file
+				header("Location: " . $requested_file);
+			}
+
 			exit;
 			
 		} else {
