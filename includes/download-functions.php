@@ -302,6 +302,7 @@ function edd_price($download_id, $echo = true) {
 	} else {
 		$price = edd_currency_filter(edd_get_download_price($download_id));
 	}
+	$price = apply_filters( 'edd_download_price', $price, $download_id );
 	if( $echo )
 		echo $price;
 	else
@@ -478,14 +479,19 @@ function edd_get_download_file_url($key, $email, $filekey, $download_id) {
 	
 	global $edd_options;
 
-	$hours = isset($edd_options['download_link_expiration']) && is_numeric($edd_options['download_link_expiration']) ? absint($edd_options['download_link_expiration']) : 24;
+	$hours = isset( $edd_options['download_link_expiration'] ) 
+			&& is_numeric( $edd_options['download_link_expiration'] ) 
+			? absint($edd_options['download_link_expiration']) : 24;
 
+	if( ! ( $date = strtotime( '+' . $hours . 'hours' ) ) )
+		$date = 2147472000; // highest possible date, January 19, 2038
+		
 	$params = array(
 		'download_key' => $key,
-		'email' => rawurlencode($email),
+		'email' => rawurlencode( $email ),
 		'file' => $filekey,
 		'download' => $download_id, 
-		'expire' => urlencode(base64_encode(strtotime('+' . $hours . 'hours', time())))
+		'expire' => rawurlencode( base64_encode( $date ) )
 	);
 
 	$params = apply_filters('edd_download_file_url_args', $params);
