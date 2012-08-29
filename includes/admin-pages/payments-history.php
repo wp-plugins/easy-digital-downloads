@@ -46,13 +46,62 @@ function edd_payment_history_page() {
 			$order = isset( $_GET['order'] ) ? $_GET['order'] : 'DESC';
 			$order_inverse = $order == 'DESC' ? 'ASC' : 'DESC';
 			$order_class = strtolower($order_inverse);
-			
-			$payments = edd_get_payments($offset, $per_page, $mode, $orderby, $order);
-			$payment_count = edd_count_payments($mode);
-			$total_pages = ceil($payment_count/$per_page);
+			$user = isset( $_GET['user'] ) ? $_GET['user'] : null;
+			$status = isset( $_GET['status'] ) ? $_GET['status'] : 'any';
+
+			$payments = edd_get_payments($offset, $per_page, $mode, $orderby, $order, $user, $status);
+			$payment_count = wp_count_posts('edd_payment');
+
+			$total_count = $payment_count->publish + $payment_count->pending + $payment_count->refunded + $payment_count->trash;
+
+			switch( $status ) {
+				case 'publish':
+					$current_count = $payment_count->publish;
+					break;
+				case 'pending':
+					$current_count = $payment_count->pending;
+					break;
+				case 'refunded':
+					$current_count = $payment_count->refunded;
+					break;
+				case 'trash':
+					$current_count = $payment_count->trash;
+					break;
+				case 'any':
+					$current_count = $total_count;
+					break;
+			}
+
+			$total_pages = ceil($current_count/$per_page);
 			
 			?>
 			<h2><?php _e('Payment History', 'edd'); ?></h2>
+			<?php do_action('edd_payments_page_top'); ?>
+			<ul class="subsubsub">
+				<li class="all">
+					<a href="<?php echo remove_query_arg('status'); ?>" <?php echo !isset( $_GET['status'] ) ? 'class="current"' : ''; ?>>
+						<?php _e('All'); ?> 
+						<span class="count">(<?php echo $total_count; ?>)</span>
+					</a> |
+				</li>
+				<li class="publish">
+					<a href="<?php echo add_query_arg('status', 'publish'); ?>" <?php echo isset( $_GET['status'] ) && $_GET['status'] == 'publish' ? 'class="current"' : ''; ?>><?php _e('Completed', 'edd'); ?> <span class="count">(<?php echo $payment_count->publish; ?>)</span></a> |
+				</li>
+				<li class="pending">
+					<a href="<?php echo add_query_arg('status', 'pending'); ?>" <?php echo isset( $_GET['status'] ) && $_GET['status'] == 'pending' ? 'class="current"' : ''; ?>><?php _e('Pending', 'edd'); ?> <span class="count">(<?php echo $payment_count->pending; ?>)</span></a> |
+				</li>
+				<li class="refunded">
+					<a href="<?php echo add_query_arg('status', 'refunded'); ?>" <?php echo isset( $_GET['status'] ) && $_GET['status'] == 'refunded' ? 'class="current"' : ''; ?>><?php _e('Refunded', 'edd'); ?> <span class="count">(<?php echo $payment_count->refunded; ?>)</span></a> |
+				</li>
+				<li class="trash">
+					<a href="<?php echo add_query_arg('status', 'trash'); ?>" <?php echo isset( $_GET['status'] ) && $_GET['status'] == 'trash' ? 'class="current"' : ''; ?>><?php _e('Deleted', 'edd'); ?> <span class="count">(<?php echo $payment_count->trash; ?>)</span></a>
+				</li>
+				<?php do_action('edd_payments_page_statuses'); ?>
+			</ul>
+			<ul class="subsubsub edd-export-payments">
+				<li> | <?php _e('Export', 'edd'); ?>: <a href="<?php echo add_query_arg('export', 'csv'); ?>">CSV</a></li>
+				<?php do_action('edd_payments_page_export_options'); ?>
+			</ul>	
 			<form id="payments-filter" action="<?php echo admin_url('edit.php'); ?>" method="get" style="float: right; margin-bottom: 5px;">
 				<label for="edd-mode"><?php _e('Payment mode', 'edd'); ?></label>
 				<select name="mode" id="edd-mode">
@@ -61,18 +110,29 @@ function edd_payment_history_page() {
 				</select>
 				<input type="hidden" name="page" value="edd-payment-history"/>
 				<input type="hidden" name="post_type" value="download"/>
+				<?php if(isset( $_GET['user'] ) ) { ?>
+					<input type="hidden" name="user" value="<?php echo $_GET['user']; ?>"/>
+				<?php } ?>
+				<?php if(isset( $_GET['status'] ) ) { ?>
+					<input type="hidden" name="status" value="<?php echo $_GET['status']; ?>"/>
+				<?php } ?>
 				<label for="edd_show"><?php _e('Payments per page', 'edd'); ?></label>
 				<input type="text" class="regular-text" style="width:30px;" id="edd_show" name="show" value="<?php echo isset($_GET['show']) ? $_GET['show'] : ''; ?>"/>
 				<input type="submit" class="button-secondary" value="<?php _e('Show', 'edd'); ?>"/>
 			</form>
+			<?php if( isset( $_GET['user'] ) ) { 
+				$user = is_numeric( $user ) ? get_userdata( $user ) : $user; 
+				$user = is_object( $user ) ? $user->display_name : $user;
+				?>
+				<p class="clear"><?php echo __('Showing payments for: ', 'edd') . '&nbsp' . $user; ?>&nbsp;-&nbsp;<a href="<?php echo remove_query_arg('user'); ?>"><?php _e('clear', 'edd'); ?></a></div>
+			<?php } ?>
 			<table class="wp-list-table widefat fixed posts edd-payments">
 				<thead>
 					<tr>
 						<th style="width: 60px;" class="manage-column column-title sortable <?php echo $order_class; echo $orderby == 'ID' ? ' sorted' : ''; ?>">
 						    <a href="<?php echo add_query_arg( array( 'orderby' => 'ID', 'order' => $order_inverse ) ); ?>" title="<?php _e('ID', 'edd'); ?>"><span><?php _e('ID', 'edd'); ?></span> <span class="sorting-indicator"></span></a>
 						</th>
-						<th style="width: 165px;"><?php _e('Email', 'edd'); ?></th>
-						<th style="width: 240px;"><?php _e('Key', 'edd'); ?></th>
+						<th style="width: 250px;"><?php _e('Email', 'edd'); ?></th>
 						<th><?php _e('Products', 'edd'); ?></th>
 						<th><?php _e('Price', 'edd'); ?></th>
 						<th class="manage-column column-title sortable <?php echo $order_class; echo $orderby == 'Date' ? ' sorted' : ''; ?>">
@@ -87,8 +147,7 @@ function edd_payment_history_page() {
 				<tfoot>
 					<tr>
 						<th style="width: 40px;"><?php _e('ID', 'edd'); ?></th>
-						<th style="width: 150px;"><?php _e('Email', 'edd'); ?></th>
-						<th style="width: 240px;"><?php _e('Key', 'edd'); ?></th>
+						<th style="width: 250px;"><?php _e('Email', 'edd'); ?></th>
 						<th><?php _e('Products', 'edd'); ?></th>
 						<th><?php _e('Price', 'edd'); ?></th>
 						<th><?php _e('Date', 'edd'); ?></th>
@@ -131,17 +190,21 @@ function edd_payment_history_page() {
 											?>
 										</div>
 									</td>
-									<td><?php echo $payment_meta['key']; ?></td>
 									<td><a href="#TB_inline?width=640&amp;inlineId=purchased-files-<?php echo $payment->ID; ?>" class="thickbox" title="<?php printf(__('Purchase Details for Payment #%s', 'edd'), $payment->ID); ?> "><?php _e('View Order Details', 'edd'); ?></a>
 										<div id="purchased-files-<?php echo $payment->ID; ?>" style="display:none;">
 											<?php 
-												$downloads = isset($payment_meta['cart_details']) ? maybe_unserialize($payment_meta['cart_details']) : maybe_unserialize($payment_meta['downloads']);
+												$downloads = isset($payment_meta['cart_details']) ? maybe_unserialize($payment_meta['cart_details']) : false;
+												if( empty( $downloads ) || !$downloads ) {
+													$downloads = maybe_unserialize($payment_meta['downloads']);
+												}
 											?>
 											<h4><?php echo _n(__('Purchased File', 'edd'), __('Purchased Files', 'edd'), count($downloads)); ?></h4>
 											<ul class="purchased-files-list">
 											<?php 
+
 												if($downloads) {
-													foreach($downloads as $download) {
+
+													foreach($downloads as $key => $download) {
 														echo '<li>';
 															
 															// retrieve the ID of the download
@@ -150,9 +213,29 @@ function edd_payment_history_page() {
 															// if download has variable prices, override the default price
 															$price_override = isset($payment_meta['cart_details']) ? $download['price'] : null; 
 															
+															$user_info = unserialize($payment_meta['user_info']);
+															
 															// calculate the final price
-															$price = edd_get_download_final_price($id, unserialize($payment_meta['user_info']), $price_override);
-															echo '<a href="' . admin_url('post.php?post=' . $id . '&action=edit') . '" target="_blank">' . get_the_title($id) . '</a> - ' . __('Price: ', 'edd') . edd_currency_filter($price);
+															$price = edd_get_download_final_price($id, $user_info, $price_override);
+															
+															// show name of download
+															echo '<a href="' . admin_url('post.php?post=' . $id . '&action=edit') . '" target="_blank">' . get_the_title($id) . '</a>';
+															
+															echo  ' - ';
+															
+															if( isset( $downloads[$key]['item_number'])) {
+
+																$price_options = $downloads[$key]['item_number']['options'];
+																															
+																if( isset($price_options['price_id']) ) {
+																	echo edd_get_price_option_name($id, $price_options['price_id']);
+																	echo ' - ';
+																}
+															}	
+
+															// show price
+															echo edd_currency_filter($price);
+														
 														echo '</li>';
 													}
 												}
@@ -169,30 +252,55 @@ function edd_payment_history_page() {
 													<?php do_action('edd_payment_personal_details_list', $payment_meta, $user_info); ?>
 												</ul>
 											</div>
+											
+											<?php
+											$gateway = get_post_meta( $payment->ID, '_edd_payment_gateway', true);
+											if( $gateway ) { ?>
+											<div class="payment-method">
+												<h4><?php _e('Payment Method:', 'edd'); ?></h4>
+												<span class="payment-method-name"><?php echo edd_get_gateway_admin_label( $gateway ); ?></span>
+											</div>
+											<?php } ?>
+											<div class="purchase-key-wrap">
+												<h4><?php _e('Purchase Key', 'edd'); ?></h4>
+												<span class="purchase-key"><?php echo $payment_meta['key']; ?></span>
+											</div>
 											<p><a id="edd-close-purchase-details" class="button-secondary" onclick="tb_remove();" title="<?php _e('Close', 'edd'); ?>"><?php _e('Close', 'edd'); ?></a></p>
 										</div>
 									</td>
 									<td style="text-transform:uppercase;"><?php echo edd_currency_filter( $payment_meta['amount']); ?></td>
 									<td><?php echo date(get_option('date_format'), strtotime($payment->post_date)); ?></td>
-									<td><?php echo isset($user_info['id']) && $user_info['id'] != -1 ? get_user_by('id', $user_info['id'])->display_name : __('guest', 'edd'); ?></td>
+									<td>
+										<?php $user_id = isset($user_info['id']) && $user_info['id'] != -1 ? $user_info['id'] : $user_info['email']?>
+										<a href="<?php echo remove_query_arg('p', add_query_arg('user', $user_id) ); ?>">
+											<?php 
+											if ( is_numeric( $user_id ) ) {
+												$user = get_user_by('id', $user_id);
+												echo is_object( $user ) ? $user->display_name : __('guest', 'edd');												
+											} else {
+												echo __('guest', 'edd');
+											}
+											?>
+										</a>
+									</td>
 									<td><?php echo edd_get_payment_status($payment, true); ?></td>
 								</tr>
 							<?php
 							$i++;
 							endforeach;
 						else : ?>
-						<tr><td colspan="8"><?php _e('No payments recorded yet', 'edd'); ?></td></tr>
+						<tr><td colspan="7"><?php _e('No payments recorded yet', 'edd'); ?></td></tr>
 					<?php endif;?>
 				</table>
 				<?php if ($total_pages > 1) : ?>
 					<div class="tablenav">
 						<div class="tablenav-pages alignright">
 							<?php
-								if(isset($_GET['show']) && $_GET['show'] > 0) {
-									$base = 'edit.php?post_type=download&page=edd-payment-history&mode=' . $mode . '&show=' . $_GET['show'] . '%_%';
-								} else {
-									$base = 'edit.php?post_type=download&page=edd-payment-history&mode=' . $mode . '%_%';
-								}
+
+								$query_string = $_SERVER['QUERY_STRING'];
+
+								$base = 'edit.php?' . remove_query_arg('p', $query_string) . '%_%';
+
 								echo paginate_links( array(
 									'base' => $base,
 									'format' => '&p=%#%',
@@ -207,7 +315,7 @@ function edd_payment_history_page() {
 						</div>
 					</div><!--end .tablenav-->
 				<?php endif; ?>
-				
+				<?php do_action('edd_payments_page_bottom'); ?>
 		</div><!--end wrap-->
 		<?php
 	}

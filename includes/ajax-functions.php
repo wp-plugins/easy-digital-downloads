@@ -12,6 +12,7 @@
 */
 
 
+
 /**
  * AJAX enabled
  *
@@ -19,17 +20,17 @@
  *
  * @access      private
  * @since       1.0
+ * @deprecated  1.0.8.3
  * @return      boolean
 */
 
 function edd_is_ajax_enabled() {
 	global $edd_options;
-	if(isset($edd_options['ajax_cart'])) {
+	if( ! isset($edd_options['disable_ajax_cart'])) {
 		return true;
 	}
 	return false;
 }
-
 
 /**
  * AJAX Remove From Cart
@@ -68,7 +69,11 @@ function edd_ajax_add_to_cart() {
 		if(!edd_item_in_cart($_POST['download_id'])) {
 			$options = is_numeric($_POST['price_id']) ? array('price_id' => $_POST['price_id']) : array();
 			$key = edd_add_to_cart($_POST['download_id'], $options);
-			$cart_item = edd_get_cart_item_template($key, $_POST['download_id'], true);
+			$item = array(
+				'id' => $_POST['download_id'],
+				'options' => $options
+			);
+			$cart_item = edd_get_cart_item_template($key, $item, true);
 			echo $cart_item;
 		} else {
 			echo 'incart';
@@ -91,22 +96,29 @@ add_action('wp_ajax_nopriv_edd_add_to_cart', 'edd_ajax_add_to_cart');
 */
 
 function edd_ajax_validate_discount() {
-	if(isset($_POST['code']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' )) {
-		if(edd_is_discount_valid($_POST['code'])) {
-			$price = edd_get_cart_amount();
-			$discounted_price = edd_get_discounted_amount($_POST['code'], $price);
-		
+	if(isset($_POST['code'],$_POST['email']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' )) {
+		if( edd_is_discount_used( $_POST['code'], $_POST['email'] ) ) {  // Called twice if discount is not used (again by edd_is_discount_valid) but allows for beter usr msg and less execution if discount is used.
 			$return = array(
-				'msg' => 'valid',
-				'amount' => edd_currency_filter(edd_format_amount($discounted_price)),
+				'msg' => __('This discount code has been used already', 'edd'),
 				'code' => $_POST['code']
 			);
-			
 		} else {
-			$return = array(
-				'msg' => __('The discount you entered is invalid', 'edd'),
-				'code' => $_POST['code']
-			);
+			if(edd_is_discount_valid($_POST['code'],$_POST['email'])) {
+				$price = edd_get_cart_amount();
+				$discounted_price = edd_get_discounted_amount($_POST['code'], $price);
+
+				$return = array(
+					'msg' => 'valid',
+					'amount' => edd_currency_filter(edd_format_amount($discounted_price)),
+					'code' => $_POST['code']
+				);
+
+			} else {
+				$return = array(
+					'msg' => __('The discount you entered is invalid', 'edd'),
+					'code' => $_POST['code']
+				);
+			}
 		}
 		echo json_encode($return);
 	}
