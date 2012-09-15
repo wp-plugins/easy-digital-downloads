@@ -28,18 +28,18 @@ function edd_show_download_sales_graph($bgcolor = 'white') {
 		    google.setOnLoadCallback(drawSalesChart);
 		    function drawSalesChart() {
 		        var data = new google.visualization.DataTable();
-		        data.addColumn('string', '<?php _e("Download", "edd"); ?>');
+		        data.addColumn('string', '<?php echo edd_get_label_plural(); ?>');
 		        data.addColumn('number', '<?php _e("Sales", "edd"); ?>');
 		        data.addRows([
 					<?php foreach($downloads as $download) { ?>
-		          		['<?php echo get_the_title($download->ID); ?>', 
+		          		['<?php echo html_entity_decode( get_the_title($download->ID), ENT_COMPAT, 'UTF-8'); ?>', 
 							<?php echo edd_get_download_sales_stats($download->ID); ?>, 
 						],
 					<?php } ?>
 		        ]);
 
 		        var options = {
-		          	title: "<?php _e('Downloads Performance in Sales', 'edd'); ?>",
+		          	title: "<?php echo sprintf(__('%s Performance in Sales', 'edd'), edd_get_label_singular() ); ?>",
 					colors:['#a3bcd3'],
 					fontSize: 12,
 					backgroundColor: '<?php echo $bgcolor; ?>'
@@ -78,14 +78,14 @@ function edd_show_download_earnings_graph($bgcolor = 'white') {
 		        data.addColumn('number', '<?php _e("Earnings", "edd"); ?>');
 		        data.addRows([
 					<?php foreach($downloads as $download) { ?>
-		          		['<?php echo get_the_title($download->ID); ?>', 
+		          		['<?php echo html_entity_decode(get_the_title($download->ID), ENT_COMPAT, 'UTF-8'); ?>', 
 							<?php echo edd_get_download_earnings_stats($download->ID); ?>
 						],
 					<?php } ?>
 		        ]);
 
 		        var options = {
-		          	title: "<?php _e('Downloads Performance in Earnings', 'edd'); ?>",
+		          	title: "<?php echo sprintf(__('%s Performance in Earnings', 'edd'), edd_get_label_singular() ); ?>",
 					colors:['#a3bcd3'],
 					fontSize: 12,
 					backgroundColor: '<?php echo $bgcolor; ?>'
@@ -125,7 +125,7 @@ function edd_show_monthly_eanings_graph($bgcolor = 'white') {
 				$i = 1;
 				while($i <= 12) : ?>
 					['<?php echo edd_month_num_to_name($i) . ' ' . date("Y"); ?>', 
-					<?php echo edd_get_earnings_by_date($i, date('Y') ); ?>,
+					<?php echo edd_get_earnings_by_date(null, $i, date('Y') ); ?>,
 					],
 					<?php $i++;
 				endwhile;
@@ -144,6 +144,106 @@ function edd_show_monthly_eanings_graph($bgcolor = 'white') {
 	    }
     </script>	    
 	<div id="monthly_earnings_chart_div"></div>
+	<?php
+	echo ob_get_clean();
+}
+
+
+/**
+ * Show Daily Earnings Graph
+ *
+ * @access      public
+ * @since       1.1.8
+ * @return      void
+*/
+
+function edd_show_daily_eanings_graph($bgcolor = 'white') {
+	ob_start(); ?>
+    <script type="text/javascript">
+	    google.load("visualization", "1", {packages:["corechart"]});
+		// sales chart
+	    google.setOnLoadCallback(drawSalesChart);
+	    function drawSalesChart() {
+	        var data = new google.visualization.DataTable();
+	        data.addColumn('string', '<?php _e("Day", "edd"); ?>');
+	        data.addColumn('number', '<?php _e("Earnings", "edd"); ?>');
+	        data.addRows([
+				<?php
+				$num_of_days = apply_filters( 'edd_earnings_per_day_days', 30 ); // show payments for the last 30 days
+				$i = $num_of_days;
+				while( $i > 1 ) : 
+					$day_time 	= strtotime( '-' . $num_of_days - $i . ' days', time() );
+					$day 		= date( 'd', $day_time );
+					$month 		= date( 'n', $day_time ) + 1; // I have no idea why the +1 is needed, but it is
+					$year 		= date( 'Y', $day_time );
+					?>
+					['<?php echo date( "n/d", mktime( 0, 0, 0, $month, $day, $year ) ); ?>', 
+					<?php echo edd_get_earnings_by_date( $day, $month, $year ); ?>,
+					],
+					<?php $i--;
+				endwhile;
+				?>
+	        ]);
+
+	        var options = {
+	          	title: "<?php printf( __('Earnings per day for last %s days', 'edd'), $num_of_days ); ?>",
+				colors:['#a3bcd3'],
+				fontSize: 12,
+				backgroundColor: '#ffffff'
+	        };
+
+	        var chart = new google.visualization.ColumnChart(document.getElementById('daily_earnings_chart_div'));
+	        chart.draw(data, options);
+	    }
+    </script>	    
+	<div id="daily_earnings_chart_div"></div>
+	<?php
+	echo ob_get_clean();
+}
+
+
+/**
+ * Show Sales Per Month Graph
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      void
+*/
+
+function edd_show_monthly_sales_graph($bgcolor = 'white') {
+	ob_start(); ?>
+    <script type="text/javascript">
+	    google.load("visualization", "1", {packages:["corechart"]});
+		// sales chart
+	    google.setOnLoadCallback(drawSalesChart);
+	    function drawSalesChart() {
+	        var data = new google.visualization.DataTable();
+	        data.addColumn('string', '<?php _e("Month", "edd"); ?>');
+	        data.addColumn('number', '<?php _e("Sales", "edd"); ?>');
+	        data.addRows([
+				<?php
+				$i = 1;
+				while($i <= 12) : ?>
+					['<?php echo edd_month_num_to_name($i) . ' ' . date("Y"); ?>', 
+					<?php echo edd_get_sales_by_date($i, date('Y') ); ?>,
+					],
+					<?php $i++;
+				endwhile;
+				?>
+	        ]);
+
+	        var options = {
+	          	title: "<?php _e('Sales per month', 'edd'); ?>",
+				colors:['#a3bcd3'],
+				fontSize: 12,
+				backgroundColor: '#ffffff'
+	        };
+
+	        var chart = new google.visualization.ColumnChart(document.getElementById('monthly_sales_chart_div'));
+	        chart.draw(data, options);
+	    }
+    </script>	    
+	<div id="monthly_sales_chart_div"></div>
 	<?php
 	echo ob_get_clean();
 }

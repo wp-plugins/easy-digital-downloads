@@ -62,7 +62,6 @@ function edd_process_purchase_form() {
 		'discount' => $valid_data['discount']
 	);
 
-
 	// setup purchase information
 	$purchase_data = array(
 		'downloads' => edd_get_cart_contents(),
@@ -72,7 +71,9 @@ function edd_process_purchase_form() {
 		'date' => date( 'Y-m-d H:i:s' ),
 		'user_info' => $user_info,
 		'post_data' => $_POST,
-		'cart_details' => edd_get_cart_content_details()
+		'cart_details' => edd_get_cart_content_details(),
+		'gateway' => $valid_data['gateway'],
+		'card_info' => $valid_data['cc_info']
 	);
 	
 	// add the user data for hooks
@@ -82,12 +83,21 @@ function edd_process_purchase_form() {
 	do_action( 'edd_checkout_before_gateway', $_POST, $user_info, $valid_data );
 
 	// allow the purchase data to be modified before it is sent to the gateway
-	$purchase_data = apply_filters( 'edd_purchase_data_before_gateway', $purchase_data, $valid_data );
+	$purchase_data = apply_filters( 
+		'edd_purchase_data_before_gateway', 
+		$purchase_data, 
+		$valid_data 
+	);
 
 	// if the total amount in the cart is 0, send to the manaul gateway. This emulates a free download purchase
 	if ( $purchase_data['price'] <= 0 ) {
 		// revert to manual
 		$valid_data['gateway'] = 'manual';
+	}
+
+	if( isset( $edd_options['show_links_on_success'] ) ) {
+		// used for showing download links to non logged-in users after purchase
+		edd_set_purchase_session( $purchase_data );
 	}
 
 	// send info to the gateway for payment processing
@@ -122,6 +132,7 @@ function edd_purchase_form_validate_fields() {
 		'new_user_data'			=> array(),	 // new user collected data
 		'login_user_data'		=> array(),	 // login user collected data
 		'guest_user_data'		=> array(),	 // guest user collected data
+		'cc_info'				=> array()	 // credit card info
 	);
 	
 	// validate the gateway
@@ -129,6 +140,9 @@ function edd_purchase_form_validate_fields() {
 	
 	// validate discounts
 	$valid_data['discount'] = edd_purchase_form_validate_discounts();
+
+	// collect credit card info
+	$valid_data['cc_info'] = edd_get_purchase_cc_info();
 
     // validate agree to terms
     if ( isset( $edd_options['show_agree_to_terms'] ) )
@@ -185,6 +199,8 @@ function edd_purchase_form_validate_gateway() {
 		if ( edd_is_gateway_active( $gateway ) ) {
 			// return active gateway
 			return $gateway;
+		} else if ( edd_get_cart_amount() <= 0 ) {
+			return 'manual';
 		} else {
 			// set invalid gateway error
 			edd_set_error( 'invalid_gateway', __( 'The selected gateway is not active', 'edd' ) );
@@ -211,9 +227,10 @@ function edd_purchase_form_validate_discounts() {
 	// check for valid discount is present
 	if ( isset( $_POST['edd-discount'] ) && trim( $_POST['edd-discount'] ) != '' ) {
 		// clean discount
-		$discount = strip_tags( trim( $_POST['edd-discount'] ) );
+		$discount = sanitize_text_field( $_POST['edd-discount'] );
+		$email = sanitize_email( $_POST['edd_email'] );
 		// check if validates
-		if (  edd_is_discount_valid( $discount ) ) {
+		if (  edd_is_discount_valid( $discount, $email ) ) {
 			// return clean discount
 			return $discount;
 		// invalid discount
@@ -261,20 +278,25 @@ function edd_purchase_form_validate_logged_in_user() {
 		'user_id' => -1 
 	);
 	
-	// verify there is an user_ID
+	// verify there is a user_ID
 	if ( $user_ID > 0 ) {
 
 		// get the logged in user data
 		$user_data = get_userdata( $user_ID );
+
+		if( !is_email( $_POST['edd_email'] ) ) {
+			// if the user enters an email other than the stored email, we must verify it
+			edd_set_error( 'invalid_email', __( 'Please enter a valid email address.', 'edd' ) );
+		}
 
 		// verify data
 		if ( $user_data ) {
 			// collected logged in user data
 			$valid_user_data = array(
 				'user_id' 		=> $user_ID,
-				'user_email' 	=> $user_data->user_email,
-				'user_first' 	=> $user_data->user_firstname,
-				'user_last' 	=> $user_data->user_lastname,
+				'user_email' 	=> sanitize_email( $_POST['edd_email'] ),
+				'user_first' 	=> sanitize_text_field( $_POST['edd_first'] ),
+				'user_last' 	=> sanitize_text_field( $_POST['edd_last'] ),
 			);	
 		} else {
 			// set invalid user error
@@ -614,6 +636,47 @@ function edd_get_purchase_form_user( $valid_data = array() ) {
 
 
 /**
+ * Get Credit Card Info
+ *
+ * @access		private
+ * @since		1.2
+ * @return		array
+*/
+
+function edd_get_purchase_cc_info( $valid_data = array() ) {
+	
+	$cc_info = array();
+	$cc_info['card_name'] 		= isset( $_POST['card_name'] ) 		? sanitize_text_field( $_POST['card_name'] ) 		: '';
+	$cc_info['card_number'] 	= isset( $_POST['card_number'] ) 	? sanitize_text_field( $_POST['card_number'] ) 		: '';
+	$cc_info['card_cvc'] 		= isset( $_POST['card_cvc'] ) 		? sanitize_text_field( $_POST['card_cvc'] ) 		: '';
+	$cc_info['card_exp_month'] 	= isset( $_POST['card_exp_month'] ) ? sanitize_text_field( $_POST['card_exp_month'] ) 	: '';
+	$cc_info['card_exp_year'] 	= isset( $_POST['card_exp_year'] ) 	? sanitize_text_field( $_POST['card_exp_year'] ) 	: '';
+	$cc_info['card_address'] 	= isset( $_POST['card_address'] ) 	? sanitize_text_field( $_POST['card_address'] ) 	: '';
+	$cc_info['card_address_2'] 	= isset( $_POST['card_address_2'] ) ? sanitize_text_field( $_POST['card_address_2'] ) 	: '';
+	$cc_info['card_city'] 		= isset( $_POST['card_city'] ) 		? sanitize_text_field( $_POST['card_city'] ) 		: '';
+	$cc_info['card_country'] 	= isset( $_POST['billing_country'] )? sanitize_text_field( $_POST['billing_country'] ) 	: '';
+	$cc_info['card_zip'] 		= isset( $_POST['card_zip'] )		? sanitize_text_field( $_POST['card_zip'] ) 		: '';
+
+	switch( $cc_info['card_country'] ) :
+
+		case 'US' :
+			$cc_info['card_state'] = isset( $_POST['card_state_us'] )	? sanitize_text_field( $_POST['card_state_us'] ) 	: '';
+			break;
+		case 'CA' :
+			$cc_info['card_state'] = isset( $_POST['card_state_ca'] )	? sanitize_text_field( $_POST['card_state_ca'] ) 	: '';
+			break;
+		default :
+			$cc_info['card_state'] = isset( $_POST['card_state_other'] )? sanitize_text_field( $_POST['card_state_other'] ) : '';
+			break;
+
+	endswitch;
+	
+	// return cc info
+	return $cc_info;
+}
+
+
+/**
  * Send To Success Page
  *
  * Sends the user to the succes page.
@@ -628,7 +691,8 @@ function edd_send_to_success_page($query_string = null) {
 	$redirect = get_permalink($edd_options['success_page']);
 	if($query_string)
 		$redirect .= $query_string;
-	wp_redirect($redirect); exit;
+			
+	wp_redirect( apply_filters('edd_success_page_redirect', $redirect, $_POST['edd-gateway'], $query_string) ); exit;
 }
 
 
@@ -648,6 +712,7 @@ function edd_send_back_to_checkout($query_string = null) {
 	$redirect = get_permalink($edd_options['purchase_page']);
 	if($query_string)
 		$redirect .= $query_string;
+	
 	wp_redirect($redirect); exit;
 }
 

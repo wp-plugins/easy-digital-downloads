@@ -19,11 +19,7 @@
 */
 
 function edd_checkout_cart() {
-	if(file_exists(trailingslashit(get_stylesheet_directory()) . 'edd_templates/checkout_cart.php')) {
-		include_once(trailingslashit(get_stylesheet_directory()) . 'edd_templates/checkout_cart.php');
-	} else {
-		include_once(EDD_PLUGIN_DIR . '/includes/templates/checkout_cart.php');
-	}
+	edd_get_template_part( 'checkout_cart' );
 }
 
 
@@ -77,11 +73,14 @@ function edd_get_cart_item_template($cart_key, $item, $ajax = false) {
 	
 	$remove_url = edd_remove_item_url($cart_key, $post, $ajax);
 	$title = get_the_title($id); 
-	if(!empty($item['options'])) {
-		$title .= ' - ' . edd_get_price_name($id, $item['options']);							
+	$options = ! empty( $item['options'] ) ? $item['options'] : array();
+	if(!empty($options)) {
+		$title .= ' <span class="edd-cart-item-separator">-</span> ' . edd_get_price_name($id, $item['options']);							
 	}
-	$remove = '<a href="' . $remove_url . '" data-cart-item="' . $cart_key . '" data-action="edd_remove_from_cart" class="edd-remove-from-cart">' . __('remove', 'edd') . '</a>';	
-	$item = '<li class="edd-cart-item"><span class="edd-cart-item-title">' . $title . '</span> <span class="edd-cart-item-separator">-</span> ' . $remove . '</li>';
+	$remove = '<a href="' . esc_url( $remove_url ) . '" data-cart-item="' . absint( $cart_key ) . '" data-download-id="' . absint( $id ) . '" data-action="edd_remove_from_cart" class="edd-remove-from-cart">' . __('remove', 'edd') . '</a>';	
+	$item = '<li class="edd-cart-item"><span class="edd-cart-item-title">' . $title . '</span>&nbsp;';
+	$item .= '<span class="edd-cart-item-separator">-</span>&nbsp;' . edd_currency_filter( edd_get_cart_item_price($id, $options) ) . '&nbsp;';
+	$item .= '<span class="edd-cart-item-separator">-</span> ' . $remove . '</li>';
 	return apply_filters('edd_cart_item', $item, $id);
 }
 

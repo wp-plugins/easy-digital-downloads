@@ -21,7 +21,7 @@
 */
 
 function edd_get_cart_contents() {
-	return isset($_SESSION['edd_cart']) ? $_SESSION['edd_cart'] : false;
+	return isset($_SESSION['edd_cart']) ? apply_filters( 'edd_cart_contents', $_SESSION['edd_cart'] ) : false;
 }
 
 
@@ -61,6 +61,9 @@ function edd_get_cart_quantity() {
 function edd_add_to_cart($download_id, $options = array()) {
 	$cart = edd_get_cart_contents();
 	if(!edd_item_in_cart($download_id)) {
+
+		do_action( 'edd_pre_add_to_cart', $download_id, $options );
+
 		if(is_array($cart)) {
 			$cart[] = array('id' => $download_id, 'options' => $options);
 		} else {
@@ -69,6 +72,8 @@ function edd_add_to_cart($download_id, $options = array()) {
 	
 		$_SESSION['edd_cart'] = $cart;
 	
+		do_action( 'edd_post_add_to_cart', $download_id, $options );
+
 		// clear all the checkout errors, if any
 		edd_clear_errors();
 	
@@ -91,6 +96,9 @@ function edd_add_to_cart($download_id, $options = array()) {
 
 function edd_remove_from_cart($cart_key) {
 	$cart = edd_get_cart_contents();
+
+	do_action( 'edd_pre_remove_from_cart', $cart_key );
+
 	if(!is_array($cart)) {
 		return true; // empty cart
 	} else {
@@ -98,6 +106,8 @@ function edd_remove_from_cart($cart_key) {
 	}
 	$_SESSION['edd_cart'] = $cart;
 	
+	do_action( 'edd_post_remove_from_cart', $cart_key );
+
 	// clear all the checkout errors, if any
 	edd_clear_errors();
 	
@@ -190,17 +200,18 @@ function edd_get_cart_item_quantity($item) {
 
 function edd_get_cart_item_price($item_id, $options = array()) {
 	
-	$variable_pricing = get_post_meta($item_id, '_variable_pricing', true);
-	$price = get_post_meta($item_id, 'edd_price', true); 
-	if($variable_pricing && !empty($options)) {
+	$variable_pricing = get_post_meta( $item_id, '_variable_pricing', true) ;
+	$price = get_post_meta( $item_id, 'edd_price', true ); 
+	if( $variable_pricing && !empty( $options ) ) {
 		// if variable prices are enabled, retrieve the options
-		$prices = get_post_meta($item_id, 'edd_variable_prices', true);
-		if($prices) {
+		$prices = get_post_meta( $item_id, 'edd_variable_prices', true );
+		if( $prices ) {
 			$price = $prices[$options['price_id']]['amount'];
 		}
 	}
-	return $price;
+	return apply_filters( 'edd_cart_item_price', $price );
 }
+add_filter( 'edd_cart_item_price', 'edd_format_amount' );
 
 
 /**
@@ -261,25 +272,6 @@ function edd_get_cart_amount() {
 }
 
 
-/**
- * Format Amount
- *
- * Returns a nicely formatted amount.
- *
- * @access      public
- * @since       1.0
- * @param       $amount string the price amount to format
- * @param       $options array optional parameters, used for defining variable prices
- * @return      string - the newly formatted amount
-*/
-
-function edd_format_amount($amount) {
-	global $edd_options;
-	$thousands_sep = isset($edd_options['thousands_separator']) ? $edd_options['thousands_separator'] : ',';
-	$decimal_sep = isset($edd_options['decimal_separator']) ? $edd_options['decimal_separator'] : '.';
-	return number_format($amount, 2, $decimal_sep, $thousands_sep);
-}
-
 
 /**
  * Get Purchase Summary
@@ -326,7 +318,7 @@ function edd_get_cart_content_details() {
 				'id' => $item['id'],
 				'item_number' => $item,
 				'price' => edd_get_cart_item_price($item['id'], $item['options']),
-				'quantity' => 1
+				'quantity' => 1,
 			);
 		}
 	}
@@ -376,6 +368,25 @@ function edd_add_collection_to_cart($taxonomy, $terms) {
 
 
 /**
+ * Remove Item URL
+ *
+ * Returns the URL to remove an item.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      string
+*/
+
+function edd_remove_item_url($cart_key, $post, $ajax = false) {
+	global $post;
+	$current_page = edd_get_current_page_url();
+	$remove_url = add_query_arg( array('cart_item' => $cart_key, 'edd_action' => 'remove' ), $current_page);
+	return apply_filters('edd_remove_item_url', $remove_url);
+}
+
+
+
+/**
  * Show Added To Cart Messages
  *
  * Renders the added to cart messages.
@@ -407,7 +418,24 @@ add_action('edd_after_download_content', 'edd_show_added_to_cart_messages');
 
 function edd_get_checkout_uri() {
     global $edd_options;
-    return isset( $edd_options['purchase_page'] ) ? get_permalink( $edd_options['purchase_page'] ) : NULL;
+    $uri = isset( $edd_options['purchase_page'] ) ? get_permalink( $edd_options['purchase_page'] ) : NULL;
+    return apply_filters( 'edd_get_checkout_uri', $uri );
+}
+
+
+/**
+ * Checks if on checkout page
+ *
+ * Determines if the current page is the checkout page
+ *
+ * @access      public
+ * @since       1.1.2
+ * @return      bool - true if on the page, false otherwise
+*/
+
+function edd_is_checkout() {
+    global $edd_options;
+    return isset( $edd_options['purchase_page'] ) ? is_page( $edd_options['purchase_page'] ) : false;
 }
 
 
@@ -423,6 +451,37 @@ function edd_get_checkout_uri() {
 
 function edd_empty_cart() {
 	$_SESSION['edd_cart'] = NULL;
+}
+
+
+/**
+ * Store Purchase Data in Sessions
+ *
+ * Used for storing info about purchase
+ *
+ * @access      public
+ * @since       1.1.5
+ * @return      void
+*/
+
+function edd_set_purchase_session( $purchase_data ) {
+	$_SESSION['edd_purchase_info'] = $purchase_data;
+}
+
+
+/**
+ * Retrieve Purchase Data from Session
+ *
+ * Used for retrieving info about purchase
+ * after completing a purchase
+ *
+ * @access      public
+ * @since       1.1.5
+ * @return      array / false
+*/
+
+function edd_get_purchase_session() {
+	return isset( $_SESSION['edd_purchase_info'] ) ? $_SESSION['edd_purchase_info'] : false;
 }
 
 
