@@ -49,9 +49,11 @@ function edd_email_templage_tags($message, $payment_data, $payment_id) {
 	}	
 	
 	$download_list = '<ul>';
-	$downloads = maybe_unserialize($payment_data['downloads']);
+	$downloads = edd_get_downloads_of_purchase( $payment_id, $payment_data );
 	if( $downloads ) {
-		foreach(maybe_unserialize($payment_data['downloads']) as $download) {
+
+		foreach( $downloads as $download) {
+
 			$id = isset($payment_data['cart_details']) ? $download['id'] : $download;
 			$download_list .= '<li>' . get_the_title($id) . '<br/>';
 			$download_list .= '<ul>';	
@@ -65,11 +67,17 @@ function edd_email_templage_tags($message, $payment_data, $payment_id) {
 						$download_list .= '<li>';
 							$file_url = edd_get_download_file_url($payment_data['key'], $payment_data['email'], $filekey, $id);
 							$download_list .= '<a href="' . $file_url . '">' . $file['name'] . '</a>';
+
 						$download_list .= '</li>';
 					}
 				}
 
-			$download_list .= '</ul></li>';
+			$download_list .= '</ul>';
+			
+			if ( '' != edd_get_product_notes( $id ) )
+				$download_list .= ' &mdash; <small>' . edd_get_product_notes( $id ) . '</small>';
+
+			$download_list .= '</li>';
 		}
 	}
 	$download_list .= '</ul>';
@@ -104,10 +112,10 @@ function edd_email_templage_tags($message, $payment_data, $payment_id) {
 function edd_email_preview_templage_tags( $message ) {
 
 	$download_list = '<ul>';
-		$download_list .= '<li>' . __('Sample Product Title', 'edd') . '<br/>';
+		$download_list .= '<li>' . __('Sample Product Title', 'edd') . '<br />';
 		$download_list .= '<ul>';
 			$download_list .= '<li>';
-				$download_list .= '<a href="#">' . __('Sample Download File Name', 'edd') . '</a>';
+				$download_list .= '<a href="#">' . __('Sample Download File Name', 'edd') . '</a> - <small>' . __( 'Optional notes about this download.', 'edd' ) . '</small>';
 			$download_list .= '</li>';
 		$download_list .= '</ul></li>';
 	$download_list .= '</ul>';
@@ -117,6 +125,8 @@ function edd_email_preview_templage_tags( $message ) {
 	$gateway = 'PayPal';
 
 	$receipt_id = strtolower( md5( uniqid() ) );
+
+	$notes = __( 'These are some sample notes added to a product.', 'edd' );
 
 	$message = str_replace('{name}', 'John Doe', $message);
 	$message = str_replace('{download_list}', $download_list, $message);
