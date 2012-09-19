@@ -58,7 +58,7 @@
 				</th>
 				<td>
 					<input name="start" id="edd-start" type="text" value="" style="width: 120px;" class="edd_datepicker"/>
-					<p class="description"><?php _e('Enter the start date for this discount code in the format of yyyy-mm-dd. For no start date, leave blank. If entered, the discount can only be used after or on this date.', 'edd'); ?></p>
+					<p class="description"><?php _e('Enter the start date for this discount code in the format of mm/dd/yyyy. For no start date, leave blank. If entered, the discount can only be used after or on this date.', 'edd'); ?></p>
 				</td>
 			</tr>
 			<tr class="form-field">
@@ -67,7 +67,16 @@
 				</th>
 				<td>
 					<input name="expiration" id="edd-expiration" type="text" style="width: 120px;" class="edd_datepicker"/>
-					<p class="description"><?php _e('Enter the expiration date for this discount code in the format of yyyy-mm-dd. For no expiration, leave blank', 'edd'); ?></p>
+					<p class="description"><?php _e('Enter the expiration date for this discount code in the format of mm/dd/yyyy. For no expiration, leave blank', 'edd'); ?></p>
+				</td>
+			</tr>
+			<tr class="form-field">
+				<th scope="row" valign="top">
+					<label for="edd-min-cart-amount"><?php _e('Minimum Amount', 'edd'); ?></label>
+				</th>
+				<td>
+					<input type="text" id="edd-min-cart-amount" name="min_price" value="" style="width: 40px;"/>
+					<p class="description"><?php _e('The minimum amount that must be purchased before this discount can be used. Leave blank for no minimum.', 'edd'); ?></p>
 				</td>
 			</tr>
 			<tr class="form-field">
