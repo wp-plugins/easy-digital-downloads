@@ -17,6 +17,7 @@
 |
 | - Cart Widget
 | - Categories / Tags Widget
+| - Purchase History Widget
 |
 */
 
@@ -128,15 +129,15 @@ class edd_categories_tags_widget extends WP_Widget {
         do_action('edd_before_taxonomy_widget');
         $terms = get_terms($tax);
 
-			if (is_wp_error($terms)) {
-			    return;
-			} else {
-	            echo "<ul class=\"edd-taxonomy-widget\">\n";
-			    foreach ($terms as $term) {
-			        echo '<li><a href="' . get_term_link( $term ) . '" title="' . esc_attr( $term->name ) . '" rel="bookmark">' . $term->name . '</a></li>'."\n";
-			    }
-			    echo "</ul>\n";
-			}
+            if (is_wp_error($terms)) {
+                return;
+            } else {
+                echo "<ul class=\"edd-taxonomy-widget\">\n";
+                foreach ($terms as $term) {
+                    echo '<li><a href="' . get_term_link( $term ) . '" title="' . esc_attr( $term->name ) . '" rel="bookmark">' . $term->name . '</a></li>'."\n";
+                }
+                echo "</ul>\n";
+            }
         
         do_action('edd_after_taxonomy_widget');
         echo $after_widget;
@@ -157,18 +158,108 @@ class edd_categories_tags_widget extends WP_Widget {
         $title = isset($instance['title']) ? esc_attr($instance['title']) : '';
         $taxonomy = isset($instance['taxonomy']) ? esc_attr($instance['taxonomy']) : 'download_category';
         ?>
-	    <p>
-	        <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'edd'); ?></label>
-	        <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>"
-	               name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>"/>
-	    </p>
-	    <p>
-	        <label for="<?php echo $this->get_field_id('taxonomy'); ?>"><?php _e('Taxonomy:', 'edd'); ?></label>
-	        <select name="<?php echo $this->get_field_name('taxonomy'); ?>" id="<?php echo $this->get_field_id('taxonomy'); ?>">
-	            <option value="download_category" <?php selected('download_category',$taxonomy); ?>><?php _e('Categories', 'edd'); ?></option>
-	            <option value="download_tag" <?php selected('download_tag',$taxonomy); ?>><?php _e('Tags', 'edd'); ?></option>
-	        </select>
-	    </p>
+        <p>
+            <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'edd'); ?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>"
+                   name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>"/>
+        </p>
+        <p>
+            <label for="<?php echo $this->get_field_id('taxonomy'); ?>"><?php _e('Taxonomy:', 'edd'); ?></label>
+            <select name="<?php echo $this->get_field_name('taxonomy'); ?>" id="<?php echo $this->get_field_id('taxonomy'); ?>">
+                <option value="download_category" <?php selected('download_category',$taxonomy); ?>><?php _e('Categories', 'edd'); ?></option>
+                <option value="download_tag" <?php selected('download_tag',$taxonomy); ?>><?php _e('Tags', 'edd'); ?></option>
+            </select>
+        </p>
+    <?php
+    }
+}
+
+
+/**
+ * Purchase History Widget
+ *
+ * Displays a user's purchase history.
+ *
+ * @access        private
+ * @since        1.2
+ * @return        void
+ */
+
+class edd_purchase_history_widget extends WP_Widget {
+
+    /** constructor */
+    function edd_purchase_history_widget()
+    {
+        parent::WP_Widget(false, __('Purchase History', 'edd'), array('description' => __('Display a user\'s purchase history', 'edd')));
+    }
+
+    /** @see WP_Widget::widget */
+    function widget($args, $instance)
+    {
+        extract($args);
+        $title = apply_filters('widget_title', $instance['title']);
+
+        global $user_ID, $edd_options;
+
+        if(is_user_logged_in()) {
+
+            $purchases = edd_get_users_purchases($user_ID);
+
+            if($purchases) {
+                echo $before_widget;
+                if ($title) {
+                    echo $before_title . $title . $after_title;
+                }
+
+                foreach($purchases as $purchase) {
+                    $purchase_data = get_post_meta($purchase->ID, '_edd_payment_meta', true);
+                    $downloads = edd_get_downloads_of_purchase($purchase->ID);
+                    if($downloads) {
+                        foreach($downloads as $download) {
+                            $id = isset($purchase_data['cart_details']) ? $download['id'] : $download;
+                            $price_id = isset($download['options']['price_id']) ? $download['options']['price_id'] : null;
+							$download_files = edd_get_download_files( $id, $price_id );
+							echo '<div class="edd-purchased-widget-purchase edd-purchased-widget-purchase-' . $purchase->ID . '" id="edd-purchased-widget-purchase-' . $id . '">';
+                                echo '<div class="edd-purchased-widget-purchase-name">' . get_the_title($id) . '</div>';
+                                echo '<ul class="edd-purchased-widget-file-list">';
+                                if( ! edd_no_redownload() ) {
+                                    if($download_files) {
+                                        foreach($download_files as $filekey => $file) {
+    										$download_url = edd_get_download_file_url($purchase_data['key'], $purchase_data['email'], $filekey, $id);
+    										echo '<li class="edd-purchased-widget-file"><a href="' . $download_url . '" class="edd-purchased-widget-file-link">' .  $file['name'] . '</a></li>';
+                                        }
+                                    } else {
+                                        echo '<li class="edd-purchased-widget-no-file">' . __('No downloadable files found.', 'edd');
+                                    }
+                                }
+                                echo '</ul>';
+                            echo '</div>';
+                        }
+                    }
+                }
+            }
+            echo $after_widget;
+        }
+    }
+
+    /** @see WP_Widget::update */
+    function update($new_instance, $old_instance)
+    {
+        $instance = $old_instance;
+        $instance['title'] = strip_tags($new_instance['title']);
+        return $instance;
+    }
+
+    /** @see WP_Widget::form */
+    function form($instance)
+    {
+        $title = isset($instance['title']) ? esc_attr($instance['title']) : '';
+        ?>
+        <p>
+            <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title', 'edd'); ?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>"
+                   name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>"/>
+        </p>
     <?php
     }
 }
@@ -187,30 +278,72 @@ class edd_categories_tags_widget extends WP_Widget {
 function edd_register_widgets() {
     register_widget('edd_cart_widget');
     register_widget('edd_categories_tags_widget');
+    register_widget('edd_purchase_history_widget');
 }
 add_action('widgets_init', 'edd_register_widgets');
 
-/*
-|--------------------------------------------------------------------------
-| DASHBOARD WIDGETS
-|--------------------------------------------------------------------------
-|
-| Disabled for now.
-|
+
+/**
+ * Register Dashboard Widgets
+ *
+ * Registers the dashboard widgets.
+ *
+ * @access      private
+ * @author      Sunny Ratilal
+ * @since       1.2.2
 */
 
-/*
-function edd_stats_widgets() {
-   wp_add_dashboard_widget('edd_sales_widget', __('Download Sales', 'edd'), 'edd_dashboard_sales_widget');
-   wp_add_dashboard_widget('edd_earnings_widget', __('Download Earnings', 'edd'), 'edd_dashboard_earnings_widget');
+function edd_register_dashboard_widgets() {
+
+    if ( current_user_can( apply_filters( 'edd_dashboard_stats_cap', 'edit_pages' ) ) ) {
+        wp_add_dashboard_widget( 'edd_dashboard_sales', __('Easy Digital Downloads Sales Summary', 'edd'), 'edd_dashboard_sales_widget' );
+    }
+
 }
-add_action('wp_dashboard_setup', 'edd_stats_widgets', 999);
+add_action('wp_dashboard_setup', 'edd_register_dashboard_widgets' ); 
+
+
+/**
+ * Sales Summary Dashboard Widget
+ *
+ *
+ * @access      private
+ * @author      Sunny Ratilal
+ * @since       1.2.2
+*/
 
 function edd_dashboard_sales_widget() {
-	edd_show_download_sales_graph();
+    ?>
+    <div class="table table_current_month">
+        <p class="sub"><?php _e('Current Month', 'edd') ?></p>
+        <table>
+            <tbody>
+                <tr class="first">
+                    <td class="first b"><?php echo edd_currency_filter( edd_get_earnings_by_date(null, date('n'), date('Y')) ); ?></td>
+                    <td class="t monthly_earnings"><?php _e('Earnings', 'edd'); ?></td>
+                </tr>
+                <tr>
+                    <td class="first b"><?php echo edd_get_sales_by_date( date('n'), date('Y') ); ?></td>
+                    <td class="t monthly_sales"><?php _e('Sales', 'edd'); ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table table_totals">
+        <p class="sub"><?php _e('Totals', 'edd') ?></p>
+        <table>
+            <tbody>
+                <tr class="first">
+                    <td class="b b-earnings"><?php echo edd_get_total_earnings(); ?></td>
+                    <td class="last t earnings"><?php _e('Total Earnings', 'edd'); ?></td>
+                </tr>
+                <tr>
+                    <td class="b b-sales"><?php echo edd_get_total_sales(); ?></td>
+                    <td class="last t sales"><?php _e('Total Sales', 'edd'); ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="clear: both"></div>
+    <?php
 }
-
-function edd_dashboard_earnings_widget() {
-	edd_show_download_earnings_graph();
-}
-*/
