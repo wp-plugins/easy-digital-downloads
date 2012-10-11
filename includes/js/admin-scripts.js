@@ -84,7 +84,7 @@ jQuery(document).ready(function ($) {
 			if ( $( '.edd_upload_image_button' ).length > 0 ) {
 				window.formfield = '';
 		        
-		        $('.edd_upload_image_button').on('click', function(e) {
+		        $('body').on('click', '.edd_upload_image_button', function(e) {
 		            e.preventDefault();
 		            window.formfield = $(this).parent().prev();
 		    		window.tbframe_interval = setInterval(function() {
@@ -204,5 +204,15 @@ jQuery(document).ready(function ($) {
 			height: 'auto'
 		});
 	}
+
+	// reporting
+	$( '#edd-graphs-date-options' ).change( function() {
+		var $this = $(this);
+		if( $this.val() == 'other' ) {
+			$( '#edd-date-range-options' ).show();
+		} else {
+			$( '#edd-date-range-options' ).hide();
+		}
+	});
 	
 });

@@ -6,7 +6,7 @@
  * @subpackage  Misc Functions
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
 
 
@@ -14,13 +14,13 @@
  * Is Test Mode
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_is_test_mode() {
 	global $edd_options;
-	if( !isset($edd_options['test_mode']) || is_null($edd_options['test_mode']) ) {
+	if( !isset( $edd_options['test_mode'] ) || is_null( $edd_options['test_mode'] ) ) {
 		return false;
 	}
 	return true;
@@ -31,13 +31,13 @@ function edd_is_test_mode() {
  * No Guest Checkout
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_no_guest_checkout() {
 	global $edd_options;
-	if(isset($edd_options['logged_in_only']))
+	if( isset( $edd_options['logged_in_only'] ) )
 		return true;
 	return false;
 }
@@ -47,13 +47,13 @@ function edd_no_guest_checkout() {
  * Logged in Only
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_logged_in_only() {
 	global $edd_options;
-	if(isset($edd_options['logged_in_only']))
+	if( isset( $edd_options['logged_in_only'] ) )
 		return true;
 	return false;
 }
@@ -69,20 +69,20 @@ function edd_logged_in_only() {
 
 function edd_no_redownload() {
 	global $edd_options;
-	if(isset($edd_options['disable_redownload']))
+	if( isset( $edd_options['disable_redownload'] ) )
 		return true;
-	return false;	
+	return false;
 }
 
 /**
- * Get Menu Access Level 
+ * Get Menu Access Level
  *
- * Returns the access level required to access 
+ * Returns the access level required to access
  * the downloads menu. Currently not changeable,
  * but here for a future update.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
@@ -93,12 +93,12 @@ function edd_get_menu_access_level() {
 
 
 /**
- * Is Odd 
+ * Is Odd
  *
  * Checks wether an integer is odd.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
@@ -113,21 +113,20 @@ function edd_is_odd( $int ) {
  * Returns the file extension of a filename.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
-function edd_get_file_extension($str)
-{
-   $parts = explode('.', $str);
-   return end($parts);
+function edd_get_file_extension( $str ) {
+   $parts = explode( '.', $str );
+   return end( $parts );
 }
 
 
-function edd_string_is_image_url($str) {
-	$ext = edd_get_file_extension($str);
+function edd_string_is_image_url( $str ) {
+	$ext = edd_get_file_extension( $str );
 
-	switch( strtolower($ext) )  {
+	switch( strtolower( $ext ) ) {
 		case 'jpg';
 			$return = true;
 			break;
@@ -159,24 +158,24 @@ function edd_string_is_image_url($str) {
 
 function edd_get_ip()
 {
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-    	//check ip from share internet
-      $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-    	//to check ip is pass from proxy
-      $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    } else {
-      $ip = $_SERVER['REMOTE_ADDR'];
-    }
-    return $ip;
+	if( !empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+		//check ip from share internet
+	  $ip = $_SERVER['HTTP_CLIENT_IP'];
+	} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+		//to check ip is pass from proxy
+	  $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	} else {
+	  $ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
 }
 
 
 /**
- * Get Currencies 
+ * Get Currencies
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      array
 */
 
@@ -209,15 +208,16 @@ function edd_get_currencies() {
 		'TRY' => __('Turkish Lira', 'edd'),
 		'RIAL' => __('Iranian Rial', 'edd')
 	);
-	return apply_filters('edd_currencies', $currencies);
+
+	return apply_filters( 'edd_currencies', $currencies );
 }
 
 
 /**
- * Get Country List 
+ * Get Country List
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      array
 */
 
@@ -467,12 +467,13 @@ function edd_get_country_list() {
 		'ZM' => 'Zambia',
 		'ZW' => 'Zimbabwe'
 	);
+
 	return $countries;
 }
 
 
 /**
- * Get States List 
+ * Get States List
  *
  * @access      public
  * @since       1.2
@@ -548,12 +549,13 @@ function edd_get_states_list() {
 		'AE' => 'Armed Forces - Europe, Canada, Middle East, Africa',
 		'AP' => 'Armed Forces - Pacific'
 	);
+
 	return $states;
 }
 
 
 /**
- * Get Provinces List 
+ * Get Provinces List
  *
  * @access      public
  * @since       1.2
@@ -576,24 +578,26 @@ function edd_get_provinces_list() {
 		'SK' => 'Saskatchewan',
 		'YT' => 'Yukon'
 	);
+
 	return $provinces;
 }
 
 
 /**
- * Month Num To Name 
+ * Month Num To Name
  *
- * Takes a month number and returns the 
+ * Takes a month number and returns the
  * name three letter name of it.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
-function edd_month_num_to_name($n) {
-    $timestamp = mktime(0, 0, 0, $n, 1, 2005);
-    return date("M", $timestamp);
+function edd_month_num_to_name( $n ) {
+	$timestamp = mktime( 0, 0, 0, $n, 1, 2005 );
+
+	return date( "M", $timestamp );
 }
 
 
@@ -606,23 +610,22 @@ function edd_month_num_to_name($n) {
 */
 
 function edd_get_php_arg_separator_output() {
-    return ini_get('arg_separator.output');
+	return ini_get('arg_separator.output');
 }
 
 
 function edd_get_current_page_url() {
+	global $post;
 
-	global $post;	
-			
-	if (is_singular()) :
-		$pageURL =  get_permalink($post->ID);
+	if( is_singular() ):
+		$pageURL = get_permalink( $post->ID );
 	else :
 		$pageURL = 'http';
-		if ( isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") $pageURL .= "s";
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) $pageURL .= "s";
 		$pageURL .= "://";
-		if ($_SERVER["SERVER_PORT"] != "80") $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+		if( $_SERVER["SERVER_PORT"] != "80" ) $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
 		else $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-	endif;	
+	endif;
 
 	return $pageURL;
 }
