@@ -8,7 +8,7 @@
  * @subpackage  AJAX
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
 
 
@@ -19,17 +19,17 @@
  *
  * @access      private
  * @since       1.0
+ * @deprecated  1.0.8.3
  * @return      boolean
 */
 
 function edd_is_ajax_enabled() {
 	global $edd_options;
-	if(isset($edd_options['ajax_cart'])) {
+	if( ! isset( $edd_options['disable_ajax_cart'] ) ) {
 		return true;
 	}
 	return false;
 }
-
 
 /**
  * AJAX Remove From Cart
@@ -42,14 +42,14 @@ function edd_is_ajax_enabled() {
 */
 
 function edd_ajax_remove_from_cart() {
-	if(isset($_POST['cart_item']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' )) {
-		edd_remove_from_cart($_POST['cart_item']);
+	if( isset( $_POST['cart_item'] ) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' ) ) {
+		edd_remove_from_cart( $_POST['cart_item'] );
 		echo 'removed';
 	}
 	die();
 }
-add_action('wp_ajax_edd_remove_from_cart', 'edd_ajax_remove_from_cart');
-add_action('wp_ajax_nopriv_edd_remove_from_cart', 'edd_ajax_remove_from_cart');
+add_action( 'wp_ajax_edd_remove_from_cart', 'edd_ajax_remove_from_cart' );
+add_action( 'wp_ajax_nopriv_edd_remove_from_cart', 'edd_ajax_remove_from_cart' );
 
 
 /**
@@ -63,12 +63,16 @@ add_action('wp_ajax_nopriv_edd_remove_from_cart', 'edd_ajax_remove_from_cart');
 */
 
 function edd_ajax_add_to_cart() {
-	if(isset($_POST['download_id']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' )) {
+	if( isset( $_POST['download_id'] ) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' ) ) {
 		global $post;
-		if(!edd_item_in_cart($_POST['download_id'])) {
-			$options = is_numeric($_POST['price_id']) ? array('price_id' => $_POST['price_id']) : array();
-			$key = edd_add_to_cart($_POST['download_id'], $options);
-			$cart_item = edd_get_cart_item_template($key, $_POST['download_id'], true);
+		if( !edd_item_in_cart( $_POST['download_id'] ) ) {
+			$options = is_numeric( $_POST['price_id'] ) ? array( 'price_id' => $_POST['price_id'] ) : array();
+			$key = edd_add_to_cart( $_POST['download_id'], $options );
+			$item = array(
+				'id' => $_POST['download_id'],
+				'options' => $options
+			);
+			$cart_item = edd_get_cart_item_template( $key, $item, true );
 			echo $cart_item;
 		} else {
 			echo 'incart';
@@ -76,8 +80,8 @@ function edd_ajax_add_to_cart() {
 	}
 	die();
 }
-add_action('wp_ajax_edd_add_to_cart', 'edd_ajax_add_to_cart');
-add_action('wp_ajax_nopriv_edd_add_to_cart', 'edd_ajax_add_to_cart');
+add_action( 'wp_ajax_edd_add_to_cart', 'edd_ajax_add_to_cart' );
+add_action( 'wp_ajax_nopriv_edd_add_to_cart', 'edd_ajax_add_to_cart' );
 
 
 /**
@@ -91,29 +95,36 @@ add_action('wp_ajax_nopriv_edd_add_to_cart', 'edd_ajax_add_to_cart');
 */
 
 function edd_ajax_validate_discount() {
-	if(isset($_POST['code']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' )) {
-		if(edd_is_discount_valid($_POST['code'])) {
-			$price = edd_get_cart_amount();
-			$discounted_price = edd_get_discounted_amount($_POST['code'], $price);
-		
+	if( isset($_POST['code'],$_POST['email']) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' ) ) {
+		if( edd_is_discount_used( $_POST['code'], $_POST['email'] ) ) {  // Called twice if discount is not used (again by edd_is_discount_valid) but allows for beter usr msg and less execution if discount is used.
 			$return = array(
-				'msg' => 'valid',
-				'amount' => edd_currency_filter(edd_format_amount($discounted_price)),
+				'msg' => __('This discount code has been used already', 'edd'),
 				'code' => $_POST['code']
 			);
-			
 		} else {
-			$return = array(
-				'msg' => __('The discount you entered is invalid', 'edd'),
-				'code' => $_POST['code']
-			);
+			if( edd_is_discount_valid( $_POST['code'],$_POST['email'] ) ) {
+				$price = edd_get_cart_amount();
+				$discounted_price = edd_get_discounted_amount( $_POST['code'], $price );
+
+				$return = array(
+					'msg' => 'valid',
+					'amount' => edd_currency_filter( edd_format_amount( $discounted_price ) ),
+					'code' => $_POST['code']
+				);
+
+			} else {
+				$return = array(
+					'msg' => __('The discount you entered is invalid', 'edd'),
+					'code' => $_POST['code']
+				);
+			}
 		}
 		echo json_encode($return);
 	}
 	die();
 }
-add_action('wp_ajax_edd_apply_discount', 'edd_ajax_validate_discount');
-add_action('wp_ajax_nopriv_edd_apply_discount', 'edd_ajax_validate_discount');
+add_action( 'wp_ajax_edd_apply_discount', 'edd_ajax_validate_discount' );
+add_action( 'wp_ajax_nopriv_edd_apply_discount', 'edd_ajax_validate_discount' );
 
 
 /**
@@ -127,7 +138,8 @@ add_action('wp_ajax_nopriv_edd_apply_discount', 'edd_ajax_validate_discount');
 */
 
 function edd_load_checkout_login_fields() {
-	echo edd_get_login_fields(); die();
+	echo edd_get_login_fields();
+	die();
 }
 add_action('wp_ajax_nopriv_checkout_login', 'edd_load_checkout_login_fields');
 
@@ -143,7 +155,8 @@ add_action('wp_ajax_nopriv_checkout_login', 'edd_load_checkout_login_fields');
 */
 
 function edd_load_checkout_register_fields() {
-	echo edd_get_register_fields(); die();
+	echo edd_get_register_fields();
+	die();
 }
 add_action('wp_ajax_nopriv_checkout_register', 'edd_load_checkout_register_fields');
 
@@ -159,9 +172,9 @@ add_action('wp_ajax_nopriv_checkout_register', 'edd_load_checkout_register_field
 */
 
 function edd_ajax_get_download_title() {
-	if(isset($_POST['download_id'])) {
-		$title = get_the_title($_POST['download_id']);
-		if($title) {
+	if( isset( $_POST['download_id'] ) ) {
+		$title = get_the_title( $_POST['download_id'] );
+		if( $title ) {
 			echo $title;
 		} else {
 			echo 'fail';
@@ -169,5 +182,25 @@ function edd_ajax_get_download_title() {
 	}
 	die();
 }
-add_action('wp_ajax_edd_get_download_title', 'edd_ajax_get_download_title');
-add_action('wp_ajax_nopriv_edd_get_download_title', 'edd_ajax_get_download_title');
+add_action( 'wp_ajax_edd_get_download_title', 'edd_ajax_get_download_title' );
+add_action( 'wp_ajax_nopriv_edd_get_download_title', 'edd_ajax_get_download_title' );
+
+
+/**
+ * Get AJAX URL
+ *
+ * @access      public
+ * @since       1.3
+ * @return      string
+*/
+
+function edd_get_ajax_url() {
+	$site_url = get_site_url();
+	$admin_url = admin_url( 'admin-ajax.php' );
+	if( preg_match( '/^https/', $admin_url ) && ! preg_match( '/^https/', $site_url ) ) {
+		$admin_url = preg_replace( '/^https/', 'http', $admin_url );
+	} else if( preg_match( '/^https/', $site_url ) && ! preg_match( '/^https/', $admin_url ) ) {
+		$admin_url = preg_replace( '/^http/', 'https', $admin_url );
+	}
+	return $admin_url;
+}

@@ -6,7 +6,7 @@
  * @subpackage  Misc Functions
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
 
 
@@ -14,15 +14,18 @@
  * Is Test Mode
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_is_test_mode() {
 	global $edd_options;
-	if(isset($edd_options['test_mode']))
-		return true;
-	return false;
+	if( !isset( $edd_options['test_mode'] ) || is_null( $edd_options['test_mode'] ) )
+		$ret = false;
+	else
+		$ret = true;
+
+	return (bool) apply_filters( 'edd_is_test_mode', $ret );
 }
 
 
@@ -30,15 +33,18 @@ function edd_is_test_mode() {
  * No Guest Checkout
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_no_guest_checkout() {
 	global $edd_options;
-	if(isset($edd_options['logged_in_only']))
-		return true;
-	return false;
+	if( isset( $edd_options['logged_in_only'] ) )
+		$ret = true;
+	else
+		$ret = false;
+
+	return (bool) apply_filters( 'edd_no_guest_checkout', $ret );
 }
 
 
@@ -46,15 +52,18 @@ function edd_no_guest_checkout() {
  * Logged in Only
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
 function edd_logged_in_only() {
 	global $edd_options;
-	if(isset($edd_options['logged_in_only']))
-		return true;
-	return false;
+	if( isset( $edd_options['logged_in_only'] ) )
+		$ret = true;
+	else
+		$ret = false;
+
+	return (bool) apply_filters( 'edd_logged_in_only', $ret );
 }
 
 
@@ -62,42 +71,41 @@ function edd_logged_in_only() {
  * Disable Redownload
  *
  * @access      public
- * @since       1.08.2
+ * @since       1.0.8.2
  * @return      boolean
 */
 
 function edd_no_redownload() {
 	global $edd_options;
-	if(isset($edd_options['disable_redownload']))
+	if( isset( $edd_options['disable_redownload'] ) )
 		return true;
-	return false;	
+	return (bool) apply_filters( 'edd_no_redownload', false );
 }
 
 /**
- * Get Menu Access Level 
+ * Get Menu Access Level
  *
- * Returns the access level required to access 
- * the downloads menu. Currently not not changeable,
+ * Returns the access level required to access
+ * the downloads menu. Currently not changeable,
  * but here for a future update.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
 function edd_get_menu_access_level() {
-	global $edd_options;
-	return 'manage_options';
+	return apply_filters( 'edd_menu_access_level', 'manage_options' );
 }
 
 
 /**
- * Is Odd 
+ * Is Odd
  *
  * Checks wether an integer is odd.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      boolean
 */
 
@@ -112,15 +120,37 @@ function edd_is_odd( $int ) {
  * Returns the file extension of a filename.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
-function edd_get_file_extension($str)
-{
-   $parts = explode('.', $str);
-   return end($parts);
+function edd_get_file_extension( $str ) {
+   $parts = explode( '.', $str );
+   return end( $parts );
 }
+
+
+function edd_string_is_image_url( $str ) {
+	$ext = edd_get_file_extension( $str );
+
+	switch( strtolower( $ext ) ) {
+		case 'jpg';
+			$return = true;
+			break;
+		case 'png';
+			$return = true;
+			break;
+		case 'gif';
+			$return = true;
+			break;
+		default:
+			$return = false;
+		break;
+	}
+
+	return (bool) apply_filters( 'edd_string_is_image', $return, $str );
+}
+
 
 
 /**
@@ -133,29 +163,25 @@ function edd_get_file_extension($str)
  * @return      string
 */
 
-function edd_get_ip()
-{
-    if (!empty($_SERVER['HTTP_CLIENT_IP']))   //check ip from share internet
-    {
-      $ip=$_SERVER['HTTP_CLIENT_IP'];
-    }
-    elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))   //to check ip is pass from proxy
-    {
-      $ip=$_SERVER['HTTP_X_FORWARDED_FOR'];
-    }
-    else
-    {
-      $ip=$_SERVER['REMOTE_ADDR'];
-    }
-    return $ip;
+function edd_get_ip() {
+	if( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+		//check ip from share internet
+	  $ip = $_SERVER['HTTP_CLIENT_IP'];
+	} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+		//to check ip is pass from proxy
+	  $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	} else {
+	  $ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return apply_filters( 'edd_get_ip', $ip );
 }
 
 
 /**
- * Get Currencies 
+ * Get Currencies
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      array
 */
 
@@ -185,69 +211,19 @@ function edd_get_currencies() {
 		'TWD' => __('Taiwan New Dollars', 'edd'),
 		'THB' => __('Thai Baht', 'edd'),
 		'INR' => __('Indian Rupee', 'edd'),
-		'TRY' => __('Turkish Lira', 'edd')
+		'TRY' => __('Turkish Lira', 'edd'),
+		'RIAL' => __('Iranian Rial', 'edd')
 	);
-	return apply_filters('edd_currencies', $currencies);
+
+	return apply_filters( 'edd_currencies', $currencies );
 }
 
 
 /**
- * Get Currency Filter 
+ * Get Country List
  *
  * @access      public
- * @since       1.0 
- * @return      array
-*/
-
-function edd_currency_filter( $price ) {
-	global $edd_options;
-	$currency = isset($edd_options['currency']) ? $edd_options['currency'] : 'USD';
-	$position = isset($edd_options['currency_position']) ? $edd_options['currency_position'] : 'before';
-	if($position == 'before') :
-		switch ($currency) :
-			case "GBP" : return '&pound;' . $price; break;
-			case "USD" : 
-			case "AUD" : 
-			case "BRL" : 
-			case "CAD" : 
-			case "HKD" : 
-			case "MXN" : 
-			case "SGD" : 
-				return '&#36;' . $price; 
-			break;
-			case "JPY" : return '&yen;' . $price; break;
-			default :
-			    $formatted = $currency . ' ' . $price;
-    		    return apply_filters('edd_' . strtolower($currency) . '_currency_filter_before', $formatted, $currency, $price);
-			break;
-		endswitch;
-	else :
-		switch ($currency) :
-			case "GBP" : return $price . '&pound;'; break;
-			case "USD" : 
-			case "AUD" : 
-			case "BRL" : 
-			case "CAD" : 
-			case "HKD" : 
-			case "MXN" : 
-			case "SGD" : 
-				return $price . '&#36;'; 
-			break;
-			case "JPY" : return $price . '&yen;'; break;
-			default : 
-			    $formatted = $price . ' ' . $currency;
-			    return apply_filters('edd_' . strtolower($currency) . '_currency_filter_after', $formatted, $currency, $price);
-			break;
-		endswitch;	
-	endif;
-}
-
-
-/**
- * Get Country List 
- *
- * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      array
 */
 
@@ -255,7 +231,7 @@ function edd_get_country_list() {
 	$countries =array(
 		'US' => 'United States',
 		'CA' => 'Canada',
-		'GB' => 'United Kingdom (GB)',
+		'GB' => 'United Kingdom',
 		'AD' => 'Andorra',
 		'AE' => 'United Arab Emirates',
 		'AF' => 'Afghanistan',
@@ -291,7 +267,7 @@ function edd_get_country_list() {
 		'BW' => 'Botswana',
 		'BY' => 'Belarus',
 		'BZ' => 'Belize',
-		'CC' => 'Cocos (keeling) Islands',
+		'CC' => 'Cocos Islands',
 		'CD' => 'Congo, Democratic People\'s Republic',
 		'CF' => 'Central African Republic',
 		'CG' => 'Congo, Republic of',
@@ -324,8 +300,8 @@ function edd_get_country_list() {
 		'ET' => 'Ethiopia',
 		'FI' => 'Finland',
 		'FJ' => 'Fiji',
-		'FK' => 'Falkland Islands (Malvina)',
-		'FM' => 'Micronesia, Federal State of',
+		'FK' => 'Falkland Islands',
+		'FM' => 'Micronesia',
 		'FO' => 'Faroe Islands',
 		'FR' => 'France',
 		'GA' => 'Gabon',
@@ -359,7 +335,7 @@ function edd_get_country_list() {
 		'IN' => 'India',
 		'IO' => 'British Indian Ocean Territory',
 		'IQ' => 'Iraq',
-		'IR' => 'Iran (Islamic Republic of)',
+		'IR' => 'Iran',
 		'IS' => 'Iceland',
 		'IT' => 'Italy',
 		'JE' => 'Jersey',
@@ -372,8 +348,8 @@ function edd_get_country_list() {
 		'KI' => 'Kiribati',
 		'KM' => 'Comoros',
 		'KN' => 'Saint Kitts and Nevis',
-		'KP' => 'Korea, Democratic People\'s Republic',
-		'KR' => 'Korea, Republic of',
+		'KP' => 'South Korea',
+		'KR' => 'North Korea',
 		'KW' => 'Kuwait',
 		'KY' => 'Cayman Islands',
 		'KZ' => 'Kazakhstan',
@@ -497,24 +473,213 @@ function edd_get_country_list() {
 		'ZM' => 'Zambia',
 		'ZW' => 'Zimbabwe'
 	);
-	return $countries;
+
+	return apply_filters( 'edd_countries', $countries );
 }
 
 
 /**
- * Month Num To Name 
+ * Get States List
  *
- * Takes a month number and returns the 
+ * @access      public
+ * @since       1.2
+ * @return      array
+*/
+
+function edd_get_states_list() {
+	$states =array(
+		'AL' => 'Alabama',
+		'AK' => 'Alaska',
+		'AZ' => 'Arizona',
+		'AR' => 'Arkansas',
+		'CA' => 'California',
+		'CO' => 'Colorado',
+		'CT' => 'Connecticut',
+		'DE' => 'Delaware',
+		'DC' => 'District of Columbia',
+		'FL' => 'Florida',
+		'GA' => 'Georgia',
+		'HI' => 'Hawaii',
+		'ID' => 'Idaho',
+		'IL' => 'Illinois',
+		'IN' => 'Indiana',
+		'IA' => 'Iowa',
+		'KS' => 'Kansas',
+		'KY' => 'Kentucky',
+		'LA' => 'Louisiana',
+		'ME' => 'Maine',
+		'MD' => 'Maryland',
+		'MA' => 'Massachusetts',
+		'MI' => 'Michigan',
+		'MN' => 'Minnesota',
+		'MS' => 'Mississippi',
+		'MO' => 'Missouri',
+		'MT' => 'Montana',
+		'NE' => 'Nebraksa',
+		'NV' => 'Nevada',
+		'NH' => 'New Hampshire',
+		'NJ' => 'New Jersey',
+		'NM' => 'New Mexico',
+		'NY' => 'New York',
+		'NC' => 'North Carolina',
+		'ND' => 'North Dakota',
+		'OH' => 'Ohio',
+		'OK' => 'Oklahoma',
+		'OR' => 'Oregon',
+		'PA' => 'Pennsylvania',
+		'RI' => 'Rhode Island',
+		'SC' => 'South Carolina',
+		'SD' => 'South Dakota',
+		'TN' => 'Tennessee',
+		'TX' => 'Texas',
+		'UT' => 'Utah',
+		'VT' => 'Vermont',
+		'VA' => 'Virginia',
+		'WA' => 'Washington',
+		'WV' => 'West Virginia',
+		'WI' => 'Wisconsin',
+		'WY' => 'Wyoming',
+		'AS' => 'American Samoa',
+		'CZ' => 'Canal Zone',
+		'CM' => 'Commonwealth of the Northern Mariana Islands',
+		'FM' => 'Federated States of Micronesia',
+		'GU' => 'Guam',
+		'MH' => 'Marshall Islands',
+		'MP' => 'Northern Mariana Islands',
+		'PW' => 'Palau',
+		'PI' => 'Philippine Islands',
+		'PR' => 'Puerto Rico',
+		'TT' => 'Trust Territory of the Pacific Islands',
+		'VI' => 'Virgin Islands',
+		'AA' => 'Armed Forces - Americas',
+		'AE' => 'Armed Forces - Europe, Canada, Middle East, Africa',
+		'AP' => 'Armed Forces - Pacific'
+	);
+
+	return apply_filters( 'edd_us_states', $states );
+}
+
+
+/**
+ * Get Provinces List
+ *
+ * @access      public
+ * @since       1.2
+ * @return      array
+*/
+
+function edd_get_provinces_list() {
+	$provinces = array(
+		'AB' => 'Alberta',
+		'BC' => 'British Columbia',
+		'MB' => 'Manitoba',
+		'NB' => 'New Brunswick',
+		'NL' => 'Newfoundland and Labrador',
+		'NS' => 'Nova Scotia',
+		'NT' => 'Northwest Territories',
+		'NU' => 'Nunavut',
+		'ON' => 'Ontario',
+		'PE' => 'Prince Edward Island',
+		'QC' => 'Quebec',
+		'SK' => 'Saskatchewan',
+		'YT' => 'Yukon'
+	);
+
+	return apply_filters( 'edd_canada_provinces', $provinces );
+}
+
+
+/**
+ * Month Num To Name
+ *
+ * Takes a month number and returns the
  * name three letter name of it.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      string
 */
 
-function edd_month_num_to_name($n)
-{
-    $timestamp = mktime(0, 0, 0, $n, 1, 2005);
-    
-    return date("M", $timestamp);
+function edd_month_num_to_name( $n ) {
+	$timestamp = mktime( 0, 0, 0, $n, 1, 2005 );
+
+	return date( "M", $timestamp );
+}
+
+
+/**
+ * Get PHP Arg Seaparator Ouput
+ *
+ * @access      public
+ * @since       1.0.8.3
+ * @return      string
+*/
+
+function edd_get_php_arg_separator_output() {
+	return ini_get('arg_separator.output');
+}
+
+
+/**
+ * Get the current page URL
+ *
+ * @access      public
+ * @since       1.3
+ * @return      string
+*/
+
+function edd_get_current_page_url() {
+	global $post;
+
+	if( is_singular() ):
+		$pageURL = get_permalink( $post->ID );
+	else :
+		$pageURL = 'http';
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) $pageURL .= "s";
+		$pageURL .= "://";
+		if( $_SERVER["SERVER_PORT"] != "80" ) $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+		else $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+	endif;
+
+	return apply_filters( 'edd_get_current_page_url', $pageURL );
+}
+
+
+
+/**
+ * Marks a function as deprecated and informs when it has been used.
+ *
+ * There is a hook edd_deprecated_function_run that will be called that can be used
+ * to get the backtrace up to what file and function called the deprecated
+ * function.
+ *
+ * The current behavior is to trigger a user error if WP_DEBUG is true.
+ *
+ * This function is to be used in every function that is deprecated.
+ *
+ * @package Easy Digital Downloads
+ * @subpackage  Misc Functions
+ * @since 1.3.1
+ * @access private
+ *
+ * @uses do_action() Calls 'edd_deprecated_function_run' and passes the function name, what to use instead,
+ *   and the version the function was deprecated in.
+ * @uses apply_filters() Calls 'edd_deprecated_function_trigger_error' and expects boolean value of true to do
+ *   trigger or false to not trigger error.
+ *
+ * @param string $function The function that was called
+ * @param string $version The version of WordPress that deprecated the function
+ * @param string $replacement Optional. The function that should have been called
+ */
+function _edd_deprecated_function( $function, $version, $replacement = null ) {
+
+	do_action( 'edd_deprecated_function_run', $function, $replacement, $version );
+
+	// Allow plugin to filter the output error trigger
+	if ( WP_DEBUG && apply_filters( 'edd_deprecated_function_trigger_error', true ) ) {
+		if ( ! is_null($replacement) )
+			trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s! Use %3$s instead.', 'edd' ), $function, $version, $replacement ) );
+		else
+			trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s with no alternative available.', 'edd'), $function, $version ) );
+	}
 }
