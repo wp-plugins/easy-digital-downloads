@@ -19,7 +19,9 @@
 */
 
 function edd_checkout_cart() {
+	do_action( 'edd_before_checkout_cart' );
 	edd_get_template_part( 'checkout_cart' );
+	do_action( 'edd_after_checkout_cart' );
 }
 
 
@@ -44,10 +46,10 @@ function edd_shopping_cart( $echo = false ) {
 			foreach( $cart_items as $key => $item ) :
 				echo edd_get_cart_item_template( $key, $item, false );
 			endforeach;
-			echo '<li class="cart_item edd_checkout"><a href="' . get_permalink( $edd_options['purchase_page'] ) . '">' . __('Checkout', 'edd') . '</a></li>';
+			echo '<li class="cart_item edd_checkout"><a href="' . edd_get_checkout_uri() . '">' . __('Checkout', 'edd') . '</a></li>';
 		else :
 			echo '<li class="cart_item empty">' . edd_empty_cart_message() . '</li>';
-			echo '<li class="cart_item edd_checkout" style="display:none;"><a href="' . get_permalink( $edd_options['purchase_page'] ) . '">' . __('Checkout', 'edd') . '</a></li>';
+			echo '<li class="cart_item edd_checkout" style="display:none;"><a href="' . edd_get_checkout_uri() . '">' . __('Checkout', 'edd') . '</a></li>';
 		endif;
 	?>
 	</ul>

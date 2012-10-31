@@ -93,7 +93,7 @@ function edd_email_templage_tags( $message, $payment_data, $payment_id ) {
 	}
 	$download_list .= '</ul>';
 
-	$price = edd_currency_filter( $payment_data['amount'] );
+	$price = edd_currency_filter( edd_format_amount( $payment_data['amount'] ) );
 
 	$gateway = edd_get_gateway_checkout_label( get_post_meta( $payment_id, '_edd_payment_gateway', true ) );
 
@@ -102,7 +102,7 @@ function edd_email_templage_tags( $message, $payment_data, $payment_id ) {
 	$message = str_replace( '{name}', $name, $message );
 	$message = str_replace( '{username}', $username, $message );
 	$message = str_replace( '{download_list}', $download_list, $message );
-	$message = str_replace( '{date}', date( get_option( 'date_format' ), strtotime( $payment_data['date'] ) ), $message );
+	$message = str_replace( '{date}', date_i18n( get_option( 'date_format' ), strtotime( $payment_data['date'] ) ), $message );
 	$message = str_replace( '{sitename}', get_bloginfo( 'name' ), $message );
 	$message = str_replace( '{price}', $price, $message );
 	$message = str_replace( '{payment_method}', $gateway, $message );
@@ -132,7 +132,7 @@ function edd_email_preview_templage_tags( $message ) {
 	$download_list .= '</ul></li>';
 	$download_list .= '</ul>';
 
-	$price = edd_currency_filter( 9.50 );
+	$price = edd_currency_filter( edd_format_amount( 9.50 ) );
 
 	$gateway = 'PayPal';
 

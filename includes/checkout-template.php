@@ -22,9 +22,7 @@ function edd_checkout_form() {
 
 	global $edd_options, $user_ID, $post;
 	
-	$page_URL = edd_get_current_page_url();
-
-	if(is_user_logged_in()) :
+	if( is_user_logged_in() ) :
 		$user_data = get_userdata( $user_ID );
 	endif;
 	
@@ -32,62 +30,26 @@ function edd_checkout_form() {
 		
 		<?php if( edd_get_cart_contents() ) : ?>
 				
-			<?php 
-			do_action( 'edd_before_checkout_cart' );
-			edd_checkout_cart(); 
-			do_action( 'edd_after_checkout_cart' );
-			?>
+			<?php edd_checkout_cart(); ?>
 			
 			<div id="edd_checkout_form_wrap" class="edd_clearfix">
 			
 				<?php 				
 				do_action( 'edd_checkout_form_top' );
 			
-				$gateways = edd_get_enabled_payment_gateways();
-				$show_gateways = false;
-				if( count( $gateways ) > 1 && !isset( $_GET['payment-mode'] ) ) {
-					$show_gateways = true;
-					if(edd_get_cart_amount() <= 0) {
-						$show_gateways = false;
-					}
-				}
-				if( $show_gateways ) {
-					do_action( 'edd_payment_payment_mode_select', $gateways );
+				if( edd_show_gateways() ) {
+					do_action( 'edd_payment_payment_mode_select'  );
 				} else {
 
-					if( count( $gateways ) >= 1 && !isset( $_GET['payment-mode'] ) ) {
-						foreach( $gateways as $gateway_id => $gateway ):
-							$enabled_gateway = $gateway_id;
-							if(edd_get_cart_amount() <= 0) {
-								$enabled_gateway = 'manual'; // this allows a free download by filling in the info
-							}
-						endforeach;
-					} else if( edd_get_cart_amount() <= 0 ) {
-						$enabled_gateway = 'manual';
-					} else {
-						$enabled_gateway = 'none';
-					}
-					$payment_mode = isset( $_GET['payment-mode'] ) ? urldecode( $_GET['payment-mode'] ) : $enabled_gateway;
-					
 					do_action( 'edd_before_purchase_form' ); ?>
-					<form id="edd_purchase_form" action="<?php echo $page_URL; ?>" method="POST">					
+
+					<form id="edd_purchase_form" action="<?php echo esc_url( edd_get_current_page_url() ); ?>" method="POST">					
 					
 						<?php do_action( 'edd_purchase_form_top' ); ?>
 					
 						<?php 
-						if( isset( $edd_options['logged_in_only'] ) && !isset( $edd_options['show_register_form'] ) ) {
-							if( is_user_logged_in() ) {
-								$can_checkout = true;
-							} else {
-								$can_checkout = false;
-							}
-						} elseif( isset( $edd_options['show_register_form'] ) && isset( $edd_options['logged_in_only'] ) ) {
-							$can_checkout = true;
-						} elseif( !isset( $edd_options['logged_in_only'] ) ) {
-							$can_checkout = true;
-						}
-						$can_checkout = true;
-						if( $can_checkout ) { ?>
+						
+						if( edd_can_checkout() ) { ?>
 							
 							<?php if( isset( $edd_options['show_register_form'] ) && !is_user_logged_in() && !isset( $_GET['login'] ) ) { ?>
 								<div id="edd_checkout_login_register"><?php echo edd_get_register_fields(); ?></div>
@@ -120,55 +82,41 @@ function edd_checkout_form() {
 
 							do_action( 'edd_purchase_form_before_cc_form' ); 
 							
+							$payment_mode = edd_get_chosen_gateway();
+
 							// load the credit card form and allow gateways to load their own if they wish
 							if( has_action( 'edd_' . $payment_mode . '_cc_form' ) ) {
 								do_action( 'edd_' . $payment_mode . '_cc_form' );
 							} else {
 								do_action( 'edd_cc_form' );
 							}
-							
-							if( isset( $edd_options['show_agree_to_terms'] ) ) { ?>
-								<fieldset id="edd_terms_agreement">
-									<p>
-										<div id="edd_terms" style="display:none;">
-											<?php 
-												do_action( 'edd_before_terms' );
-												echo wpautop( $edd_options['agree_text'] );
-												do_action( 'edd_after_terms' );
-											?>
-										</div>
-										<div id="edd_show_terms">
-											<a href="#" class="edd_terms_links"><?php _e('Show Terms', 'edd'); ?></a>
-											<a href="#" class="edd_terms_links" style="display:none;"><?php _e('Hide Terms', 'edd'); ?></a>
-										</div>
-										<input name="edd_agree_to_terms" class="required" type="checkbox" id="edd_agree_to_terms" value="1"/>
-										<label for="edd_agree_to_terms"><?php echo isset( $edd_options['agree_label'] ) ? $edd_options['agree_label'] : __('Agree to Terms?', 'edd'); ?></label>
-									</p>
-								</fieldset>
-							<?php } ?>	
+
+							do_action( 'edd_purchase_form_after_cc_form' );
+
+							?>
+
 							<fieldset id="edd_purchase_submit">
 								<p>
 									<?php do_action( 'edd_purchase_form_before_submit' ); ?>
 									
-									<?php if( is_user_logged_in() ) { ?>
-									<input type="hidden" name="edd-user-id" value="<?php echo $user_data->ID; ?>"/>
-									<?php } ?>
-									<input type="hidden" name="edd_action" value="purchase"/>
-									<input type="hidden" name="edd-gateway" value="<?php echo $payment_mode; ?>" />
-									<input type="hidden" name="edd-nonce" value="<?php echo wp_create_nonce('edd-purchase-nonce'); ?>"/>
+									<?php edd_checkout_hidden_fields(); ?>
 									
 									<?php echo edd_checkout_button_purchase(); ?>
 									
 									<?php do_action( 'edd_purchase_form_after_submit' ); ?>
 								</p>
+
 								<?php if( !edd_is_ajax_enabled() ) { ?>
 									<p class="edd-cancel"><a href="javascript:history.go(-1)"><?php _e('Go back', 'edd'); ?></a></p>
-								<?php } ?>				
+								<?php } ?>
+
 							</fieldset>
 						<?php } else { ?>
 							<p><?php _e('You must be logged in to complete your purchase', 'edd'); ?></p>
 						<?php } ?>
+
 						<?php do_action( 'edd_purchase_form_bottom' ); ?>
+
 					</form>
 					<?php do_action( 'edd_after_purchase_form' ); ?>
 			<?php } ?>
@@ -178,6 +126,17 @@ function edd_checkout_form() {
 			do_action( 'edd_empty_cart' );
 		endif;
 	return ob_get_clean();
+}
+
+
+function edd_can_checkout() {
+
+	global $edd_options;
+
+	$can_checkout = true; // always true for now
+
+	return apply_filters( 'edd_can_checkout', $can_checkout );
+
 }
 
 
@@ -296,7 +255,7 @@ function edd_default_cc_address_fields() {
 	<?php
 	echo ob_get_clean();
 }
-add_action('edd_after_cc_expiration', 'edd_default_cc_address_fields');
+add_action('edd_after_cc_fields', 'edd_default_cc_address_fields');
 
 
 /**
@@ -335,8 +294,8 @@ function edd_get_register_fields() {
 			<?php do_action( 'edd_register_account_fields_after' ); ?>
 		</fieldset>
 		<p>
-			<input name="edd_email" id="edd_email" class="required edd-input" type="email" placeholder="<?php _e('Email', 'edd'); ?>" title="<?php _e('Email', 'edd'); ?>"/>
-			<label for="edd_email"><?php _e('Email', 'edd'); ?></label>
+			<input name="edd_email" id="edd-email" class="required edd-input" type="email" placeholder="<?php _e('Email', 'edd'); ?>" title="<?php _e('Email', 'edd'); ?>"/>
+			<label for="edd-email"><?php _e('Email', 'edd'); ?></label>
 		</p>
 		<p>
 			<input class="edd-input required" type="text" name="edd_first" placeholder="<?php _e('First Name', 'edd'); ?>" id="edd-first" value="<?php echo is_user_logged_in() ? $user_data->user_firstname : ''; ?>"/>
@@ -398,7 +357,8 @@ function edd_get_login_fields() {
  * @return      void
 */
 
-function edd_payment_mode_select( $gateways ) {
+function edd_payment_mode_select() {
+	$gateways = edd_get_enabled_payment_gateways();
 	$page_URL = edd_get_current_page_url();
 	do_action('edd_payment_mode_top'); ?>
 	<form id="edd_payment_mode" action="<?php echo $page_URL; ?>" method="GET">
@@ -407,21 +367,22 @@ function edd_payment_mode_select( $gateways ) {
 			<p id="edd-payment-mode-wrap">
 				<?php								
 					echo '<select class="edd-select" name="payment-mode" id="edd-gateway">';
+						echo '<option value="0">' . __( 'Select payment method', 'edd' ) . '</option>';
 						foreach($gateways as $gateway_id => $gateway) :
 							echo '<option value="' . $gateway_id . '">' . $gateway['checkout_label'] . '</option>';
 						endforeach;
 					echo '</select>';
-					echo '<label for="edd-gateway">' . __('Choose Your Payment Method', 'edd') . '</label>';
 				?>
 			</p>
 			<?php do_action('edd_payment_mode_after_gateways'); ?>
 		</fieldset>
-		<fieldset id="edd_payment_mode_submit">
+		<fieldset id="edd_payment_mode_submit" class="edd-no-js">
 			<p id="edd-next-submit-wrap">
 				<?php echo edd_checkout_button_next(); ?>
 			</p>
 		</fieldset>
 	</form>
+	<div id="edd_purchase_form_wrap"></div><!-- the checkout fields are loaded into this-->
 	<?php do_action('edd_payment_mode_bottom');
 }
 add_action( 'edd_payment_payment_mode_select', 'edd_payment_mode_select' );
@@ -452,6 +413,41 @@ function edd_discount_field() {
 	}
 }
 add_action( 'edd_purchase_form_before_cc_form', 'edd_discount_field' );
+
+
+/**
+ * The checkout Agree to Terms section
+ *
+ * @access      public
+ * @since       1.3.2
+ * @return      void
+ */
+
+function edd_terms_agreement() {
+	global $edd_options;
+	if( isset( $edd_options['show_agree_to_terms'] ) ) { 
+?>
+		<fieldset id="edd_terms_agreement">
+			<p>
+				<div id="edd_terms" style="display:none;">
+					<?php 
+						do_action( 'edd_before_terms' );
+						echo wpautop( $edd_options['agree_text'] );
+						do_action( 'edd_after_terms' );
+					?>
+				</div>
+				<div id="edd_show_terms">
+					<a href="#" class="edd_terms_links"><?php _e('Show Terms', 'edd'); ?></a>
+					<a href="#" class="edd_terms_links" style="display:none;"><?php _e('Hide Terms', 'edd'); ?></a>
+				</div>
+				<input name="edd_agree_to_terms" class="required" type="checkbox" id="edd_agree_to_terms" value="1"/>
+				<label for="edd_agree_to_terms"><?php echo isset( $edd_options['agree_label'] ) ? $edd_options['agree_label'] : __('Agree to Terms?', 'edd'); ?></label>
+			</p>
+		</fieldset>
+<?php 
+	}
+}
+add_action( 'edd_purchase_form_after_cc_form', 'edd_terms_agreement' );
 
 
 /**
@@ -550,3 +546,24 @@ function edd_agree_to_terms_js() {
 	}
 }
 add_action( 'edd_checkout_form_top', 'edd_agree_to_terms_js' );
+
+
+/**
+ * Hidden checkout fields
+ *
+ * @access      private
+ * @since       1.3.2 * @return      void
+*/
+
+function edd_checkout_hidden_fields() {
+
+?>
+	<?php if( is_user_logged_in() ) { ?>
+	<input type="hidden" name="edd-user-id" value="<?php echo get_current_user_id(); ?>"/>
+	<?php } ?>
+	<input type="hidden" name="edd_action" value="purchase"/>
+	<input type="hidden" name="edd-gateway" value="<?php echo edd_get_chosen_gateway(); ?>" />
+	<input type="hidden" name="edd-nonce" value="<?php echo wp_create_nonce('edd-purchase-nonce'); ?>"/>
+<?php
+
+}

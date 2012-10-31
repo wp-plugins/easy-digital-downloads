@@ -375,6 +375,7 @@ function edd_discount_is_min_met( $code_id = null ) {
 */
 
 function edd_is_discount_used( $code = null, $email = '' ) {
+	
 	$return = false;
 
 	$query_args = array(
@@ -388,10 +389,10 @@ function edd_is_discount_used( $code = null, $email = '' ) {
 		)
 	);
 
-	$discounts_query = new WP_Query($query_args); // Get all payments with matching email
+	$payments = get_posts( $query_args ); // Get all payments with matching email
 
-	if( $discounts_query->have_posts() ) {
-		foreach ( $discounts_query->posts as $payment ) { 
+	if( $payments  ) {
+		foreach ( $payments as $payment ) { 
 			// Check all matching payments for discount code.
 			$payment_meta = get_post_meta( $payment->ID, '_edd_payment_meta', true );
 			$user_info = maybe_unserialize( $payment_meta['user_info'] );
@@ -421,7 +422,7 @@ function edd_is_discount_valid( $code = '', $email = '') {
 	$discount_id = edd_get_discount_id_by_code( $code );
 	$email 		 = trim( $email );
 
-	if( $discount_id !== false && $email !== "" ) {
+	if( $discount_id !== false ) {
 		if(
 			edd_is_discount_active( $discount_id ) && 
 			edd_is_discount_started( $discount_id ) && 

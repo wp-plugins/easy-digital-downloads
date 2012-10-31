@@ -221,6 +221,18 @@ function edd_reports_tab_export() {
 					</div><!--end inside-->
 				</div><!--end postbox-->
 
+				<div class="postbox">
+					<h3><span><?php _e('Export Download History in CSV', 'edd'); ?></span></h3>
+					<div class="inside">
+						<p><?php _e( 'Download a CSV of all file downloads for the current month.', 'edd' ); ?></p>
+						<p>
+							<a class="button" href="<?php echo wp_nonce_url( add_query_arg( array( 'edd-action' => 'downloads_history_export' ) ), 'edd_export_all_downloads_history' ); ?>">
+								<?php _e( 'Generate CSV', 'edd' ) ; ?>
+							</a>
+						</p>
+					</div><!--end inside-->
+				</div><!--end postbox-->
+
 			</div><!--endpost-body-content-->
 		</div><!--end post-body-->
 	</div><!--end metabox-holder-->

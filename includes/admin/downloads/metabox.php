@@ -36,6 +36,7 @@ function edd_add_download_meta_box() {
 }
 add_action( 'add_meta_boxes', 'edd_add_download_meta_box' );
 
+
 /**
  * Download Meta Box Save
  *
@@ -96,6 +97,31 @@ function edd_download_meta_box_save( $post_id) {
 	}
 }
 add_action( 'save_post', 'edd_download_meta_box_save' );
+
+
+/**
+ * Sanitize the price before it is saved
+ *
+ * This is mostly for ensuring commas aren't saved in the price
+ *
+ * @access      private
+ * @since       1.3.2
+ * @return      float
+ */
+
+function edd_sanitize_price_save( $price ) {
+	global $edd_options;
+
+	$thousands_sep = isset( $edd_options['thousands_separator'] ) ? $edd_options['thousands_separator'] : ',';
+	$decimal_sep   = isset( $edd_options['decimal_separator'] )   ? $edd_options['decimal_separator'] 	 : '.';
+
+	if( $thousands_sep == ',' ) {
+		$price = str_replace( ',', '', $price );
+	}
+
+	return $price;
+}
+add_filter( 'edd_metabox_save_edd_price', 'edd_sanitize_price_save' );
 
 
 /** Download Configuration *****************************************************************/
@@ -160,7 +186,10 @@ function edd_render_price_field( $post_id) {
 			<?php echo edd_currency_filter(''); ?><input type="text" name="edd_price" id="edd_price" value="<?php echo isset( $price ) ? esc_attr( edd_format_amount( $price ) ) : ''; ?>" size="30" style="width:80px;" placeholder="9.99"/>
 		<?php else : ?>
 			<input type="text" name="edd_price" id="edd_price" value="<?php echo isset( $price ) ? esc_attr( edd_format_amount( $price ) ) : ''; ?>" size="30" style="width:80px;" placeholder="9.99"/><?php echo edd_currency_filter(''); ?>
-		<?php endif; ?>			
+		<?php endif; ?>		
+
+		<?php do_action( 'edd_price_field', $post_id ); ?>
+
 	</div>
 
 	<div id="edd_variable_price_fields" class="edd_pricing_fields" <?php echo $variable_display; ?>>
