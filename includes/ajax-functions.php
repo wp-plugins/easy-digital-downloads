@@ -145,7 +145,7 @@ add_action( 'wp_ajax_nopriv_edd_apply_discount', 'edd_ajax_validate_discount' );
 */
 
 function edd_load_checkout_login_fields() {
-	echo edd_get_login_fields();
+	do_action( 'edd_purchase_form_login_fields' );
 	die();
 }
 add_action('wp_ajax_nopriv_checkout_login', 'edd_load_checkout_login_fields');
@@ -162,7 +162,7 @@ add_action('wp_ajax_nopriv_checkout_login', 'edd_load_checkout_login_fields');
 */
 
 function edd_load_checkout_register_fields() {
-	echo edd_get_register_fields();
+	do_action( 'edd_purchase_form_register_fields' );
 	die();
 }
 add_action('wp_ajax_nopriv_checkout_register', 'edd_load_checkout_register_fields');
@@ -202,12 +202,14 @@ add_action( 'wp_ajax_nopriv_edd_get_download_title', 'edd_ajax_get_download_titl
 */
 
 function edd_get_ajax_url() {
-	$site_url = get_site_url();
-	$admin_url = admin_url( 'admin-ajax.php' );
-	if( preg_match( '/^https/', $admin_url ) && ! preg_match( '/^https/', $site_url ) ) {
-		$admin_url = preg_replace( '/^https/', 'http', $admin_url );
-	} else if( preg_match( '/^https/', $site_url ) && ! preg_match( '/^https/', $admin_url ) ) {
-		$admin_url = preg_replace( '/^http/', 'https', $admin_url );
+	
+	$current_url = edd_get_current_page_url();
+	$ajax_url = admin_url( 'admin-ajax.php' );
+
+	if( preg_match( '/^https/', $ajax_url ) && ! preg_match( '/^https/', $current_url ) ) {
+		$ajax_url = preg_replace( '/^https/', 'http', $ajax_url );
+	} else if( preg_match( '/^https/', $current_url ) && ! preg_match( '/^https/', $ajax_url ) ) {
+		$ajax_url = preg_replace( '/^http/', 'https', $ajax_url );
 	}
-	return $admin_url;
+	return apply_filters( 'edd_ajax_url', $ajax_url );
 }

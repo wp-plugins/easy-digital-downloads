@@ -6,7 +6,7 @@ Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.2
 Tested up to: 3.5
-Stable Tag: 1.3.2
+Stable Tag: 1.3.3
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -29,6 +29,7 @@ Features of the plugin include:
 * Customizable purchase receipts
 * Earnings and sales charts
 * Detailed purchase and file download logs
+* Data export options for CSV and PDF
 * Extensible with many [add-ons](http://easydigitaldownloads.com/extensions/)
 * Developer friendly with dozens of actions and filters
 
@@ -138,6 +139,44 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.3.3 = 
+
+* Added new Tax system for calculating simple taxes on purchases
+* Added error / payment failure logging to PayPal standard gateway
+* Improved the error logging system
+* Fixed an issue with payment method select when ajax is disabled
+* Fixed a problem with a stray file upload button in IE and Firefox
+* Improved the Payment History export to CSV option
+* Removed old, out of date PayPal payment gateway
+* Fixed a problem with improperly formatted amounts after applying a flat rate discount
+* Fixed two conflicting filter names
+* Improved markup for the [edd_price] short code
+* Updated Dutch translation files
+* Improved front-end CSS for variable price options
+* Added new edd_file_download_has_access filter
+* Improved logic for determing the lower price on variable priced downloads
+* Improved stylesheet loading
+* Fixed a pagination bug with the [downloads] short code
+
+= 1.3.2.1 =
+
+* Fixed a problem with discount code amount formatting
+* Added basic pagination to the [downloads] short code
+* Fixed a bug with PressTrends integration
+* Improved the checkout template to make it easier to customize
+* Added new edd_ajax_url filter
+* Moved user info (email, first / last name) fields to a function connected via a hook to allow them to be changed
+* Added new edd_cart_total() function for showing fully formatted cart amount
+* Updated French language files
+* Fixed price formats in the admin sales notification
+* Updated login/register ajax actions to use do_action() instead of calling functions directly
+* Updated checkout login/register fields to be attached via actions
+* Upgraded Colorbox to v1.3.20
+* Added new "edd_checkout_form_bottom" hook
+* Added version numbers to scripts and styles to ensure proper display on upgrades
+* Fixed a problem with upgrade routines
+* Fixed a bug with edd_get_sales_by_date()
 
 = 1.3.2 =
 
@@ -722,6 +761,44 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Upgrade Notice ==
+
+= 1.3.3 = 
+
+* Added new Tax system for calculating simple taxes on purchases
+* Added error / payment failure logging to PayPal standard gateway
+* Improved the error logging system
+* Fixed an issue with payment method select when ajax is disabled
+* Fixed a problem with a stray file upload button in IE and Firefox
+* Improved the Payment History export to CSV option
+* Removed old, out of date PayPal payment gateway
+* Fixed a problem with improperly formatted amounts after applying a flat rate discount
+* Fixed two conflicting filter names
+* Improved markup for the [edd_price] short code
+* Updated Dutch translation files
+* Improved front-end CSS for variable price options
+* Added new edd_file_download_has_access filter
+* Improved logic for determing the lower price on variable priced downloads
+* Improved stylesheet loading
+* Fixed a pagination bug with the [downloads] short code
+
+= 1.3.2.1 =
+
+* Fixed a problem with discount code amount formatting
+* Added basic pagination to the [downloads] short code
+* Fixed a bug with PressTrends integration
+* Improved the checkout template to make it easier to customize
+* Added new edd_ajax_url filter
+* Moved user info (email, first / last name) fields to a function connected via a hook to allow them to be changed
+* Added new edd_cart_total() function for showing fully formatted cart amount
+* Updated French language files
+* Fixed price formats in the admin sales notification
+* Updated login/register ajax actions to use do_action() instead of calling functions directly
+* Updated checkout login/register fields to be attached via actions
+* Upgraded Colorbox to v1.3.20
+* Added new "edd_checkout_form_bottom" hook
+* Added version numbers to scripts and styles to ensure proper display on upgrades
+* Fixed a problem with upgrade routines
+* Fixed a bug with edd_get_sales_by_date()
 
 = 1.3.2 =
 
