@@ -35,80 +35,84 @@ add_action( 'edd_paypal_cc_form', 'edd_paypal_remove_cc_form' );
 */
 
 function edd_process_paypal_purchase( $purchase_data ) {
-	global $edd_options;
-	
-	// check there is a gateway name
-	if ( !isset( $purchase_data['post_data']['edd-gateway'] ) )
-	return;
-	
-	/* 
-	Purchase data comes in like this:
-	////////////////////////////////
-	
-	$purchase_data = array( 
-		'downloads'     => array of download IDs, 
-		'price'         => total price of cart contents, 
-		'purchase_key'  =>  // random key
-		'user_email'    => $user_email, 
-		'date'          => date( 'Y-m-d H:i:s' ), 
-		'user_id'       => $user_id, 
-		'post_data'     => $_POST, 
-		'user_info'     => array of user's information and used discount code
-		'cart_details'  => array of cart details, 
-	 );
-	*/
-	
-	// collect payment data
-	$payment_data = array( 
-		'price'         => $purchase_data['price'], 
-		'date'          => $purchase_data['date'], 
-		'user_email'    => $purchase_data['user_email'], 
-		'purchase_key'  => $purchase_data['purchase_key'], 
-		'currency'      => $edd_options['currency'], 
-		'downloads'     => $purchase_data['downloads'], 
-		'user_info'     => $purchase_data['user_info'], 
-		'cart_details'  => $purchase_data['cart_details'], 
-		'status'        => 'pending'
-	 );
-	
-	// record the pending payment
-	$payment = edd_insert_payment( $payment_data );
-	
-	// check payment
-	if ( !$payment ) {
-		// problems? send back
-		edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
-	} else {
-		// only send to PayPal if the pending payment is created successfully
-		$listener_url = trailingslashit( home_url() ).'?edd-listener=IPN';
-	   
-		 // get the success url
-		$return_url = add_query_arg( 'payment-confirmation', 'paypal', get_permalink( $edd_options['success_page'] ) );
-		
-		// get the complete cart cart_summary
-		$summary = edd_get_purchase_summary( $purchase_data, false );      
-		
-		// get the PayPal redirect uri
-		$paypal_redirect = trailingslashit( edd_get_paypal_redirect() ) . '?';
-		
-		// setup PayPal arguments
-		$paypal_args = array( 
-			'cmd'           => '_xclick', 
-			'amount'        => $purchase_data['price'], 
-			'business'      => $edd_options['paypal_email'], 
-			'item_name'     => stripslashes_deep( html_entity_decode( $summary, ENT_COMPAT, 'UTF-8' ) ), 
-			'email'         => $purchase_data['user_email'], 
-			'no_shipping'   => '1', 
-			'shipping'      => '0',
-			'no_note'       => '1', 
-			'currency_code' => $edd_options['currency'], 
-			'item_number'   => $purchase_data['purchase_key'], 
-			'charset'       => get_bloginfo( 'charset' ), 
-			'custom'        => $payment, 
-			'rm'            => '2', 
-			'return'        => $return_url, 
-			'notify_url'    => $listener_url
-		 );
+
+    global $edd_options;
+    
+    // check there is a gateway name
+    if ( ! isset( $purchase_data['post_data']['edd-gateway'] ) )
+    return;
+    
+    /* 
+    Purchase data comes in like this:
+    ////////////////////////////////
+    
+    $purchase_data = array( 
+        'downloads'     => array of download IDs, 
+        'price'         => total price of cart contents, 
+        'purchase_key'  =>  // random key
+        'user_email'    => $user_email, 
+        'date'          => date( 'Y-m-d H:i:s' ), 
+        'user_id'       => $user_id, 
+        'post_data'     => $_POST, 
+        'user_info'     => array of user's information and used discount code
+        'cart_details'  => array of cart details, 
+     );
+    */
+    
+    // collect payment data
+    $payment_data = array(
+        'price'         => $purchase_data['price'],
+        'date'          => $purchase_data['date'], 
+        'user_email'    => $purchase_data['user_email'], 
+        'purchase_key'  => $purchase_data['purchase_key'], 
+        'currency'      => $edd_options['currency'], 
+        'downloads'     => $purchase_data['downloads'], 
+        'user_info'     => $purchase_data['user_info'], 
+        'cart_details'  => $purchase_data['cart_details'],
+        'status'        => 'pending'
+     );
+    
+    // record the pending payment
+    $payment = edd_insert_payment( $payment_data );
+    
+    // check payment
+    if ( ! $payment ) {
+    	// record the error
+        edd_record_gateway_error( __( 'Payment Error', 'edd' ), sprintf( __( 'Payment creation failed before sending buyer to PayPal. Payment data: %s', 'edd' ), json_encode( $payment_data ) ) );
+        // problems? send back
+        edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
+    } else {
+        // only send to PayPal if the pending payment is created successfully
+        $listener_url = trailingslashit( home_url() ).'?edd-listener=IPN';
+       
+         // get the success url
+        $return_url = add_query_arg( 'payment-confirmation', 'paypal', get_permalink( $edd_options['success_page'] ) );
+        
+        // get the complete cart cart_summary
+        $summary = edd_get_purchase_summary( $purchase_data, false );      
+        
+        // get the PayPal redirect uri
+        $paypal_redirect = trailingslashit( edd_get_paypal_redirect() ) . '?';
+        
+        // setup PayPal arguments
+        $paypal_args = array( 
+            'cmd'           => '_xclick', 
+            'amount'        => $purchase_data['subtotal'],
+            'tax'           => $purchase_data['tax'],
+            'business'      => $edd_options['paypal_email'], 
+            'item_name'     => stripslashes_deep( html_entity_decode( $summary, ENT_COMPAT, 'UTF-8' ) ), 
+            'email'         => $purchase_data['user_email'], 
+            'no_shipping'   => '1', 
+            'shipping'      => '0',
+            'no_note'       => '1', 
+            'currency_code' => $edd_options['currency'], 
+            'item_number'   => $purchase_data['purchase_key'], 
+            'charset'       => get_bloginfo( 'charset' ), 
+            'custom'        => $payment, 
+            'rm'            => '2', 
+            'return'        => $return_url, 
+            'notify_url'    => $listener_url
+         );
 
 		// build query
 		$paypal_redirect .= http_build_query( apply_filters('edd_paypal_redirect_args', $paypal_args, $purchase_data ) );
@@ -123,6 +127,8 @@ function edd_process_paypal_purchase( $purchase_data ) {
 	
 }
 add_action( 'edd_gateway_paypal', 'edd_process_paypal_purchase' );
+
+
 
 
 /**
@@ -251,14 +257,15 @@ function edd_process_paypal_ipn() {
 	// get response
 	$api_response = wp_remote_post( edd_get_paypal_redirect(), $remote_post_vars );
 
-	if( is_wp_error( $api_response) )
+	if( is_wp_error( $api_response ) ) {
+		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid IPN verification response. IPN data: ', 'edd' ), json_encode( $api_response ) ) );
 		return; // something went wrong   
+	}
 
-	if( $api_response['body'] !== 'VERIFIED' && !isset($edd_options['disable_paypal_verification'] ) )
+	if( $api_response['body'] !== 'VERIFIED' && !isset( $edd_options['disable_paypal_verification'] ) ) {
+		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid IPN verification response. IPN data: ', 'edd' ), json_encode( $api_response ) ) );		
 		return; // response not okay
-
-	// convert collected post data to an array
-	parse_str( $post_data, $post_data_array );
+	}
 	
 	// check if $post_data_array has been populated
 	if( !is_array( $encoded_data_array ) && !empty( $encoded_data_array ) )
@@ -278,14 +285,17 @@ function edd_process_paypal_ipn() {
 	// verify details
 	if( $currency_code != strtolower( $edd_options['currency'] ) ) {
 		// the currency code is invalid
+		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid currency in IPN response. IPN data: ', 'edd' ), json_encode( $encoded_data_array ) ) );
 		return;
 	}
 	if( number_format((float)$paypal_amount, 2) != $payment_amount ) {
 		// the prices don't match
+		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid payment amount in IPN response. IPN data: ', 'edd' ), json_encode( $encoded_data_array ) ) );
 	   //return;
 	}
 	if( $purchase_key != $payment_meta['key'] ) {
 		// purchase keys don't match
+		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid purchase key in IPN response. IPN data: ', 'edd' ), json_encode( $encoded_data_array ) ) );
 		return;
 	}
 		 

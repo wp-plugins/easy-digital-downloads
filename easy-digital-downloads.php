@@ -5,7 +5,7 @@ Plugin URI: http://easydigitaldownloads.com
 Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
-Version: 1.3.2.1
+Version: 1.3.3
 Text Domain: edd
 Domain Path: languages
 
@@ -38,7 +38,7 @@ along with Easy Digital Downloads. If not, see <http://www.gnu.org/licenses/>.
 */
 // Plugin version
 if( !defined( 'EDD_VERSION' ) ) {
-	define( 'EDD_VERSION', '1.3.2.1' );
+	define( 'EDD_VERSION', '1.3.3' );
 }
 // Plugin Folder URL
 if( !defined( 'EDD_PLUGIN_URL' ) ) {
@@ -75,7 +75,7 @@ function edd_textdomain() {
 	// Load the translations
 	load_plugin_textdomain( 'edd', false, $edd_lang_dir );
 }
-add_action( 'init', 'edd_textdomain' );
+add_action( 'init', 'edd_textdomain', 1 );
 
 /*
 |--------------------------------------------------------------------------
@@ -113,6 +113,7 @@ include_once( EDD_PLUGIN_DIR . 'includes/email-actions.php' );
 include_once( EDD_PLUGIN_DIR . 'includes/error-tracking.php' );
 include_once( EDD_PLUGIN_DIR . 'includes/user-functions.php' );
 include_once( EDD_PLUGIN_DIR . 'includes/query-filters.php' );
+include_once(EDD_PLUGIN_DIR . 'includes/tax-functions.php');
 if( is_admin() ) {
 	include_once( EDD_PLUGIN_DIR . 'includes/admin/add-ons.php' );
 	include_once( EDD_PLUGIN_DIR . 'includes/admin/admin-actions.php' );

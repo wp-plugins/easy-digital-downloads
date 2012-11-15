@@ -59,6 +59,11 @@ function edd_load_scripts() {
 		wp_localize_script( 'edd-validation', 'edd_scripts_validation', apply_filters( 'edd_scripts_validation',$required ) );
 	}
 	wp_enqueue_script( 'edd-checkout-global', EDD_PLUGIN_URL . 'includes/js/edd-checkout-global.js', array( 'jquery' ), EDD_VERSION );
+	wp_localize_script( 'edd-checkout-global', 'edd_global_vars', array(
+        'currency_sign'		=> edd_currency_filter(''),
+        'currency_pos'		=> isset( $edd_options['currency_position'] ) ? $edd_options['currency_position'] : 'before',
+        'no_gateway'		=> __( 'Please select a payment method', 'edd' )
+    ));
 }
 add_action( 'wp_enqueue_scripts', 'edd_load_scripts' );
 
@@ -75,16 +80,21 @@ add_action( 'wp_enqueue_scripts', 'edd_load_scripts' );
 
 function edd_register_styles() {
 	global $edd_options;
-	if( !isset( $edd_options['disable_styles'] ) ) {
+	
+	if( isset( $edd_options['disable_styles'] ) )
+		return;
 
-		// allow the CSS to be overwritten from the templates directory
-		$edd_css = edd_locate_template( 'edd.css' );
+	$file = 'edd.css';
 
-		// convert file path to URL
-		$edd_css = str_replace( ABSPATH, '/', $edd_css );
-
-		wp_enqueue_style( 'edd-styles', $edd_css, EDD_VERSION );
+	if ( file_exists( trailingslashit( get_stylesheet_directory() ) . $file ) ) {
+		$url = trailingslashit( get_stylesheet_directory_uri() ) . $file;
+	} elseif ( file_exists( trailingslashit( get_template_directory() ) . $file ) ) {
+		$url = trailingslashit( get_template_directory_uri() ) . $file;
+	} elseif ( file_exists( trailingslashit( edd_get_templates_dir() ) . $file ) ) {
+		$url = trailingslashit( edd_get_templates_url() ) . $file;
 	}
+
+	wp_enqueue_style( 'edd-styles', $url, EDD_VERSION );
 }
 add_action( 'wp_enqueue_scripts', 'edd_register_styles' );
 

@@ -171,7 +171,9 @@ function edd_get_chosen_gateway() {
 	$gateways = edd_get_enabled_payment_gateways();
 	
 	if( isset( $_GET['payment-mode'] ) ) {
+
 		$enabled_gateway = urldecode( $_GET['payment-mode'] );
+
 	} else if( count( $gateways ) >= 1 && ! isset( $_GET['payment-mode'] ) ) {
 		foreach( $gateways as $gateway_id => $gateway ):
 			$enabled_gateway = $gateway_id;
@@ -186,4 +188,19 @@ function edd_get_chosen_gateway() {
 	}
 
 	return apply_filters( 'edd_chosen_gateway', $enabled_gateway );
+}
+
+
+/**
+ * Record a gateway error
+ *
+ * A simple wrapper function for edd_record_log()
+ *
+ * @access      public
+ * @since       1.3.3
+ * @return      int The ID of the new log entry
+*/
+
+function edd_record_gateway_error( $title = '', $message = '', $parent = 0 ) {
+	return edd_record_log( $title, $message, $parent, 'gateway_error' );
 }

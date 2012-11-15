@@ -247,6 +247,10 @@ function edd_payment_history_page() {
 											<?php $payment_date = strtotime( $payment->post_date ); ?>
 											<p><?php echo __( 'Date and Time:', 'edd' ) . ' ' . date_i18n( get_option( 'date_format' ), $payment_date ) . ' ' . date_i18n( get_option( 'time_format' ), $payment_date ) ?>
 											<p><?php echo __( 'Discount used:', 'edd' ) . ' '; if( isset( $user_info['discount'] ) && $user_info['discount'] != 'none' ) { echo $user_info['discount']; } else { _e( 'none', 'edd' ); } ?>
+											<?php if( edd_use_taxes() ) : ?>
+											<p><?php echo __( 'Subtotal:', 'edd' ) . ' ' . edd_payment_subtotal( $payment->ID, $payment_meta ); ?>
+											<p><?php echo __( 'Taxed Amount:', 'edd' ) . ' ' . edd_payment_tax( $payment->ID, $payment_meta ); ?>
+											<?php endif; ?>
 											<p><?php echo __( 'Total:', 'edd' ) . ' ' . edd_currency_filter( edd_format_amount( edd_get_payment_amount( $payment->ID ) ) ); ?></p>
 											
 											<div class="purcase-personal-details">
@@ -300,7 +304,7 @@ function edd_payment_history_page() {
 				<div class="tablenav">
 
 					<div class="left edd-total-earnings">
-						<p><?php _e( 'Total Earnings:', 'edd' ); ?>&nbsp;<strong><?php echo edd_get_total_earnings(); ?></strong></p>
+						<p><?php _e( 'Total Earnings:', 'edd' ); ?>&nbsp;<strong><?php echo edd_currency_filter( edd_format_amount( edd_get_total_earnings() ) ); ?></strong></p>
 						<?php do_action( 'edd_payments_page_earnings' ); ?>
 					</div>
 					<?php if( $total_pages > 1 ) : ?>

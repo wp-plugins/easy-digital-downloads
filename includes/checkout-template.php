@@ -126,7 +126,7 @@ function edd_user_info_fields() {
 	endif;
 	?>
 	<fieldset id="edd_checkout_user_info">
-		<legend><?php _e('Personal Info', 'edd'); ?></legend>
+		<legend><?php echo apply_filters( 'edd_checkout_personal_info_text', __('Personal Info', 'edd') ); ?></legend>
 		<?php do_action( 'edd_purchase_form_before_email' ); ?>
 		<p id="edd-email-wrap">
 			<input class="edd-input required" type="email" name="edd_email" placeholder="<?php _e('Email address', 'edd'); ?>" id="edd-email" value="<?php echo is_user_logged_in() ? $user_data->user_email : ''; ?>"/>
@@ -464,6 +464,22 @@ function edd_terms_agreement() {
 	}
 }
 add_action( 'edd_purchase_form_after_cc_form', 'edd_terms_agreement' );
+
+
+function edd_show_local_tax_opt_in() {
+	global $edd_options;
+	if( isset( $edd_options['tax_condition'] ) && $edd_options['tax_condition'] == 'local' ) { 
+?>
+		<fieldset id="edd_tax_opt_in_fields">
+			<p>
+				<input name="edd_tax_opt_in" class="required" type="checkbox" id="edd_tax_opt_in" value="1"/>
+				<label for="edd_tax_opt_in"><?php echo isset( $edd_options['tax_location'] ) ? $edd_options['tax_location'] : __('Opt Into Taxes?', 'edd'); ?></label>
+			</p>
+		</fieldset>
+<?php 
+	}
+}
+add_action( 'edd_purchase_form_before_submit', 'edd_show_local_tax_opt_in' );
 
 
 /**
