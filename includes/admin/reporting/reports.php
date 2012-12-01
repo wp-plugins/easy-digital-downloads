@@ -9,6 +9,8 @@
  * @since       1.0 
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Reports Page
@@ -263,7 +265,7 @@ function edd_reports_tab_export() {
 				<div class="postbox">
 					<h3><span><?php _e('Export Customers in CSV', 'edd'); ?></span></h3>
 					<div class="inside">
-						<p><?php _e( 'Download a CSV of all customer emails.', 'edd' ); ?></p>
+						<p><?php _e( 'Download a CSV of all customer emails. This export includes purchase numbers and amounts for each customer.', 'edd' ); ?></p>
 						<p>
 							<a class="button" href="<?php echo wp_nonce_url( add_query_arg( array( 'edd-action' => 'email_export' ) ), 'edd_email_export' ); ?>">
 								<?php _e( 'Generate CSV', 'edd' ) ; ?>

@@ -10,7 +10,8 @@
  * @since       1.3.1
 */
 
-
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 
 /**
@@ -81,7 +82,7 @@ class EDD_Logging {
 
 	function register_taxonomy() {
 
-		register_taxonomy( 'edd_log_type', 'edd_log' );
+		register_taxonomy( 'edd_log_type', 'edd_log', array( 'public' => false ) );
 
 		$types = $this->log_types();
 
@@ -352,6 +353,44 @@ class EDD_Logging {
 		$logs = new WP_Query( $query_args );
 
 		return (int) $logs->post_count;
+
+	}
+
+
+	function delete_logs( $object_id = 0, $type = null, $meta_query = null  ) {
+
+		$query_args = array(
+			'post_parent' 	=> $object_id,
+			'post_type'		=> 'edd_log',
+			'posts_per_page'=> -1,
+			'post_status'	=> 'publish',
+			'fields'        => 'ids'
+		);
+
+		if( ! empty( $type ) && $this->valid_type( $type ) ) {
+
+			$query_args['tax_query'] = array(
+				array(
+					'taxonomy' 	=> 'edd_log_type',
+					'field'		=> 'slug',
+					'terms'		=> $type,
+				)
+			);
+
+		}
+
+		if( ! empty( $meta_query ) ) {
+			$query_args['meta_query'] = $meta_query;
+		}
+
+		$logs = get_posts( $query_args );
+		
+		if( $logs ) {
+			foreach( $logs as $log ) {
+				wp_delete_post( $log, true );
+			}
+
+		}
 
 	}
 
