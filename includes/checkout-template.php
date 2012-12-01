@@ -9,6 +9,8 @@
  * @since       1.0 
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Get Checkout Form
@@ -340,11 +342,11 @@ function edd_get_login_fields() {
 			<legend><?php _e('Login to your account', 'edd'); ?></legend>
 			<?php do_action('edd_checkout_login_fields_before'); ?>
 			<p>
-				<input class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="text" name="edd-username" id="edd-username" value="" placeholder="<?php _e('Your username', 'edd'); ?>"/>
+				<input class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="text" name="edd_user_login" id="edd_user_login" value="" placeholder="<?php _e('Your username', 'edd'); ?>"/>
 				<label class="edd-label" for="edd-username"><?php _e('Username', 'edd'); ?></label>
 			</p>
 			<p class="edd_login_password">
-				<input class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="password" name="edd-password" id="edd-password" placeholder="<?php _e('Your password', 'edd'); ?>"/>
+				<input class="<?php if(edd_no_guest_checkout()) { echo 'required '; } ?>edd-input" type="password" name="edd_user_pass" id="edd_user_pass" placeholder="<?php _e('Your password', 'edd'); ?>"/>
 				<label class="edd-label" for="edd-password"><?php _e('Password', 'edd'); ?></label>
 				<input type="hidden" name="edd-purchase-var" value="needs-to-login"/>
 			</p>
@@ -472,7 +474,7 @@ function edd_show_local_tax_opt_in() {
 ?>
 		<fieldset id="edd_tax_opt_in_fields">
 			<p>
-				<input name="edd_tax_opt_in" class="required" type="checkbox" id="edd_tax_opt_in" value="1"/>
+				<input name="edd_tax_opt_in" type="checkbox" id="edd_tax_opt_in" value="1"/>
 				<label for="edd_tax_opt_in"><?php echo isset( $edd_options['tax_location'] ) ? $edd_options['tax_location'] : __('Opt Into Taxes?', 'edd'); ?></label>
 			</p>
 		</fieldset>

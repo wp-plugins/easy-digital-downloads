@@ -5,7 +5,7 @@ Plugin URI: http://easydigitaldownloads.com
 Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
-Version: 1.3.3
+Version: 1.3.4.1
 Text Domain: edd
 Domain Path: languages
 
@@ -23,6 +23,9 @@ You should have received a copy of the GNU General Public License
 along with Easy Digital Downloads. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
+
 /* PHP Hack to Get Plugin Headers in the .POT File */
 	$edd_plugin_header_translate = array(
 		__( 'Easy Digital Downloads', 'edd' ),
@@ -38,7 +41,7 @@ along with Easy Digital Downloads. If not, see <http://www.gnu.org/licenses/>.
 */
 // Plugin version
 if( !defined( 'EDD_VERSION' ) ) {
-	define( 'EDD_VERSION', '1.3.3' );
+	define( 'EDD_VERSION', '1.3.4.1' );
 }
 // Plugin Folder URL
 if( !defined( 'EDD_PLUGIN_URL' ) ) {
@@ -68,12 +71,31 @@ global $edd_options;
 */
 
 function edd_textdomain() {
+
 	// Set filter for plugin's languages directory
 	$edd_lang_dir = dirname( plugin_basename( EDD_PLUGIN_FILE ) ) . '/languages/';
 	$edd_lang_dir = apply_filters( 'edd_languages_directory', $edd_lang_dir );
 
-	// Load the translations
-	load_plugin_textdomain( 'edd', false, $edd_lang_dir );
+
+	// Traditional WordPress plugin locale filter
+	$locale        = apply_filters( 'plugin_locale',  get_locale(), 'edd' );
+	$mofile        = sprintf( '%1$s-%2$s.mo', 'edd', $locale );
+
+	// Setup paths to current locale file
+	$mofile_local  = $edd_lang_dir . $mofile;
+	$mofile_global = WP_LANG_DIR . '/edd/' . $mofile;
+
+	if ( file_exists( $mofile_global ) ) {
+		// Look in global /wp-content/languages/edd folder
+		load_textdomain( 'edd', $mofile_global );
+	} elseif ( file_exists( $mofile_local ) ) {
+		// Look in local /wp-content/plugins/easy-digital-downloads/languages/ folder
+		load_textdomain( 'edd', $mofile_local );
+	} else {
+		// Load the default language files
+		load_plugin_textdomain( 'edd', false, $edd_lang_dir );
+	}
+
 }
 add_action( 'init', 'edd_textdomain', 1 );
 

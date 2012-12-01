@@ -9,6 +9,8 @@
  * @since       1.0 
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Setup Download Post Type
@@ -162,6 +164,12 @@ function edd_get_label_plural( $lowercase = false ) {
 */
 
 function edd_setup_download_taxonomies() {
+
+	$slug = 'downloads';
+	if( defined( 'EDD_SLUG' ) ) {
+		$slug = EDD_SLUG;
+	}
+
 	$category_labels = array(
 		'name' 				=> _x( 'Categories', 'taxonomy general name', 'edd' ),
 		'singular_name' 	=> _x( 'Category', 'taxonomy singular name', 'edd' ),
@@ -181,7 +189,7 @@ function edd_setup_download_taxonomies() {
 			'labels' 		=> apply_filters('edd_download_category_labels', $category_labels),
 			'show_ui' 		=> true,
 			'query_var' 	=> 'download_category',
-			'rewrite' 		=> array('slug' => 'downloads/category')
+			'rewrite' 		=> array('slug' => $slug . '/category', 'with_front' => false )
 		)
 	);
 
@@ -206,7 +214,7 @@ function edd_setup_download_taxonomies() {
 			'labels' 		=> apply_filters( 'edd_download_tag_labels', $tag_labels ),
 			'show_ui' 		=> true,
 			'query_var' 	=> 'download_tag',
-			'rewrite' 		=> array( 'slug' => 'downloads/tag')
+			'rewrite' 		=> array( 'slug' => $slug . '/tag', 'with_front' => false )
 		)
 	);
 

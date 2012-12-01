@@ -9,6 +9,8 @@
  * @since       1.0 
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Process Purchase Form
@@ -31,6 +33,21 @@ function edd_process_purchase_form() {
 	// verify the nonce for this action
 	if ( ! isset( $_POST['edd-nonce'] ) || ! wp_verify_nonce( $_POST['edd-nonce'], 'edd-purchase-nonce' ) )
 		return;
+
+	// make sure the cart isn't empty
+	$cart = edd_get_cart_contents();
+	if( empty( $cart ) ) {
+
+		wp_die(
+			sprintf( 
+				__( 'Your cart is empty, please return to the %ssite%s and try again.', 'edd' ), 
+				'<a href="' . esc_url( home_url() ) . '" title="' . get_bloginfo( 'name' ) . '">',
+				'</a>'
+			),
+			__( 'Error', 'edd' ) 
+		);
+
+	}
 
 	// validate the form $_POST data
 	$valid_data = edd_purchase_form_validate_fields(); 
@@ -227,9 +244,9 @@ function edd_purchase_form_validate_discounts() {
 	if ( isset( $_POST['edd-discount'] ) && trim( $_POST['edd-discount'] ) != '' ) {
 		// clean discount
 		$discount = sanitize_text_field( $_POST['edd-discount'] );
-		$email = sanitize_email( $_POST['edd_email'] );
+		$user     = isset( $_POST['edd_user_login'] ) ? sanitize_text_field( $_POST['edd_user_login'] ) : sanitize_email( $_POST['edd_email'] );
 		// check if validates
-		if (  edd_is_discount_valid( $discount, $email ) ) {
+		if (  edd_is_discount_valid( $discount, $user ) ) {
 			// return clean discount
 			return $discount;
 		// invalid discount
@@ -335,6 +352,7 @@ function edd_purchase_form_validate_new_user() {
 	$user_pass	  = isset( $_POST["edd_user_pass"] ) ? trim( $_POST["edd_user_pass"] ) : false;
 	$pass_confirm = isset( $_POST["edd_user_pass_confirm"] ) ? trim( $_POST["edd_user_pass_confirm"] ) : false;
 
+
 	// Check if we have an username to register
 	if( $user_login && strlen( $user_login ) > 0 ) {
 		$registering_new_user = true;
@@ -344,7 +362,7 @@ function edd_purchase_form_validate_new_user() {
 			// username already registered
 			edd_set_error( 'username_unavailable', __( 'Username already taken', 'edd' ) );
 		// Check if it's valid
-		} else if( !validate_username( $user_login ) ) {
+		} else if( ! edd_validate_username( $user_login ) ) {
 		   // invalid username
 			edd_set_error( 'username_invalid', __( 'Invalid username', 'edd' ) );
 		} else {
@@ -415,19 +433,19 @@ function edd_purchase_form_validate_user_login() {
 	);
 	
 	// username
-	if ( !isset( $_POST['edd-username'] ) || $_POST['edd-username'] == '' ) {
+	if ( !isset( $_POST['edd_user_login'] ) || $_POST['edd_user_login'] == '' ) {
 		edd_set_error( 'must_log_in', __( 'You must login or register to complete your purchase', 'edd' ) );
 		return $valid_user_data;
 	}
 	
 	// get the user by login
-	$user_data = get_user_by( 'login', strip_tags( $_POST['edd-username'] ) );
+	$user_data = get_user_by( 'login', strip_tags( $_POST['edd_user_login'] ) );
 	
 	// check if user exists
 	if( $user_data ) {
 		
 		// get password
-		$user_pass = isset( $_POST["edd-password"] ) ? $_POST["edd-password"] : false;
+		$user_pass = isset( $_POST["edd_user_pass"] ) ? $_POST["edd_user_pass"] : false;
 		
 		// check user_pass
 		if ( $user_pass ) {

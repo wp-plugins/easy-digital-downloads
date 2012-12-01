@@ -1,4 +1,25 @@
 <?php
+/**
+ * Exports Functions
+ *
+ * These are functions are used for exporting data from Easy Digital Downloads.
+ *
+ * @package     Easy Digital Downloads
+ * @subpackage  Export Functions
+ * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+*/
+
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
+
+/**
+ * Export all Payment History to CSV
+ *
+ * @access      private
+ * @since       1.2
+ * @return      void
+ */
 
 function edd_export_payment_history() {
 	global $edd_options;
@@ -18,28 +39,31 @@ function edd_export_payment_history() {
 
 	if ( $payments ) {
 		$i = 0;
-		echo '"' . __( 'ID', 'edd' ) .  '",';
-		echo '"' . __( 'Email', 'edd' ) .  '",';
-		echo '"' . __( 'First Name', 'edd' ) .  '",';
-		echo '"' . __( 'Last Name', 'edd' ) .  '",';
-		echo '"' . __( 'Products', 'edd' ) .  '",';
-		echo '"' . __( 'Discounts,', 'edd' ) .  '",';
-		echo '"' . __( 'Amount paid', 'edd' ) .  '",';
-		echo '"' . __( 'Payment method', 'edd' ) .  '",';
-		echo '"' . __( 'Key', 'edd' ) .  '",';
-		echo '"' . __( 'Date', 'edd' ) .  '",';
-		echo '"' . __( 'User', 'edd' ) .  '",';
-		echo '"' . __( 'Status', 'edd' ) .  '"';
+		echo '"' . __( 'ID', 'edd' ) 			.  '",';
+		echo '"' . __( 'Email', 'edd' ) 		.  '",';
+		echo '"' . __( 'First Name', 'edd' ) 	.  '",';
+		echo '"' . __( 'Last Name', 'edd' ) 	.  '",';
+		echo '"' . __( 'Products', 'edd' ) 		.  '",';
+		echo '"' . __( 'Discounts,', 'edd' ) 	.  '",';
+		echo '"' . __( 'Amount paid', 'edd' ) 	.  '",';
+		if ( edd_use_taxes() ) {
+			echo '"' . __( 'Amount taxed', 'edd' ) . '",';
+		}
+		echo '"' . __( 'Payment method', 'edd' ).  '",';
+		echo '"' . __( 'Key', 'edd' ) 			.  '",';
+		echo '"' . __( 'Date', 'edd' ) 			.  '",';
+		echo '"' . __( 'User', 'edd' ) 			.  '",';
+		echo '"' . __( 'Status', 'edd' ) 		.  '"';
 		echo "\r\n";
 		foreach ( $payments as $payment ) {
 
 			$payment_meta 	= edd_get_payment_meta( $payment->ID );
 			$user_info 		= edd_get_payment_meta_user_info( $payment->ID );
 
-			echo '"' . $payment->ID . '",';
-			echo '"' . $payment_meta['email'] . '",';
+			echo '"' . $payment->ID 			. '",';
+			echo '"' . $payment_meta['email'] 	. '",';
 			echo '"' . $user_info['first_name'] . '",';
-			echo '"' . $user_info['last_name']. '",';
+			echo '"' . $user_info['last_name']	. '",';
 
 			$downloads = edd_get_payment_meta_cart_details( $payment->ID );
 
@@ -51,24 +75,22 @@ function edd_export_payment_history() {
 
 				foreach ( $downloads as $key => $download ) {
 
-					// retrieve the ID of the download
+					// Download ID
 					$id = isset( $payment_meta['cart_details'] ) ? $download['id'] : $download;
 
-					// if download has variable prices, override the default price
+					// If the download has variable prices, override the default price
 					$price_override = isset( $payment_meta['cart_details'] ) ? $download['price'] : null;
 
 					$user_info = unserialize( $payment_meta['user_info'] );
 
-					// calculate the final price
 					$price = edd_get_download_final_price( $id, $user_info, $price_override );
 
-					// show name of download
+					// Display the Downoad Name
 					echo '"' . get_the_title( $id );
 
 					echo  ' - ';
 
 					if ( isset( $downloads[ $key ]['item_number'] ) ) {
-
 						$price_options = $downloads[ $key ]['item_number']['options'];
 
 						if ( isset( $price_options['price_id'] ) ) {
@@ -93,7 +115,12 @@ function edd_export_payment_history() {
 			} else {
 				echo '"' . __( 'none', 'edd' ) . '",';
 			}
-			echo '"' . html_entity_decode( edd_currency_filter( $payment_meta['amount'] ) ) . '",';
+
+			echo '"' . html_entity_decode( edd_currency_filter( edd_format_amount( $payment_meta['amount'] ) ) ) . '",';
+
+			if ( edd_use_taxes() ) {
+				echo '"' . html_entity_decode( edd_payment_tax( $payment->ID, $payment_meta ) ) . '",';
+			}
 
 			$gateway = get_post_meta( $payment->ID, '_edd_payment_gateway', true );
 			if ( $gateway ) {
@@ -101,14 +128,13 @@ function edd_export_payment_history() {
 			} else {
 				echo '"' . __( 'none', 'edd' ) . '",';
 			}
+
 			echo '"' . $payment_meta['key'] . '",';
-			echo '"' . date( get_option( 'date_format' ), strtotime( $payment->post_date ) ) . '",';
+
+			echo '"' . date_i18n( get_option( 'date_format' ), strtotime( $payment->post_date ) ) . '",';
 
 			$user_id = isset( $user_info['id'] ) && $user_info['id'] != -1 ? $user_info['id'] : $user_info['email'];
-
-			echo '"';
-			echo is_numeric( $user_id ) ? get_user_by( 'id', $user_id )->display_name : __( 'guest', 'edd' );
-			echo '",';
+			echo '"' . is_numeric( $user_id ) ? get_user_by( 'id', $user_id )->display_name : __( 'guest', 'edd' ) . '",';
 			echo '"' . edd_get_payment_status( $payment, true ) . '"';
 			echo "\r\n";
 
@@ -131,6 +157,7 @@ add_action( 'edd_payment_export', 'edd_export_payment_history' );
  * @since       1.2
  * @return      void
  */
+
 function edd_export_all_customers() {
 
 	if ( current_user_can( 'administrator' ) ) {
@@ -142,11 +169,27 @@ function edd_export_all_customers() {
 		if ( !empty( $emails ) ) {
 			header( "Content-type: text/csv" );
 			$today = date( "Y-m-d" );
-			header( "Content-Disposition: attachment; filename=user_emails-$today.csv" );
+			header( "Content-Disposition: attachment; filename=customers-$today.csv" );
 			header( "Pragma: no-cache" );
 			header( "Expires: 0" );
 
-			echo implode( "\n", $emails );
+			echo '"' . __( 'Email', 'edd' ) 			.  '",';
+			echo '"' . __( 'Name', 'edd' ) 				.  '",';
+			echo '"' . __( 'Total Purchases', 'edd' ) 	.  '",';
+			echo '"' . __( 'Total Purchased', 'edd' ) 	.  '"';
+			echo "\r\n";
+			foreach( $emails as $email ) {
+				
+				$wp_user = get_user_by( 'email', $email );		
+				
+				echo $email . ',';
+				echo $wp_user ? $wp_user->display_name : __( 'Guest', 'edd' );
+				echo ',';
+				echo edd_count_purchases_of_customer( $email ) . ',';
+				echo html_entity_decode( edd_currency_filter( edd_format_amount( edd_purchase_total_of_user( $email ) ) ) );
+				echo "\n";
+
+			}
 			exit;
 		}
 	} else {
@@ -155,14 +198,15 @@ function edd_export_all_customers() {
 }
 add_action( 'edd_email_export', 'edd_export_all_customers' );
 
+
 /**
  * Export all downloads to CSV
- *
  *
  * @access      private
  * @since       1.2
  * @return      void
  */
+
 function edd_export_all_downloads_history() {
 
 	if ( current_user_can( 'administrator' ) ) {
@@ -176,7 +220,7 @@ function edd_export_all_downloads_history() {
 
 		$downloads = get_posts( $report_args );
 
-		if ( !empty( $downloads ) ) {
+		if ( ! empty( $downloads ) ) {
 			header( "Content-type: text/csv" );
 			$today = date_i18n( "Y-m-d" );
 			header( "Content-Disposition: attachment; filename=user_downloads_history-$today.csv" );
