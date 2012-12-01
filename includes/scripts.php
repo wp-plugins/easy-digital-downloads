@@ -9,6 +9,8 @@
  * @since       1.0
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Load Scripts
@@ -40,6 +42,7 @@ function edd_load_scripts() {
 				'no_discount' 				=> __('Please enter a discount code', 'edd'), // blank discount code message
 				'discount_applied' 			=> __('Discount Applied', 'edd'), // discount verified message
 				'no_email' 					=> __('Please enter an email address before applying a discount code', 'edd'),
+				'no_username'				=> __('Please enter a username before applying a discount code', 'edd'),
 				'position_in_cart' 			=> isset( $position ) ? $position : -1,
 				'already_in_cart_message' 	=> __('You have already added this item to your cart', 'edd'), // item already in the cart message
 				'empty_cart_message' 		=> __('Your cart is empty', 'edd'), // item already in the cart message
@@ -86,10 +89,10 @@ function edd_register_styles() {
 
 	$file = 'edd.css';
 
-	if ( file_exists( trailingslashit( get_stylesheet_directory() ) . $file ) ) {
-		$url = trailingslashit( get_stylesheet_directory_uri() ) . $file;
-	} elseif ( file_exists( trailingslashit( get_template_directory() ) . $file ) ) {
-		$url = trailingslashit( get_template_directory_uri() ) . $file;
+	if ( file_exists( trailingslashit( get_stylesheet_directory() ) . 'edd_templates/' . $file ) ) {
+		$url = trailingslashit( get_stylesheet_directory_uri() ) . 'edd_templates/' . $file;
+	} elseif ( file_exists( trailingslashit( get_template_directory() ) . 'edd_templates/' . $file ) ) {
+		$url = trailingslashit( get_template_directory_uri() ) . 'edd_templates/' . $file;
 	} elseif ( file_exists( trailingslashit( edd_get_templates_dir() ) . $file ) ) {
 		$url = trailingslashit( edd_get_templates_url() ) . $file;
 	}
