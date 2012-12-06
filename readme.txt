@@ -6,7 +6,7 @@ Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.2
 Tested up to: 3.5
-Stable Tag: 1.3.3
+Stable Tag: 1.3.4.3
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -66,7 +66,7 @@ Easy Digital Downloads as been translated into the following languages:
 9. Arabic
 10. Polish
 
-Would you like to help translate the plugin into more langauges? [Contact Pippin](http://easydigitaldownloads.com/contact-developer/).
+Would you like to help translate the plugin into more languages? [Contact Pippin](http://easydigitaldownloads.com/contact-developer/).
 
 == Installation ==
 
@@ -139,6 +139,58 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.3.4.3 =
+
+* Fixed fatal error in PayPal
+
+= 1.3.4.2 =
+
+* Added a new {fullname} email template tag
+* Improved CSS for the ajax cart loader
+* Made download taxonomy rewrites hierarchical
+* Updated Italian language files
+* Fixed a potential issue with jQuery validation of the checkout form
+* made a JS file only load on the checkout page instead of all pages
+* Reverted back to $_SESSION based storage as WP_Session isn't quite ready for use yet
+
+= 1.3.4.1 =
+
+* Fixed major bug in PayPal standard gateway introduced in 1.3.4
+* Updated French langauge files
+
+= 1.3.4 =
+
+* Added new option for defining the emails that receive admin sale notifications
+* Improved contextual help tabs
+* Fixed a problem with $0 purchases
+* Added new edd_item_in_cart filter
+* Made the edd_log_type taxonomy private
+* Added prices to the [purchase_link] short code so that the product price is shown on the button
+* Fixed a problem with display the buyer's first name in purchase receipts
+* Updated category/tag slugs to respect EDD_SLUG constant (if defined)
+* Updated Italian language files
+* Added payment history search
+* Rebuilt Payment History page to use better core UI standards
+* Improved PayPal IPN processing with new do_action() hooks for each transaction type
+* Added exclude_category and exclude_tags parameters to the [downloads] short code
+* Fixed a problem with category/tag query parameters in the [downloads] short code
+* Improved username validation and error messages on checkout
+* Updated French language files
+* Improved the way language files are loaded to permit users to place custom language files in wp-content/languages/edd/
+* Improved edd_get_ajax_url() to fix problems with sites that use SSl
+* Fixed a problem with PayPal purchases when item names have HTML entities
+* Improved some internationalization with date functions
+* Fixed a problem with prices over 1,000 on checkout
+* Fixed path to custom edd.css
+* Made the email address in View Details for purchase history clickable
+* Added a tax column to the CSV purchase export
+* Fixed a problem with some payments not having meta data for the total amount recorded
+* Added date parameters to edd_get_payments() to allow payments of specific dates to be queried
+* Removed the "required" class from the local tax opt-in checkbox
+* Improved the function that retrieves the total earnings amount
+* Updated customer CSV export to include the number of purchases and total amount spent
+* Updated purchase details to include tax information
 
 = 1.3.3 = 
 
@@ -761,6 +813,60 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Upgrade Notice ==
+
+= 1.3.4.3 =
+
+* Fixed fatal error in PayPal
+
+= 1.3.4.2 =
+
+* Added a new {fullname} email template tag
+* Improved CSS for the ajax cart loader
+* Made download taxonomy rewrites hierarchical
+* Updated Italian language files
+* Fixed a potential issue with jQuery validation of the checkout form
+* made a JS file only load on the checkout page instead of all pages
+* Reverted back to $_SESSION based storage as WP_Session isn't quite ready for use yet
+
+
+= 1.3.4.1 =
+
+* Fixed major bug in PayPal standard gateway introduced in 1.3.4
+* Updated French langauge files
+
+= 1.3.4 =
+
+* Added new option for defining the emails that receive admin sale notifications
+* Improved contextual help tabs
+* Fixed a problem with $0 purchases
+* Added new edd_item_in_cart filter
+* Made the edd_log_type taxonomy private
+* Added prices to the [purchase_link] short code so that the product price is shown on the button
+* Fixed a problem with display the buyer's first name in purchase receipts
+* Updated category/tag slugs to respect EDD_SLUG constant (if defined)
+* Updated Italian language files
+* Added payment history search
+* Rebuilt Payment History page to use better core UI standards
+* Improved PayPal IPN processing with new do_action() hooks for each transaction type
+* Added exclude_category and exclude_tags parameters to the [downloads] short code
+* Fixed a problem with category/tag query parameters in the [downloads] short code
+* Improved username validation and error messages on checkout
+* Updated French language files
+* Improved the way language files are loaded to permit users to place custom language files in wp-content/languages/edd/
+* Improved edd_get_ajax_url() to fix problems with sites that use SSl
+* Fixed a problem with PayPal purchases when item names have HTML entities
+* Improved some internationalization with date functions
+* Fixed a problem with prices over 1,000 on checkout
+* Fixed path to custom edd.css
+* Made the email address in View Details for purchase history clickable
+* Added a tax column to the CSV purchase export
+* Fixed a problem with some payments not having meta data for the total amount recorded
+* Added date parameters to edd_get_payments() to allow payments of specific dates to be queried
+* Removed the "required" class from the local tax opt-in checkbox
+* Improved the function that retrieves the total earnings amount
+* Updated customer CSV export to include the number of purchases and total amount spent
+* Updated purchase details to include tax information
+
 
 = 1.3.3 = 
 
