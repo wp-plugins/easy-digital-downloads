@@ -9,8 +9,11 @@
  * @since       1.0 
 */
 
-// Exit if accessed directly
-if ( !defined( 'ABSPATH' ) ) exit;
+
+// make sure a session is started
+if( !session_id() ) {
+	add_action( 'init', 'session_start', -1 );
+}
 
 /**
  * Print Errors
@@ -83,6 +86,20 @@ function edd_set_error( $error_id, $error_message ) {
 
 
 /**
+ * Clear Errors
+ *
+ * Clears all stored errors.
+ *
+ * @access      public
+ * @since       1.0 
+ * @return      void
+*/
+
+function edd_clear_errors() {
+	if( isset( $_SESSION['edd-errors'] ) ) $_SESSION['edd-errors'] = null;
+}
+
+/**
  * Unset an Error
  *
  * Removes a stored error
@@ -98,19 +115,4 @@ function edd_unset_error( $error_id ) {
 	if( $errors ) {
 		unset( $errors[ $error_id ] );
 	}
-}
-
-
-/**
- * Clear Errors
- *
- * Clears all stored errors.
- *
- * @access      public
- * @since       1.0 
- * @return      void
-*/
-
-function edd_clear_errors() {
-	if( isset( $_SESSION['edd-errors'] ) ) $_SESSION['edd-errors'] = null;
 }
