@@ -9,6 +9,8 @@
  * @since       1.0 
 */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Register Settings
@@ -53,6 +55,13 @@ function edd_register_settings() {
 					'id' => 'success_page',
 					'name' => __('Success Page', 'edd'),
 					'desc' => __('This is the page buyers are sent to after completing their purchases', 'edd'),
+					'type' => 'select',
+					'options' => $pages_options
+				),
+				array(
+					'id' => 'failure_page',
+					'name' => __('Failed Transaction Page', 'edd'),
+					'desc' => __('This is the page buyers are sent to if their transaction is canceled or fails', 'edd'),
 					'type' => 'select',
 					'options' => $pages_options
 				),
@@ -203,13 +212,23 @@ function edd_register_settings() {
 					'name' => __('Purchase Receipt', 'edd'),
 					'desc' => __('Enter the email that is sent to users after completing a successful purchase. HTML is accepted. Available template tags:', 'edd') . '<br/>' .
 						'{download_list} - ' . __('A list of download URLs for each download purchased', 'edd') . '<br/>' .
-						'{name} - ' . __('The buyer\'s name', 'edd') . '<br/>' .
+						'{name} - ' . __('The buyer\'s name first', 'edd') . '<br/>' .
+						'{fullname} - ' . __('The buyer\'s full name, first and last', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
+						'{subtotal} - ' . __('The price of the purchase before taxes', 'edd') . '<br/>' .
+						'{tax} - ' . __('The taxed amount of the purchase', 'edd') . '<br/>' .
 						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
 						'{receipt_id} - ' . __('The unique ID number for this purchase receipt', 'edd') . '<br/>' .
 						'{payment_method} - ' . __('The method of payment used for this purchase', 'edd') . '<br/>' .
 						'{sitename} - ' . __('Your site name', 'edd'),
 					'type' => 'rich_editor'
+				),
+				array(
+					'id' => 'admin_notice_emails',
+					'name' => __( 'Sale Notification Emails', 'edd' ),
+					'desc' => __( 'Enter the email address(es) that should receive a notification anytime a sale is made, one per line', 'edd' ),
+					'type' => 'textarea',
+					'std'  => get_bloginfo( 'admin_email' )
 				)
 			)
 		),
@@ -754,6 +773,28 @@ function edd_text_callback($args) {
 	if( isset( $edd_options[ $args['id'] ] ) ) { $value = $edd_options[ $args['id'] ]; } else { $value = isset( $args['std'] ) ? $args['std'] : ''; }
 	$size = isset( $args['size'] ) && !is_null($args['size']) ? $args['size'] : 'regular';
 	$html = '<input type="text" class="' . $args['size'] . '-text" id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" value="' . esc_attr( $value ) . '"/>';   
+	$html .= '<label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
+ 
+	echo $html; 
+}
+
+
+/**
+ * Textarea Callback
+ *
+ * Renders textarea fields.
+ *
+ * @access      private
+ * @since       1.0 
+ * @return      void
+*/
+
+function edd_textarea_callback($args) { 
+	global $edd_options;
+
+	if( isset( $edd_options[ $args['id'] ] ) ) { $value = $edd_options[ $args['id'] ]; } else { $value = isset( $args['std'] ) ? $args['std'] : ''; }
+	$size = isset( $args['size'] ) && !is_null($args['size']) ? $args['size'] : 'regular';
+	$html = '<textarea class="large-text" cols="50" rows="5" id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']">' . esc_textarea( $value ) . '</textarea>';   
 	$html .= '<label for="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';  
  
 	echo $html; 
