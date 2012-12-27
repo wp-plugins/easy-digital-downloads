@@ -9,20 +9,24 @@
  * @since       1.0
 */
 
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 
 /**
  * Process Actions
  *
  * @access      private
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 
 function edd_process_actions() {
-	if( isset( $_POST['edd-action'] ) ) {
+	if ( isset( $_POST['edd-action'] ) ) {
 		do_action( 'edd_' . $_POST['edd-action'], $_POST );
 	}
-	if( isset( $_GET['edd-action'] ) ) {
+
+	if ( isset( $_GET['edd-action'] ) ) {
 		do_action( 'edd_' . $_GET['edd-action'], $_GET );
 	}
 }

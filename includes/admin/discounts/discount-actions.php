@@ -9,6 +9,9 @@
  * @since       1.0.8.1
 */
 
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 
 /**
  * Add Discount
@@ -16,19 +19,19 @@
  * Setups and stores a new discount code.
  *
  * @access      private
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 
 function edd_add_discount( $data ) {
-	if( wp_verify_nonce( $data['edd-discount-nonce'], 'edd_discount_nonce' ) ) {
-		// setup the discount code details
+	if ( wp_verify_nonce( $data['edd-discount-nonce'], 'edd_discount_nonce' ) ) {
+		// Setup the discount code details
 		$posted = array();
-		foreach( $data as $key => $value ) {
-			if( $key != 'edd-discount-nonce' && $key != 'edd-action' )
-			$posted[$key] = strip_tags(addslashes( $value ) );
+		foreach ( $data as $key => $value ) {
+			if ( $key != 'edd-discount-nonce' && $key != 'edd-action' )
+			$posted[ $key ] = strip_tags(addslashes( $value ) );
 		}
-		// set the discount code's default status to active
+		// Set the discount code's default status to active
 		$posted['status'] = 'active';
 		$save = edd_store_discount( $posted );
 	}
@@ -42,21 +45,21 @@ add_action( 'edd_add_discount', 'edd_add_discount' );
  * Saves an edited discount.
  *
  * @access      private
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 
 function edd_edit_discount( $data ) {
-	if( isset( $data['edd-discount-nonce'] ) && wp_verify_nonce( $data['edd-discount-nonce'], 'edd_discount_nonce' ) ) {
+	if ( isset( $data['edd-discount-nonce'] ) && wp_verify_nonce( $data['edd-discount-nonce'], 'edd_discount_nonce' ) ) {
 		// setup the discount code details
 		$discount = array();
-		foreach( $data as $key => $value ) {
-			if( $key != 'edd-discount-nonce' && $key != 'edd-action' && $key != 'discount-id' && $key != 'edd-redirect' )
+		foreach ( $data as $key => $value ) {
+			if ( $key != 'edd-discount-nonce' && $key != 'edd-action' && $key != 'discount-id' && $key != 'edd-redirect' )
 			$discount[ $key ] = strip_tags( addslashes( $value ) );
 		}
 		$old_discount = edd_get_discount_by_code( $data['code'] );
-		$discount['uses'] = $old_discount['uses']; 
-		if( edd_store_discount( $discount, $data['discount-id'] ) ) {
+		$discount['uses'] = edd_get_discount_uses( $old_discount->ID );
+		if ( edd_store_discount( $discount, $data['discount-id'] ) ) {
 			wp_redirect( add_query_arg( 'edd-message', 'discount_updated', $data['edd-redirect'] ) ); exit;
 		} else {
 			wp_redirect( add_query_arg( 'edd-message', 'discount_update_failed', $data['edd-redirect'] ) ); exit;
@@ -65,13 +68,14 @@ function edd_edit_discount( $data ) {
 }
 add_action( 'edd_edit_discount', 'edd_edit_discount' );
 
+
 /**
  * Delete Discount
  *
  * Listens for when a discount delete button is clicked.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 
@@ -88,7 +92,7 @@ add_action( 'edd_delete_discount', 'edd_delete_discount' );
  * Sets a discount code to active.
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 
@@ -103,7 +107,7 @@ add_action( 'edd_activate_discount', 'edd_activate_discount' );
  * Deactivate Discount
  *
  * @access      public
- * @since       1.0 
+ * @since       1.0
  * @return      void
 */
 

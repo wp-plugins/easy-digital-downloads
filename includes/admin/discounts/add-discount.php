@@ -6,8 +6,12 @@
  * @subpackage  Discounts
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
+
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 ?>
 <h3><?php _e( 'Add New Discount', 'edd' ); ?></h3>
 <form id="edd-add-discount" action="" method="POST">
@@ -92,7 +96,7 @@
 	</table>
 	<p class="submit">
 		<input type="hidden" name="edd-action" value="add_discount"/>
-		<input type="hidden" name="edd-discount-nonce" value="<?php echo wp_create_nonce('edd_discount_nonce'); ?>"/>
+		<input type="hidden" name="edd-discount-nonce" value="<?php echo wp_create_nonce( 'edd_discount_nonce' ); ?>"/>
 		<input type="submit" value="<?php _e( 'Add Discount Code', 'edd' ); ?>" class="button-primary"/>
 	</p>
 </form>
