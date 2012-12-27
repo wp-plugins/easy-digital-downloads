@@ -4,9 +4,9 @@ Plugin URI: http://easydigitaldownloads.com
 Contributors: mordauk, sksmatt, sunnyratilal, SpencerFinnell
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
-Requires at least: 3.2
+Requires at least: 3.3
 Tested up to: 3.5
-Stable Tag: 1.3.4.3
+Stable Tag: 1.4
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -90,7 +90,7 @@ There are three ways you can show the downloads shopping cart:
 
 `echo edd_shopping_cart();`
 
-= My Payments Marked as Pending = 
+= My Payments Marked as Pending =
 
 There are several reasons this happens. Please follow the suggestions [here](https://easydigitaldownloads.com/documentation/faqs/).
 
@@ -110,6 +110,11 @@ Yes! EDD has an add-on that provides a complete affiliate system that you can us
 
 [Checkout Affiliates Pro + EDD Integration Pack](http://easydigitaldownloads.com/extension/affiliates-pro-integration-pack/)
 
+= Can I give my customers downloadable PDF Invoices? =
+Yes, EDD has an add-on that allows for downloadable invoices to be generated for each payment.
+
+[PDF Invoices](https://easydigitaldownloads.com/extension/pdf-invoices)
+
 = Can Users Purchase Products without Using PayPal? =
 
 Yes, through the addition of one or more of the add-on payment gateways, you can accept payments in many different ways. The add-on gateways currently available:
@@ -124,6 +129,26 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * [GoCardless](https://easydigitaldownloads.com/extension/gocardless-payment-gateway/)
 * [Amazon FPS](https://easydigitaldownloads.com/extension/amazon-fps-payment-gateway/)
 * [Payza](https://easydigitaldownloads.com/extension/payza-payment-gateway/)
+* [Paymill](https://easydigitaldownloads.com/extension/paymill-payment-gateway/)
+* [MOLPay](https://easydigitaldownloads.com/extension/molpay-payment-gateway/)
+* [MercadoPago](https://easydigitaldownloads.com/extension/mercadopago/)
+* [NoChex](https://easydigitaldownloads.com/extension/nochex-gateway/)
+* [Recurly.com](https://easydigitaldownloads.com/extension/recurly-com-checkout/)
+* [Network Merchants](https://easydigitaldownloads.com/extension/network-merchants-gateway/)
+* [Direct One](https://easydigitaldownloads.com/extension/direct-one/)
+* [Moneybookers/Skrill](https://easydigitaldownloads.com/extension/moneybookers-skrill-payment-gateway/)
+* [Moneris Solutions](https://easydigitaldownloads.com/extension/moneris-solutions-gateway/)
+* [My Virtual Merchant](https://easydigitaldownloads.com/extension/my-virtual-merchant/)
+* [NAB](https://easydigitaldownloads.com/extension/6038/)
+* [Mijireh](https://easydigitaldownloads.com/extension/mijireh-checkout/)
+* [eWay](https://easydigitaldownloads.com/extension/eway-gateway/)
+* [Check](https://easydigitaldownloads.com/extension/check-payment-gateway/)
+* [PagSeguro](https://easydigitaldownloads.com/extension/pagseguro-payment-gateway/)
+* [Beanstream](https://easydigitaldownloads.com/extension/beanstream-payment-gateway/)
+* [Quickbooks](https://easydigitaldownloads.com/extension/quickbooks/)
+* [PayFast](https://easydigitaldownloads.com/extension/payfast-payment-gateway/())
+* [WorldPay](https://easydigitaldownloads.com/extension/worldpay-gateway/)
+* [Payment Express](https://easydigitaldownloads.com/extension/payment-express-gateway/)
 
 == Screenshots ==
 
@@ -139,6 +164,45 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.4 =
+
+* Converted coupons to a custom post type
+* Added Dummy XML File
+* Added System Info (props @chriscct7)
+* Fixed Conflict with Jetpack
+* Fixed issue with exporting lots of customers
+* Added Contextual Help
+* Fixed Download Icon missing
+* Fixed Bulk Delete Payments
+* Updated edd_get_user_purchases()
+* Added Receipt shortcode
+* Added Filter on Default Customer User Role
+* Added Live Credit Card Verification 
+* Added Travis-CI Integration (props @chriscct7)
+* Added New Column to Customers Reports to Show File Download Count
+* Made some UI tweaks, and bug fixes for Logs
+* Added edd_send_back_to_checkout()
+* Brand new Logs UI
+* Fixes in payments functions
+* Added support for WP 3.5 Button
+* Made updates to edd_process_download()
+* Reordered the inclusion of payment gateways
+* Restructured file organization
+* Improved payment-functions.php file
+* Added Payment Notes
+* Added a more efficient AJAX selector
+* Serious Optomizations
+* Optimized png's losslessly
+* Stripped whitespace + normalize
+* Added New Helper Function for "Transaction ID" 
+* Added "failed" payment status 
+* Added Profile Editor
+* Added Retina images
+* Converted Discount Admin Page to WP List Table
+* Added over 100 new MIME-Types allowed for download
+* Added support for uploading .psd files
+* Rewrote main plugin file to use a singleton OOP approach
 
 = 1.3.4.3 =
 
@@ -192,7 +256,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated customer CSV export to include the number of purchases and total amount spent
 * Updated purchase details to include tax information
 
-= 1.3.3 = 
+= 1.3.3 =
 
 * Added new Tax system for calculating simple taxes on purchases
 * Added error / payment failure logging to PayPal standard gateway
@@ -341,7 +405,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a problem with manually completing purchases
 * Fixed some problems with international number formatting
 
-= 1.2 = 
+= 1.2 =
 
 * Added reset styles to default fieldsets to account for themes without fieldset styling
 * Added new Date and Time to the View Details purchase popup
@@ -528,7 +592,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug in the purchase receipt that caused it to include all source file links, not just the ones set to the price option purchase
 * Added a new "class" parameter to the [purchas_link} short code
 * Moved the discount code fieldset inside of the user info fieldset on the checkout form
-* Added a legend to the user info fieldset 
+* Added a legend to the user info fieldset
 * Improved the markup of the default CC fields
 * Added new edd_is_checkout() conditional function
 * Updated Spanish language files
@@ -597,7 +661,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug with download sale/earning stats going negative when reversing purchases
 * Removed some blank form action attributes that caused the HTML to invalidate
 * Added "Settings Updated" notification when saving plugin settings
-* Made some improvements to the default purchase receipt email template 
+* Made some improvements to the default purchase receipt email template
 * Renamed the "Manual Payment" gateway to "Test"
 * Added options for linking the download titles in the [downloads] short code
 * Removed the "You have already purchased this" message from the purchase link short code / template
@@ -690,7 +754,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug with the discount code form on checkout. It now only shows if there is at least one active discount. Props to Sksmatt
 * Fixed a bug with the Media Uploader when adding media to the content of a Download. Props to Sksmatt
 * Added a wrapper div.edd-cart-ajax-alert around the message that shows when an item has been added to the cart
-* Fixed a small error notice present in the checkout form short code. Props to Sksmatt 
+* Fixed a small error notice present in the checkout form short code. Props to Sksmatt
 * Fixed a small bug wit the edd_remove_item_url() present when on a 404 error page. Props to Sksmatt
 
 = 1.0.7 =
@@ -762,7 +826,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 = 1.0.3 =
 
 * Added first and last name fields to the checkout registration form.
-* Improved country list formatting. 
+* Improved country list formatting.
 * Improved the price input field to make it more clear and help prevent improper price formats.
 * Added backwards compatibility for WP versions < 3.3. The rich editors in the settings pages could not be rendered in < 3.3.
 * Added option to include an "Agree to terms" to the checkout.
@@ -783,7 +847,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated language files
 * Fixed a bug with the discount code system
 
-= 1.0.1.4 = 
+= 1.0.1.4 =
 
 * Fixed a bug with the "Add New" button for download source files.
 * Added the Italian language files, thanks to Marco.
@@ -794,13 +858,13 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 = 1.0.1.2 =
 
-* Fixed a bug with the manual payment gateway. 
-* Fixed a bug where sales / earnings counts were increased before a purchase was confirmed. 
+* Fixed a bug with the manual payment gateway.
+* Fixed a bug where sales / earnings counts were increased before a purchase was confirmed.
 * Fixed a bug with the checkout registration / login forms.
 * Added a German translation, thanks to David Decker.
 * Added a partial European Portuguese translation, thanks to Takssista.
 
-= 1.0.1.1 = 
+= 1.0.1.1 =
 
 * Minor updates including inclusion of INR as an available currency.
 * Updates to the default.po file for missing strings.
@@ -868,7 +932,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated purchase details to include tax information
 
 
-= 1.3.3 = 
+= 1.3.3 =
 
 * Added new Tax system for calculating simple taxes on purchases
 * Added error / payment failure logging to PayPal standard gateway
@@ -1017,7 +1081,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a problem with manually completing purchases
 * Fixed some problems with international number formatting
 
-= 1.2 = 
+= 1.2 =
 
 * Added reset styles to default fieldsets to account for themes without fieldset styling
 * Added new Date and Time to the View Details purchase popup
@@ -1204,7 +1268,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug in the purchase receipt that caused it to include all source file links, not just the ones set to the price option purchase
 * Added a new "class" parameter to the [purchas_link} short code
 * Moved the discount code fieldset inside of the user info fieldset on the checkout form
-* Added a legend to the user info fieldset 
+* Added a legend to the user info fieldset
 * Improved the markup of the default CC fields
 * Added new edd_is_checkout() conditional function
 * Updated Spanish language files
@@ -1274,7 +1338,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug with download sale/earning stats going negative when reversing purchases
 * Removed some blank form action attributes that caused the HTML to invalidate
 * Added "Settings Updated" notification when saving plugin settings
-* Made some improvements to the default purchase receipt email template 
+* Made some improvements to the default purchase receipt email template
 * Renamed the "Manual Payment" gateway to "Test"
 * Added options for linking the download titles in the [downloads] short code
 * Removed the "You have already purchased this" message from the purchase link short code / template
@@ -1367,7 +1431,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fixed a bug with the discount code form on checkout. It now only shows if there is at least one active discount. Props to Sksmatt
 * Fixed a bug with the Media Uploader when adding media to the content of a Download. Props to Sksmatt
 * Added a wrapper div.edd-cart-ajax-alert around the message that shows when an item has been added to the cart
-* Fixed a small error notice present in the checkout form short code. Props to Sksmatt 
+* Fixed a small error notice present in the checkout form short code. Props to Sksmatt
 * Fixed a small bug wit the edd_remove_item_url() present when on a 404 error page. Props to Sksmatt
 
 = 1.0.7 =
@@ -1437,7 +1501,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 = 1.0.3 =
 
 * Added first and last name fields to the checkout registration form.
-* Improved country list formatting. 
+* Improved country list formatting.
 * Improved the price input field to make it more clear and help prevent improper price formats.
 * Added backwards compatibility for WP versions < 3.3. The rich editors in the settings pages could not be rendered in < 3.3.
 * Added option to include an "Agree to terms" to the checkout.
@@ -1458,7 +1522,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated language files
 * Fixed a bug with the discount code system
 
-= 1.0.1.4 = 
+= 1.0.1.4 =
 
 * Fixed a bug with the "Add New" button for download source files.
 * Added the Italian language files, thanks to Marco.
@@ -1469,13 +1533,13 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 = 1.0.1.2 =
 
-Fixed a bug with the manual payment gateway. 
-Fixed a bug where sales / earnings counts were increased before a purchase was confirmed. 
+Fixed a bug with the manual payment gateway.
+Fixed a bug where sales / earnings counts were increased before a purchase was confirmed.
 Fixed a bug with the checkout registration / login forms.
 Added a German translation, thanks to David Decker.
 Added a partial European Portuguese translation, thanks to Takssista.
 
-= 1.0.1.1 = 
+= 1.0.1.1 =
 
 * Minor updates including inclusion of INR as an available currency.
 * Updates to the default.po file for missing strings.

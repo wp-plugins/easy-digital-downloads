@@ -10,7 +10,7 @@
  * For the full copyright and license information, please view the LICENSE file.
  */
 
-include_once dirname(__FILE__).'/../GoogleChartMarker.php';
+require_once dirname(__FILE__).'/../GoogleChartMarker.php';
 
 /**
  * A Shape Marker.
@@ -142,7 +142,7 @@ class GoogleChartShapeMarker extends GoogleChartMarker
 		return $this;
 	}
 
-	/** 
+	/**
 	 * Set a border to the shape.
 	 *
 	 * To create a border to a shape with Google Chart API, you need to create

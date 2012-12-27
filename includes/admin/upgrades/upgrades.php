@@ -28,7 +28,7 @@ function edd_upgrades_screen() {
 		<div id="edd-upgrade-status">
 			<p>
 				<?php _e( 'The upgrade process has started, please be patient. This could take several minutes. You will be automatically redirected when the upgrade is finished.', 'edd' ); ?>
-				<img src="<?php echo EDD_PLUGIN_URL . '/includes/images/loading.gif'; ?>" id="edd-upgrade-loader"/>
+				<img src="<?php echo EDD_PLUGIN_URL . '/assets/images/loading.gif'; ?>" id="edd-upgrade-loader"/>
 			</p>
 		</div>
 		<script type="text/javascript">
@@ -38,7 +38,7 @@ function edd_upgrades_screen() {
 		        jQuery.post( ajaxurl, data, function (response) {
 		        	if( response == 'complete' ) {
 			        	jQuery('#edd-upgrade-loader').hide();
-			        	document.location.href = 'index.php'; // redirect back to the dashboard when complete
+			        	document.location.href = 'index.php?page=edd-about'; // redirect to the welcome page
 					}
 		        });
 			});

@@ -8,7 +8,7 @@
  * @subpackage  Gateway Functions
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
 
 // Exit if accessed directly
@@ -20,7 +20,7 @@ if ( !defined( 'ABSPATH' ) ) exit;
  * Removes the "Restrict This Content" meta box from Restrict Content Pro.
  *
  * @access      private
- * @since       1.0 
+ * @since       1.0
  * @return      array
 */
 
@@ -35,7 +35,7 @@ add_filter( 'rcp_metabox_excluded_post_types', 'edd_remove_restrict_meta_box', 9
 /**
  * Disables admin sorting of Post Types Order
  *
- * When sorting downloads by price, earnings, sales, date, or name, 
+ * When sorting downloads by price, earnings, sales, date, or name,
  * we need to remove the posts_orderby that Post Types Order imposes
  *
  * @access      private
@@ -61,8 +61,8 @@ add_action( 'load-edit.php', 'edd_remove_post_types_order' );
 */
 
 function edd_disable_jetpack_og_on_checkout() {
-	if( edd_is_checkout() )
-		return false;
-	return true;
+	if ( edd_is_checkout() ) {
+		remove_action( 'wp_head', 'jetpack_og_tags' );
+	}
 }
-add_filter( 'jetpack_enable_open_graph', 'edd_disable_jetpack_og_on_checkout', 999 );
+add_action( 'template_redirect', 'edd_disable_jetpack_og_on_checkout' );

@@ -6,13 +6,13 @@
  * @subpackage  Edit Payment
  * @copyright   Copyright (c) 2012, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0 
+ * @since       1.0
 */
 
 // Exit if accessed directly
-if ( !defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
-$payment = get_post( $_GET['purchase_id'] );
+$payment = get_post( absint( $_GET['purchase_id'] ) );
 $payment_data = get_post_meta( $_GET['purchase_id'], '_edd_payment_meta', true );
 ?>
 <div class="wrap">
@@ -23,27 +23,54 @@ $payment_data = get_post_meta( $_GET['purchase_id'], '_edd_payment_meta', true )
 				<tr>
 					<th scope="row" valign="top">
 						<span><?php _e( 'Buyer\'s Email', 'edd' ); ?></span>
-					</th>	
+					</th>
 					<td>
 						<input class="regular-text" type="text" name="edd-buyer-email" id="edd-buyer-email" value="<?php echo $payment_data['email']; ?>"/>
 						<p class="description"><?php _e( 'If needed, you can update the buyer\'s email here.', 'edd' ); ?></p>
 					</td>
 				</tr>
-				<tr>				
+				<tr>
 					<th scope="row" valign="top">
 						<span><?php _e( 'Downloads Purchased', 'edd' ); ?></span>
 					</th>
 					<td id="purchased-downloads">
 						<?php
 							$downloads = maybe_unserialize( $payment_data['downloads'] );
-							if( $downloads ) :
-								foreach( $downloads as $download ):
+							if ( $downloads ) :
+								foreach ( $downloads as $download ):
 									$id = isset( $payment_data['cart_details'] ) ? $download['id'] : $download;
 									echo '<div class="purchased_download_' . $id . '"><input type="hidden" name="edd-purchased-downloads[]" value="' . $id . '"/><strong>' . get_the_title( $id ) . '</strong> - <a href="#" class="edd-remove-purchased-download" data-action="remove_purchased_download" data-id="' . $id . '">Remove</a></div>';
 								endforeach;
 							endif;
 						?>
-						<p id="edit-downloads"><a href="#TB_inline?width=640&inlineId=available-downloads" class="thickbox" title="<?php printf( __( 'Add download to purchase #%s', 'edd' ), $_GET['purchase_id'] ); ?> "><?php _e( 'Add download to purchase', 'edd' ); ?></p>
+						<p id="edit-downloads"><a href="#TB_inline?width=640&amp;inlineId=available-downloads" class="thickbox" title="<?php printf( __( 'Add download to purchase #%s', 'edd' ), $_GET['purchase_id'] ); ?> "><?php _e( 'Add download to purchase', 'edd' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" valign="top">
+						<span><?php _e( 'Payment Notes', 'edd' ); ?></span>
+					</th>
+					<td>
+						<?php
+							$notes = edd_get_payment_notes( $payment->ID );
+							if ( ! empty( $notes ) ) :
+								echo '<ul id="payment-notes">';
+								foreach ( $notes as $note ):
+									if ( ! empty( $note->user_id ) ) {
+										$user = get_userdata( $note->user_id );
+										$user = $user->display_name;
+									} else {
+										$user = __( 'EDD Bot', 'edd' );
+									}
+									echo '<p><strong>' . $user . '</strong>&nbsp;<em>' . $note->comment_date . '</em>&nbsp;&mdash;' . $note->comment_content . '</p>';
+								endforeach;
+								echo '</ul>';
+							else :
+								echo '<p>' . __( 'No payment notes', 'edd' ) . '</p>';
+							endif;
+						?>
+						<label for="edd-payment-note"><?php _e( 'Add New Note', 'edd' ); ?></label><br/>
+						<textarea name="edd-payment-note" id="edd-payment-note" cols="30" rows="5"></textarea>
 					</td>
 				</tr>
 				<tr>
@@ -52,11 +79,11 @@ $payment_data = get_post_meta( $_GET['purchase_id'], '_edd_payment_meta', true )
 					</th>
 					<td>
 						<select name="edd-payment-status" id="edd_payment_status">
-							<?php 
+							<?php
 							$status = $payment->post_status; // current status
 							$statuses = edd_get_payment_statuses();
 							foreach( $statuses as $status_id => $label ) {
-								echo '<option value="' . $status_id	. '" ' . selected( $status, $status_id, false ) . '>' . $label . '</option>'; 
+								echo '<option value="' . $status_id	. '" ' . selected( $status, $status_id, false ) . '>' . $label . '</option>';
 							}
 							?>
 						</select>
@@ -73,7 +100,7 @@ $payment_data = get_post_meta( $_GET['purchase_id'], '_edd_payment_meta', true )
 				</tr>
 			</tbody>
 		</table>
-		
+
 		<input type="hidden" name="edd-action" value="edit_payment"/>
 		<input type="hidden" name="edd-old-status" value="<?php echo $status; ?>"/>
 		<input type="hidden" name="payment-id" value="<?php echo $_GET['purchase_id']; ?>"/>
