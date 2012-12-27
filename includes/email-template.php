@@ -9,6 +9,8 @@
  * @since 1.0.8.2
  */
 
+// Exit if accessed directly
+if ( !defined( 'ABSPATH' ) ) exit;
 
 /**
  * Get Email Templates
@@ -39,20 +41,28 @@ function edd_email_templage_tags( $message, $payment_data, $payment_id ) {
 
 	$user_info = maybe_unserialize( $payment_data['user_info'] );
 
-	if ( isset( $user_info['id'] ) && $user_info['id'] > 0 ) {
+	if ( isset( $user_info['id'] ) && $user_info['id'] > 0 && isset( $user_info['first_name'] ) ) {
+
 		$user_data = get_userdata( $user_info['id'] );
-		$name = $user_data->display_name;
-		$username = $user_data->user_login;
+		$name      = $user_info['first_name'];
+		$fullname  = $user_info['first_name'] . ' ' . $user_info['last_name'];
+		$username  = $user_data->user_login;
+	
 	} elseif ( isset( $user_info['first_name'] ) ) {
-		$name = $user_info['first_name'];
-		$username = $user_info['first_name'];
+	
+		$name      = $user_info['first_name'];
+		$fullname  = $user_info['first_name'] . ' ' . $user_info['last_name'];
+		$username  = $user_info['first_name'];
+	
 	} else {
-		$name = $user_info['email'];
-		$username = $user_info['email'];
+	
+		$name      = $user_info['email'];
+		$username  = $user_info['email'];
+	
 	}
 
 	$download_list = '<ul>';
-	$downloads = edd_get_downloads_of_purchase( $payment_id, $payment_data );
+	$downloads     = edd_get_downloads_of_purchase( $payment_id, $payment_data );
 	if ( $downloads ) {
 
 		$show_names = apply_filters( 'edd_email_show_names', true );
@@ -93,20 +103,25 @@ function edd_email_templage_tags( $message, $payment_data, $payment_id ) {
 	}
 	$download_list .= '</ul>';
 
-	$price = edd_currency_filter( edd_format_amount( $payment_data['amount'] ) );
-
-	$gateway = edd_get_gateway_checkout_label( get_post_meta( $payment_id, '_edd_payment_gateway', true ) );
-
+	$subtotal   = isset( $payment_data['subtotal'] ) ? $payment_data['subtotal'] : $payment_data['amount'];
+	$subtotal   = edd_currency_filter( edd_format_amount( $subtotal ) );
+	$tax        = isset( $payment_data['tax'] ) ? $payment_data['tax'] : 0;
+	$tax        = edd_currency_filter( edd_format_amount( $tax ) );
+	$price      = edd_currency_filter( edd_format_amount( $payment_data['amount'] ) );
+	$gateway    = edd_get_gateway_checkout_label( get_post_meta( $payment_id, '_edd_payment_gateway', true ) );
 	$receipt_id = $payment_data['key'];
 
-	$message = str_replace( '{name}', $name, $message );
-	$message = str_replace( '{username}', $username, $message );
-	$message = str_replace( '{download_list}', $download_list, $message );
-	$message = str_replace( '{date}', date_i18n( get_option( 'date_format' ), strtotime( $payment_data['date'] ) ), $message );
-	$message = str_replace( '{sitename}', get_bloginfo( 'name' ), $message );
-	$message = str_replace( '{price}', $price, $message );
+	$message = str_replace( '{name}',           $name, $message );
+	$message = str_replace( '{fullname}',       $fullname, $message );
+	$message = str_replace( '{username}',       $username, $message );
+	$message = str_replace( '{download_list}',  $download_list, $message );
+	$message = str_replace( '{date}',           date_i18n( get_option( 'date_format' ), strtotime( $payment_data['date'] ) ), $message );
+	$message = str_replace( '{sitename}',       get_bloginfo( 'name' ), $message );
+	$message = str_replace( '{subtotal}',       $subtotal, $message );
+	$message = str_replace( '{tax}',            $tax, $message );
+	$message = str_replace( '{price}',          $price, $message );
 	$message = str_replace( '{payment_method}', $gateway, $message );
-	$message = str_replace( '{receipt_id}', $receipt_id, $message );
+	$message = str_replace( '{receipt_id}',     $receipt_id, $message );
 	$message = apply_filters( 'edd_email_template_tags', $message, $payment_data, $payment_id );
 
 	return $message;
