@@ -6,7 +6,7 @@ Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.3
 Tested up to: 3.5
-Stable Tag: 1.4.0.1
+Stable Tag: 1.4.0.2
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -165,8 +165,13 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
+= 1.4.0.2 =
+
+* Fixed an issue with the checkout page on sites with HTTPS and PayPal Standard
+
 = 1.4.0.1 =
 
+* Fixed an issue with purchase receipts sending
 * Fixed issue with registration / login forms not showing on checkout
 * Fixed an undefined index on the discounts page
 
@@ -880,11 +885,15 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 
-
 == Upgrade Notice ==
+
+= 1.4.0.2 =
+
+* Fixed an issue with the checkout page on sites with HTTPS and PayPal Standard
 
 = 1.4.0.1 =
 
+* Fixed an issue with purchase receipts sending
 * Fixed issue with registration / login forms not showing on checkout
 * Fixed an undefined index on the discounts page
 
