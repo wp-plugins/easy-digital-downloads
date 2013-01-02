@@ -53,18 +53,29 @@ if( $purchases ) :
 
 							echo '</td>';
 
-						} // end if ! edd_no_redownload()
+						} // End if ! edd_no_redownload()
 
 						do_action( 'edd_download_history_row_end', $post->ID, $id );
 
 					echo '</tr>';
 
-				} // end foreach $downloads
+				} // End foreach $downloads
 				wp_reset_postdata();
-			} // end if $downloads
+			} // End if $downloads
 		endforeach;
 		?>
 	</table>
+	<div id="edd_download_history_pagination" class="edd_pagination navigation">
+		<?php
+		$big = 999999;
+		echo paginate_links( array(
+			'base'    => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+			'format'  => '?paged=%#%',
+			'current' => max( 1, get_query_var( 'paged' ) ),
+			'total'   => edd_count_purchases_of_customer()
+		) );
+		?>
+	</div>
 	<?php
 	do_action( 'edd_after_download_history' );
 else : ?>

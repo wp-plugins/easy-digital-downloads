@@ -1,12 +1,12 @@
 === Easy Digital Downloads ===
 Author URI: http://pippinsplugins.com
 Plugin URI: http://easydigitaldownloads.com
-Contributors: mordauk, sksmatt, sunnyratilal, SpencerFinnell
+Contributors: mordauk, sksmatt, sunnyratilal, SpencerFinnell, Chriscct7
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.3
 Tested up to: 3.5
-Stable Tag: 1.4.0.2
+Stable Tag: 1.4.0.3
 
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -165,6 +165,15 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
+= 1.4.0.3 =
+
+* January 1, 2012
+* Fixed an error with the dashboard summary widget for previous month (if current month is Jan)
+* Fixed an issue with guests and discount codes
+* Travis now autoloads all of EDD
+* WP_Sessions removed temporarily
+* Fixed Double Click Required JS issue (props @chriscct7)
+
 = 1.4.0.2 =
 
 * Fixed an issue with the checkout page on sites with HTTPS and PayPal Standard
@@ -188,7 +197,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated edd_get_user_purchases()
 * Added Receipt shortcode
 * Added Filter on Default Customer User Role
-* Added Live Credit Card Verification 
+* Added Live Credit Card Verification
 * Added Travis-CI Integration (props @chriscct7)
 * Added New Column to Customers Reports to Show File Download Count
 * Made some UI tweaks, and bug fixes for Logs
@@ -205,8 +214,8 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Serious Optomizations
 * Optimized png's losslessly
 * Stripped whitespace + normalize
-* Added New Helper Function for "Transaction ID" 
-* Added "failed" payment status 
+* Added New Helper Function for "Transaction ID"
+* Added "failed" payment status
 * Added Profile Editor
 * Added Retina images
 * Converted Discount Admin Page to WP List Table
@@ -887,6 +896,15 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Upgrade Notice ==
 
+= 1.4.0.3 =
+
+* January 1, 2012
+* Fixed an error with the dashboard summary widget for previous month (if current month is Jan)
+* Fixed an issue with guests and discount codes
+* Travis now autoloads all of EDD
+* WP_Sessions removed temporarily
+* Fixed Double Click Required JS issue (props @chriscct7)
+
 = 1.4.0.2 =
 
 * Fixed an issue with the checkout page on sites with HTTPS and PayPal Standard
@@ -910,7 +928,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Updated edd_get_user_purchases()
 * Added Receipt shortcode
 * Added Filter on Default Customer User Role
-* Added Live Credit Card Verification 
+* Added Live Credit Card Verification
 * Added Travis-CI Integration (props @chriscct7)
 * Added New Column to Customers Reports to Show File Download Count
 * Made some UI tweaks, and bug fixes for Logs
@@ -927,8 +945,8 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Serious Optomizations
 * Optimized png's losslessly
 * Stripped whitespace + normalize
-* Added New Helper Function for "Transaction ID" 
-* Added "failed" payment status 
+* Added New Helper Function for "Transaction ID"
+* Added "failed" payment status
 * Added Profile Editor
 * Added Retina images
 * Converted Discount Admin Page to WP List Table
