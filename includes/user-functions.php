@@ -26,7 +26,7 @@ if ( !defined( 'ABSPATH' ) ) exit;
  *
  * @return array List of all user purchases
  */
-function edd_get_users_purchases( $user = 0, $number = -1 ) {
+function edd_get_users_purchases( $user = 0, $number = 20 ) {
 
 	if ( empty( $user ) ) {
 		global $user_ID;
@@ -34,20 +34,23 @@ function edd_get_users_purchases( $user = 0, $number = -1 ) {
 		$user = $user_ID;
 	}
 
-	$purchases = get_transient( 'edd_user_' . $user . '_purchases' );
+	$mode = edd_is_test_mode() ? 'test' : 'live';
 
-	if ( false === $purchases || edd_is_test_mode() ) {
-		$mode = edd_is_test_mode() ? 'test' : 'live';
+	if ( get_query_var( 'paged' ) )
+		$paged = get_query_var('paged');
+	else if ( get_query_var( 'page' ) )
+		$paged = get_query_var( 'page' );
+	else
+		$paged = 1;
 
-		$purchases = edd_get_payments( array(
-			'mode' => $mode,
-			'user' => $user
-		) );
+	$purchases = edd_get_payments( array(
+		'mode'   => $mode,
+		'user'   => $user,
+		'page'   => $paged,
+		'number' => $number
+	) );
 
-		set_transient( 'edd_user_' . $user . '_purchases', $purchases, 7200 );
-	}
-
-	// no purchases
+	// No purchases
 	if ( ! $purchases )
 		return false;
 
@@ -71,7 +74,7 @@ function edd_get_users_purchases( $user = 0, $number = -1 ) {
 function edd_has_user_purchased( $user_id, $downloads, $variable_price_id = null ) {
 
 	if( !is_user_logged_in() )
-		return false; // at some point this should support email checking
+		return false; // At some point this should support email checking
 
 	$users_purchases = edd_get_users_purchases( $user_id );
 
@@ -140,9 +143,9 @@ function edd_has_purchases( $user_id = null ) {
 	}
 
 	if( edd_get_users_purchases( $user_id, 1 ) ) {
-		return true; // user has at least one purchase
+		return true; // User has at least one purchase
 	}
-	return false; // user has never purchased anything
+	return false; // User has never purchased anything
 }
 
 
@@ -158,6 +161,10 @@ function edd_has_purchases( $user_id = null ) {
 */
 
 function edd_count_purchases_of_customer( $user = null ) {
+
+	if( empty( $user ) )
+		$user = get_current_user_id();
+
 	$args = array(
 		'number'   => -1,
 		'mode'     => 'live',

@@ -60,15 +60,15 @@ function edd_get_cart_quantity() {
 
 function edd_add_to_cart( $download_id, $options = array() ) {
 	$cart = edd_get_cart_contents();
-	if( ! edd_item_in_cart( $download_id ) ) {
+	if( ! edd_item_in_cart( $download_id, $options ) ) {
 
 		if( 'download' != get_post_type( $download_id ) )
-			return; // not a download product
+			return; // Not a download product
 
 		do_action( 'edd_pre_add_to_cart', $download_id, $options );
 
 		if( edd_has_variable_prices( $download_id )  && ! isset( $options['price_id'] ) ) {
-			// forces to the first price ID if none is specified and download has variable prices
+			// Forces to the first price ID if none is specified and download has variable prices
 			$options['price_id'] = 0;
 		}
 
@@ -84,7 +84,7 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 
 		do_action( 'edd_post_add_to_cart', $download_id, $options );
 
-		// clear all the checkout errors, if any
+		// Clear all the checkout errors, if any
 		edd_clear_errors();
 
 		return count( $cart ) - 1;
@@ -110,7 +110,7 @@ function edd_remove_from_cart($cart_key) {
 	do_action( 'edd_pre_remove_from_cart', $cart_key );
 
 	if( !is_array( $cart ) ) {
-		return true; // empty cart
+		return true; // Empty cart
 	} else {
 		unset( $cart[ $cart_key ] );
 	}
@@ -118,10 +118,10 @@ function edd_remove_from_cart($cart_key) {
 
 	do_action( 'edd_post_remove_from_cart', $cart_key );
 
-	// clear all the checkout errors, if any
+	// Clear all the checkout errors, if any
 	edd_clear_errors();
 
-	return $cart; // the updated cart items
+	return $cart; // The updated cart items
 }
 
 
@@ -137,17 +137,22 @@ function edd_remove_from_cart($cart_key) {
  * @return      boolean
 */
 
-function edd_item_in_cart( $download_id ) {
+function edd_item_in_cart( $download_id = 0, $options = array() ) {
+
 	$cart_items = edd_get_cart_contents();
-	if( !is_array($cart_items ) ) {
-		return false; // empty cart
-	} else {
+
+	$ret = false;
+
+	if( is_array( $cart_items ) ) {
 		foreach( $cart_items as $item ) {
 			if( $item['id'] == $download_id ) {
-				return true;
+				$ret = true;
+				break;
 			}
 		}
 	}
+
+	return (bool) apply_filters( 'edd_item_in_cart', $ret, $download_id, $options );
 }
 
 
@@ -166,7 +171,7 @@ function edd_item_in_cart( $download_id ) {
 function edd_get_item_position_in_cart( $download_id ) {
 	$cart_items = edd_get_cart_contents();
 	if( !is_array( $cart_items ) ) {
-		return false; // empty cart
+		return false; // Empty cart
 	} else {
 		foreach( $cart_items as $postion => $item ) {
 			if( $item['id'] == $download_id ) {
@@ -233,7 +238,7 @@ function edd_get_cart_item_price( $item_id, $options = array() ) {
 	$variable_pricing = get_post_meta( $item_id, '_variable_pricing', true) ;
 	$price = edd_get_download_price( $item_id );
 	if( $variable_pricing && !empty( $options ) ) {
-		// if variable prices are enabled, retrieve the options
+		// If variable prices are enabled, retrieve the options
 		$prices = get_post_meta( $item_id, 'edd_variable_prices', true );
 		if( $prices ) {
 			$price = $prices[ $options['price_id'] ]['amount'];
@@ -259,7 +264,7 @@ function edd_get_cart_item_price( $item_id, $options = array() ) {
 function edd_get_price_name( $item_id, $options = array() ) {
 	$variable_pricing = get_post_meta($item_id, '_variable_pricing', true);
 	if( $variable_pricing && !empty( $options ) ) {
-		// if variable prices are enabled, retrieve the options
+		// If variable prices are enabled, retrieve the options
 		$prices = get_post_meta( $item_id, 'edd_variable_prices', true );
 		if( $prices ) {
 			$name = $prices[ $options['price_id'] ]['name'];
@@ -333,7 +338,7 @@ function edd_get_cart_amount( $add_taxes = true, $local_override = false ) {
 	$amount = edd_get_cart_subtotal();
 
 	if( isset( $_POST['edd-discount'] ) && $_POST['edd-discount'] != '' ) {
-		// discount is validated before this function runs, so no need to check for it
+		// Discount is validated before this function runs, so no need to check for it
 		$amount = edd_get_discounted_amount( $_POST['edd-discount'], $amount );
 	}
 
@@ -341,13 +346,13 @@ function edd_get_cart_amount( $add_taxes = true, $local_override = false ) {
 
 		if( edd_local_taxes_only() && ( isset( $_POST['edd_tax_opt_in'] ) || $local_override ) ) {
 
-			// add the tax amount for a local resident
+			// Add the tax amount for a local resident
 			$tax = edd_get_cart_tax();
 			$amount += $tax;
 
 		} elseif( ! edd_local_taxes_only() ) {
 
-			// add the global tax amount
+			// Add the global tax amount
 			$tax = edd_get_cart_tax();
 			$amount += $tax;
 
@@ -570,11 +575,11 @@ add_action('edd_after_download_content', 'edd_show_added_to_cart_messages');
 
 function edd_get_checkout_uri( $args = array() ) {
     global $edd_options;
-    
+
     $uri = isset( $edd_options['purchase_page'] ) ? get_permalink( $edd_options['purchase_page'] ) : NULL;
 
     if ( ! empty( $args ) ) {
-		// check for backward compatibility
+		// Check for backward compatibility
 		if ( is_string( $args ) )
 			$args = str_replace( '?', '', $args );
 
@@ -680,7 +685,7 @@ function edd_get_purchase_session() {
 }
 
 
-// make sure a session is started
+// Make sure a session is started
 if( !session_id() ) {
 	add_action( 'init', 'session_start', -1 );
 }

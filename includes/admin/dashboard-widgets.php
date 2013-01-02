@@ -48,9 +48,7 @@ function edd_dashboard_sales_widget() {
 		'meta_compare'           => '>',
 		'meta_value'             => 0,
 		'orderby'                => 'meta_value_num',
-		'cache_results'          => false,
 		'update_post_term_cache' => false,
-		'no_found_rows'          => true,
 		'order'                  => 'DESC'
 	);
 
@@ -73,11 +71,15 @@ function edd_dashboard_sales_widget() {
 			</tbody>
 		</table>
 		<p class="label_heading"><?php _e( 'Last Month', 'edd' ) ?></p>
+		<?php
+		$previous_month   = date( 'n' ) == 1 ? 12 : date( 'n' ) - 1;
+		$previous_year    = $previous_month == 12 ? date( 'Y' ) - 1 : date( 'Y' );
+		?>
 		<div>
-			<?php echo __( 'Earnings', 'edd' ) . ':&nbsp;<span class="edd_price_label">' . edd_currency_filter( edd_format_amount( edd_get_earnings_by_date( null, date('n') - 1, date('Y') ) ) ) . '</span>'; ?>
+			<?php echo __( 'Earnings', 'edd' ) . ':&nbsp;<span class="edd_price_label">' . edd_currency_filter( edd_format_amount( edd_get_earnings_by_date( null, $previous_month, $previous_year ) ) ) . '</span>'; ?>
 		</div>
 		<div>
-			<?php $last_month_sales = edd_get_sales_by_date( null, date( 'n' ) - 1, date( 'Y' ) ); ?>
+			<?php $last_month_sales = edd_get_sales_by_date( null, $previous_month, $previous_year ); ?>
 			<?php echo _n( 'Sale', 'Sales', $last_month_sales, 'edd' ) . ':&nbsp;' . '<span class="edd_price_label">' . $last_month_sales . '</span>'; ?>
 		</div>
 	</div>
@@ -185,9 +187,9 @@ function edd_dashboard_sales_widget() {
 						</div>
 					</td>
 				</tr>
-				<?php } // end foreach ?>
+				<?php } // End foreach ?>
 			</tbody>
 		</table>
 	</div>
-	<?php } // end if
+	<?php } // End if
 }
