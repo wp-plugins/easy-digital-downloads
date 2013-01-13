@@ -5,7 +5,7 @@ Plugin URI: http://easydigitaldownloads.com
 Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
-Version: 1.4.0.2
+Version: 1.4.1
 Text Domain: edd
 Domain Path: languages
 
@@ -90,7 +90,7 @@ final class Easy_Digital_Downloads {
 
 		// Plugin version
 		if( !defined( 'EDD_VERSION' ) )
-			define( 'EDD_VERSION', '1.4.0.2' );
+			define( 'EDD_VERSION', '1.4.1' );
 
 		// Plugin Folder URL
 		if( !defined( 'EDD_PLUGIN_URL' ) )
@@ -103,10 +103,6 @@ final class Easy_Digital_Downloads {
 		// Plugin Root File
 		if( !defined( 'EDD_PLUGIN_FILE' ) )
 			define( 'EDD_PLUGIN_FILE', __FILE__ );
-
-		// make sure the cookie is defined
-		if( ! defined( 'WP_SESSION_COOKIE' ) )
-			define( 'WP_SESSION_COOKIE', '_wp_session' );
 
 	}
 
@@ -129,12 +125,6 @@ final class Easy_Digital_Downloads {
 		require_once EDD_PLUGIN_DIR . 'includes/install.php';
 		require_once EDD_PLUGIN_DIR . 'includes/actions.php';
 
-		// Only include the functionality if it's not pre-defined.
-		/*
-		if ( ! class_exists( 'WP_Session' ) ) {
-			require_once EDD_PLUGIN_DIR . 'includes/libraries/wp_session/class-wp-session.php';
-			require_once EDD_PLUGIN_DIR . 'includes/libraries/wp_session/wp-session.php';
-		}*/
 
 		require_once EDD_PLUGIN_DIR . 'includes/deprecated-functions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/ajax-functions.php';
@@ -244,7 +234,7 @@ final class Easy_Digital_Downloads {
 	}
 }
 
-endif; // end if class_exists check
+endif; // End if class_exists check
 
 
 /**

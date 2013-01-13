@@ -29,7 +29,7 @@ function edd_sanitize_amount( $amount ) {
 	$thousands_sep = isset( $edd_options['thousands_separator'] ) ? $edd_options['thousands_separator'] : ',';
 	$decimal_sep   = isset( $edd_options['decimal_separator'] )   ? $edd_options['decimal_separator'] 	 : '.';
 
-	// sanitize the amount
+	// Sanitize the amount
 	if( $decimal_sep == ',' && false !== ( $found = strpos( $amount, $decimal_sep ) ) ) {
 
 		if( $thousands_sep == '.' && false !== ( $found = strpos( $amount, $thousands_sep ) ) ) {
@@ -38,9 +38,10 @@ function edd_sanitize_amount( $amount ) {
 
 		$amount = str_replace( $decimal_sep, '.', $amount );
 
-		// make sure we don't have more than 2 decimals
-		$amount = number_format( $amount, 2 );
 	}
+
+	// Make sure we don't have more than 2 decimals
+	$amount = number_format( $amount, 2 );
 
 	return apply_filters( 'edd_sanitize_amount', $amount );
 }
@@ -54,16 +55,22 @@ function edd_sanitize_amount( $amount ) {
  * @access      public
  * @since       1.0
  * @param       $amount string the price amount to format
- * @return      string - the newly formatted amount
+ * @return      string - the newly formatted amount or Price Not Available
 */
 
 function edd_format_amount( $amount ) {
 	global $edd_options;
-
+	// If no price was given for the download
+	$amount= "$amount"; // The Anti-Geczy check
+	if ( $amount == '' ) {
+		$label = edd_get_label_singular();
+		$string = sprintf( __('%1$s Not Available', 'edd' ), $label );
+		return	apply_filters( 'edd_price_not_available_text', $string );
+	}
 	$thousands_sep 	= isset( $edd_options['thousands_separator'] ) ? $edd_options['thousands_separator'] : ',';
 	$decimal_sep 	= isset( $edd_options['decimal_separator'] )   ? $edd_options['decimal_separator'] 	 : '.';
 
-	// format the amount
+	// Format the amount
 	if( $decimal_sep == ',' && false !== ( $found = strpos( $amount, $decimal_sep ) ) ) {
 		$whole = substr( $amount, 0, $sep_found );
 		$part = substr( $amount, $sep_found + 1, ( strlen( $amount ) - 1 ) );

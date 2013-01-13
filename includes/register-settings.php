@@ -24,9 +24,9 @@ if ( !defined( 'ABSPATH' ) ) exit;
 
 function edd_register_settings() {
 
-	// setup some default option sets
+	// Setup some default option sets
 	$pages = get_pages();
-	$pages_options = array( 0 => '' ); // blank option
+	$pages_options = array( 0 => '' ); // Blank option
 	if( $pages ) {
 		foreach( $pages as $page ) {
 			$pages_options[ $page->ID ] = $page->post_title;
@@ -61,7 +61,7 @@ function edd_register_settings() {
 				array(
 					'id' => 'failure_page',
 					'name' => __('Failed Transaction Page', 'edd'),
-					'desc' => __('This is the page buyers are sent to if their transaction is canceled or fails', 'edd'),
+					'desc' => __('This is the page buyers are sent to if their transaction is cancelled or fails', 'edd'),
 					'type' => 'select',
 					'options' => $pages_options
 				),
@@ -155,6 +155,13 @@ function edd_register_settings() {
 					'size' => 'regular'
 				),
 				array(
+					'id' => 'paypal_page_style',
+					'name' => __('PayPal Page Style', 'edd'),
+					'desc' => __('Enter the name of the page style to use, or leave blank for default', 'edd'),
+					'type' => 'text',
+					'size' => 'regular'
+				),
+				array(
 					'id' => 'paypal_alternate_verification',
 					'name' => __('Alternate PayPal Purchase Verification', 'edd'),
 					'desc' => __('If payments are not getting marked as complete, then check this box. Note, this requires that buyers return to your site from PayPal.', 'edd'),
@@ -206,7 +213,7 @@ function edd_register_settings() {
 					'name' => __('Purchase Receipt', 'edd'),
 					'desc' => __('Enter the email that is sent to users after completing a successful purchase. HTML is accepted. Available template tags:', 'edd') . '<br/>' .
 						'{download_list} - ' . __('A list of download links for each download purchased', 'edd') . '<br/>' .
-						'{url_list} - ' . __('A list of download URLs for each download purchased', 'edd') . '<br/>' .
+						'{file_urls} - ' . __('A plain-text list of download URLs for each download purchased', 'edd') . '<br/>' .
 						'{name} - ' . __('The buyer\'s first name', 'edd') . '<br/>' .
 						'{fullname} - ' . __('The buyer\'s full name, first and last', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
@@ -293,6 +300,12 @@ function edd_register_settings() {
 					'id' => 'taxes_on_prices',
 					'name' => __('Tax in Prices', 'edd'),
 					'desc' => __('Include taxes in individual product prices?', 'edd'),
+					'type' => 'checkbox'
+				),
+				array(
+					'id' => 'taxes_after_discounts',
+					'name' => __('Calculate Tax After Discounts?', 'edd'),
+					'desc' => __('Check this if you would like taxes calculated after discounts. By default taxes are calculated before discounts are applied.', 'edd'),
 					'type' => 'checkbox'
 				)
 			)
@@ -559,7 +572,7 @@ function edd_register_settings() {
 		);
 	}
 
-	// creates our settings in the options table
+	// Creates our settings in the options table
 	register_setting( 'edd_settings_general', 'edd_settings_general', 'edd_settings_sanitize' );
 	register_setting( 'edd_settings_gateways', 'edd_settings_gateways', 'edd_settings_sanitize' );
 	register_setting( 'edd_settings_emails', 'edd_settings_emails', 'edd_settings_sanitize' );
