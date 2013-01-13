@@ -26,7 +26,7 @@ if ( !defined( 'ABSPATH' ) ) exit;
  *
  * @return array List of all user purchases
  */
-function edd_get_users_purchases( $user = 0, $number = 20 ) {
+function edd_get_users_purchases( $user = 0, $number = 20, $pagination = false ) {
 
 	if ( empty( $user ) ) {
 		global $user_ID;
@@ -36,19 +36,28 @@ function edd_get_users_purchases( $user = 0, $number = 20 ) {
 
 	$mode = edd_is_test_mode() ? 'test' : 'live';
 
-	if ( get_query_var( 'paged' ) )
-		$paged = get_query_var('paged');
-	else if ( get_query_var( 'page' ) )
-		$paged = get_query_var( 'page' );
-	else
-		$paged = 1;
+	if( $pagination ) {
+		if ( get_query_var( 'paged' ) )
+			$paged = get_query_var('paged');
+		else if ( get_query_var( 'page' ) )
+			$paged = get_query_var( 'page' );
+		else
+			$paged = 1;
+	}
 
-	$purchases = edd_get_payments( array(
+	$args = apply_filters( 'edd_get_users_purchases_args', array(
 		'mode'   => $mode,
 		'user'   => $user,
-		'page'   => $paged,
-		'number' => $number
+		'number' => $number,
+		'status' => 'publish'
 	) );
+
+	if( $pagination )
+		$args['page'] = $paged;
+	else
+		$args['nopaging'] = true;
+
+	$purchases = edd_get_payments( $args );
 
 	// No purchases
 	if ( ! $purchases )
@@ -73,7 +82,7 @@ function edd_get_users_purchases( $user = 0, $number = 20 ) {
 
 function edd_has_user_purchased( $user_id, $downloads, $variable_price_id = null ) {
 
-	if( !is_user_logged_in() )
+	if( ! is_user_logged_in() )
 		return false; // At some point this should support email checking
 
 	$users_purchases = edd_get_users_purchases( $user_id );
@@ -217,17 +226,39 @@ function edd_purchase_total_of_user( $user = null ) {
 }
 
 
-function edd_count_file_downloads_of_user( $user_email ) {
+/**
+ * Counts the total number of files a customer has downloaded
+ *
+ * @access      public
+ * @since       1.3
+ * @param       $user mixed - ID or email
+ * @return      int - The total number of files the user has downloaded
+*/
+
+function edd_count_file_downloads_of_user( $user ) {
 
 	global $edd_logs;
 
-	$meta_query = array(
-		array(
-			'key'     => '_edd_log_user_info',
-			'value'   => $user_email,
-			'compare' => 'LIKE'
-		)
-	);
+	if( is_email( $user ) ) {
+
+		$meta_query = array(
+			array(
+				'key'     => '_edd_log_user_info',
+				'value'   => $user,
+				'compare' => 'LIKE'
+			)
+		);
+
+	} else {
+
+		$meta_query = array(
+			array(
+				'key'     => '_edd_log_user_id',
+				'value'   => $user
+			)
+		);
+
+	}
 
 	return $edd_logs->get_log_count( null, 'file_download', $meta_query );
 

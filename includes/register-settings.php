@@ -155,6 +155,13 @@ function edd_register_settings() {
 					'size' => 'regular'
 				),
 				array(
+					'id' => 'paypal_page_style',
+					'name' => __('PayPal Page Style', 'edd'),
+					'desc' => __('Enter the name of the page style to use, or leave blank for default', 'edd'),
+					'type' => 'text',
+					'size' => 'regular'
+				),
+				array(
 					'id' => 'paypal_alternate_verification',
 					'name' => __('Alternate PayPal Purchase Verification', 'edd'),
 					'desc' => __('If payments are not getting marked as complete, then check this box. Note, this requires that buyers return to your site from PayPal.', 'edd'),
@@ -206,7 +213,7 @@ function edd_register_settings() {
 					'name' => __('Purchase Receipt', 'edd'),
 					'desc' => __('Enter the email that is sent to users after completing a successful purchase. HTML is accepted. Available template tags:', 'edd') . '<br/>' .
 						'{download_list} - ' . __('A list of download links for each download purchased', 'edd') . '<br/>' .
-						'{url_list} - ' . __('A list of download URLs for each download purchased', 'edd') . '<br/>' .
+						'{file_urls} - ' . __('A plain-text list of download URLs for each download purchased', 'edd') . '<br/>' .
 						'{name} - ' . __('The buyer\'s first name', 'edd') . '<br/>' .
 						'{fullname} - ' . __('The buyer\'s full name, first and last', 'edd') . '<br/>' .
 						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
@@ -293,6 +300,12 @@ function edd_register_settings() {
 					'id' => 'taxes_on_prices',
 					'name' => __('Tax in Prices', 'edd'),
 					'desc' => __('Include taxes in individual product prices?', 'edd'),
+					'type' => 'checkbox'
+				),
+				array(
+					'id' => 'taxes_after_discounts',
+					'name' => __('Calculate Tax After Discounts?', 'edd'),
+					'desc' => __('Check this if you would like taxes calculated after discounts. By default taxes are calculated before discounts are applied.', 'edd'),
 					'type' => 'checkbox'
 				)
 			)

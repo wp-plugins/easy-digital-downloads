@@ -1,5 +1,5 @@
 <?php
-$purchases = edd_get_users_purchases();
+$purchases = edd_get_users_purchases( get_current_user_id(), 20, true );
 if( $purchases ) :
 	do_action( 'edd_before_download_history' ); ?>
 	<table id="edd_user_history">
@@ -72,7 +72,7 @@ if( $purchases ) :
 			'base'    => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
 			'format'  => '?paged=%#%',
 			'current' => max( 1, get_query_var( 'paged' ) ),
-			'total'   => edd_count_purchases_of_customer()
+			'total'   => ceil( edd_count_purchases_of_customer() / 20 ) // 20 items per page
 		) );
 		?>
 	</div>

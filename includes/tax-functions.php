@@ -49,6 +49,45 @@ function edd_local_taxes_only() {
 
 
 /**
+ * Checks if a customer has opted into local taxes
+ *
+ * @access      public
+ * @since       1.4.1
+ * @return      bool
+*/
+
+function edd_local_tax_opted_in() {
+	return isset( $_COOKIE['wordpress_edd_local_tax_opt_in'] );
+}
+
+
+/**
+ * Sets a customer as opted into local taxes
+ *
+ * @access      public
+ * @since       1.4.1
+ * @return      bool
+*/
+
+function edd_opt_into_local_taxes() {
+	return setcookie( 'wordpress_edd_local_tax_opt_in', 1, time()+3600, COOKIEPATH, COOKIE_DOMAIN, false );
+}
+
+
+/**
+ * Sets a customer as opted out of local taxes
+ *
+ * @access      public
+ * @since       1.4.1
+ * @return      bool
+*/
+
+function edd_opt_out_local_taxes() {
+	return setcookie( 'wordpress_edd_local_tax_opt_in', null, strtotime( '-1 day' ), COOKIEPATH, COOKIE_DOMAIN, false );
+}
+
+
+/**
  * Show taxes on individual prices?
  *
  * @access      public
@@ -59,6 +98,20 @@ function edd_local_taxes_only() {
 function edd_taxes_on_prices() {
 	global $edd_options;
 	return apply_filters( 'edd_taxes_on_prices', isset( $edd_options['taxes_on_prices'] ) );
+}
+
+
+/**
+ * Calculate taxes before or after discounts?
+ *
+ * @access      public
+ * @since       1.4.1
+ * @return      bool
+*/
+
+function edd_taxes_after_discounts() {
+	global $edd_options;
+	return apply_filters( 'edd_taxes_after_discounts', isset( $edd_options['taxes_after_discounts'] ) );
 }
 
 

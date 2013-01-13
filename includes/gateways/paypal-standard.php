@@ -113,7 +113,8 @@ function edd_process_paypal_purchase( $purchase_data ) {
             'rm'            => '2',
             'return'        => $return_url,
             'cancel_return' => edd_get_failed_transaction_uri(),
-            'notify_url'    => $listener_url
+            'notify_url'    => $listener_url,
+            'page_style'    => edd_get_paypal_page_style()
         );
 
         if( edd_use_taxes() )
@@ -312,6 +313,9 @@ function edd_process_paypal_web_accept( $data ) {
 	$payment_meta = get_post_meta( $payment_id, '_edd_payment_meta', true );
 	$payment_amount = edd_format_amount( $payment_meta['amount'] );
 
+	if( edd_get_payment_gateway( $payment_id ) != 'paypal' )
+		return; // this isn't a PayPal standard IPN
+
 	// Verify details
 	if( $currency_code != strtolower( $edd_options['currency'] ) ) {
 		// The currency code is invalid
@@ -331,12 +335,6 @@ function edd_process_paypal_web_accept( $data ) {
 		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid purchase key in IPN response. IPN data: ', 'edd' ), json_encode( $encoded_data_array ) ), $payment_id );
 	   	edd_update_payment_status( $payment_id, 'failed' );
 	   	return;
-	}
-	if( $purchase_key != $payment_meta['key'] ) {
-		// Purchase keys don't match
-		edd_record_gateway_error( __( 'IPN Error', 'edd' ), sprintf( __( 'Invalid purchase key in IPN response. IPN data: ', 'edd' ), json_encode( $encoded_data_array ) ), $payment_id );
-		edd_update_payment_status( $payment_id, 'failed' );
-		return;
 	}
 
 	$status = strtolower( $payment_status );
@@ -377,4 +375,21 @@ function edd_get_paypal_redirect( $ssl_check = false ) {
 	}
 
 	return $paypal_uri;
+}
+
+
+/**
+ * Set the Page Style for PayPal Purchase page
+ *
+ * @access      private
+ * @since       1.4.1
+ * @return      string
+*/
+
+function edd_get_paypal_page_style() {
+	global $edd_options;
+	$page_style = 'PayPal';
+	if( isset( $edd_options['paypal_page_style'] ) )
+		$page_style = trim( $edd_options['paypal_page_style'] );
+	return apply_filters( 'edd_paypal_page_style', $page_style );
 }

@@ -668,16 +668,30 @@ function edd_get_current_page_url() {
 	global $post;
 
 	if( is_singular() ):
-		$pageURL = get_permalink( $post->ID );
+
+		$page_url = get_permalink( $post->ID );
+
+	elseif ( is_front_page() ) :
+
+		$page_url = home_url();
+
 	else :
-		$pageURL = 'http';
-		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) $pageURL .= "s";
-		$pageURL .= "://";
-		if( $_SERVER["SERVER_PORT"] != "80" ) $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
-		else $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+
+		$page_url = 'http';
+
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" )
+			$page_url .= "s";
+
+		$page_url .= "://";
+
+		if( $_SERVER["SERVER_PORT"] != "80" )
+			$page_url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+		else
+			$page_url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+
 	endif;
 
-	return apply_filters( 'edd_get_current_page_url', esc_url( $pageURL ) );
+	return apply_filters( 'edd_get_current_page_url', esc_url( $page_url ) );
 }
 
 
@@ -706,8 +720,9 @@ function edd_get_current_page_url() {
  * @param string $function The function that was called
  * @param string $version The version of WordPress that deprecated the function
  * @param string $replacement Optional. The function that should have been called
+ * @param array $backtrace Optional. Contains stack backtrace of deprecated function
  */
-function _edd_deprecated_function( $function, $version, $replacement = null ) {
+function _edd_deprecated_function( $function, $version, $replacement = null, $backtrace = null ) {
 
 	do_action( 'edd_deprecated_function_run', $function, $replacement, $version );
 
@@ -716,10 +731,16 @@ function _edd_deprecated_function( $function, $version, $replacement = null ) {
 
 	// Allow plugin to filter the output error trigger
 	if ( WP_DEBUG && apply_filters( 'edd_deprecated_function_trigger_error', $show_errors ) ) {
-		if ( ! is_null( $replacement ) )
-			trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s! Use %3$s instead.', 'edd' ), $function, $version, $replacement ) );
-		else
-			trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s with no alternative available.', 'edd'), $function, $version ) );
+		if ( ! is_null( $replacement ) ){
+				trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s! Use %3$s instead.', 'edd' ), $function, $version, $replacement ) );
+				trigger_error(  print_r($backtrace) ); // Limited to previous 1028 characters, but since we only need to move back 1 in stack that should be fine.
+			    // Alernatively we could dump this to a file.
+		}
+		else{
+				trigger_error( sprintf( __('%1$s is <strong>deprecated</strong> since Easy Digital Downloads version %2$s with no alternative available.', 'edd'), $function, $version ) );
+				trigger_error( print_r($backtrace) );// Limited to previous 1028 characters, but since we only need to move back 1 in stack that should be fine.
+			    // Alernatively we could dump this to a file.
+		}
 	}
 }
 
