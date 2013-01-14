@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.3
 Tested up to: 3.5
 
-Stable Tag: 1.4.1
+Stable Tag: 1.4.1.1
 License: GNU Version 2 or Any Later Version
 
 
@@ -166,6 +166,11 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.4.1.1: January 14, 2013 =
+
+* Fix: Discounts weren't getting carried over to PayPal
+* Fix: Added missing {username} tag for purchase receipts
 
 = 1.4.1: January 13, 2013 =
 
@@ -944,6 +949,12 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Upgrade Notice ==
+
+
+= 1.4.1.1: January 14, 2013 =
+
+* Fix: Discounts weren't getting carried over to PayPal
+* Fix: Added missing {username} tag for purchase receipts
 
 = 1.4.1: January 13, 2013 =
 
