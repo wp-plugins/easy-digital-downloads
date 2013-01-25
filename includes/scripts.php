@@ -33,30 +33,6 @@ function edd_load_scripts() {
 	    $position = edd_get_item_position_in_cart( $post->ID );
 	}
 
-	// Load AJAX scripts, if enabled
-	if( edd_is_ajax_enabled() ) {
-		wp_enqueue_script( 'edd-ajax', EDD_PLUGIN_URL . 'assets/js/edd-ajax.js', array( 'jquery' ), EDD_VERSION );
-		wp_localize_script( 'edd-ajax', 'edd_scripts', array(
-				'ajaxurl' 					=> edd_get_ajax_url(),
-				'ajax_nonce' 				=> wp_create_nonce( 'edd_ajax_nonce' ),
-				'position_in_cart' 			=> isset( $position ) ? $position : -1,
-				'already_in_cart_message' 	=> __('You have already added this item to your cart', 'edd'), // Item already in the cart message
-				'empty_cart_message' 		=> __('Your cart is empty', 'edd'), // Item already in the cart message
-				'loading' 					=> __('Loading', 'edd') , // General loading message
-				'ajax_loader' 				=> EDD_PLUGIN_URL . 'assets/images/loading.gif', // Ajax loading image
-				'checkout_page' 			=> edd_get_checkout_uri(),
-				'permalinks' 				=> get_option( 'permalink_structure' ) ? '1' : '0'
-			)
-		);
-	}
-
-	// Load jQuery validation
-	if( isset( $edd_options['jquery_validation'] ) && edd_is_checkout() ) {
-		wp_enqueue_script( 'jquery-validation', EDD_PLUGIN_URL . 'assets/js/jquery.validate.min.js' );
-		wp_enqueue_script( 'edd-validation', EDD_PLUGIN_URL . 'assets/js/form-validation.js', array( 'jquery', 'jquery-validation' ), EDD_VERSION );
-		$required = array( 'firstname' => true, 'lastname' => true );
-		wp_localize_script( 'edd-validation', 'edd_scripts_validation', apply_filters( 'edd_scripts_validation', $required ) );
-	}
 	if( edd_is_checkout() ) {
 
 		if( edd_is_cc_verify_enabled() ) {
@@ -74,7 +50,33 @@ function edd_load_scripts() {
 			'no_email'          => __('Please enter an email address before applying a discount code', 'edd'),
 			'no_username'       => __('Please enter a username before applying a discount code', 'edd'),
 	    ));
+
+	    // Load jQuery validation
+		if( isset( $edd_options['jquery_validation'] ) ) {
+			wp_enqueue_script( 'jquery-validation', EDD_PLUGIN_URL . 'assets/js/jquery.validate.min.js' );
+		    $required = array( 'firstname' => true, 'lastname' => true );
+			wp_localize_script( 'jquery-validation', 'edd_scripts_validation', apply_filters( 'edd_scripts_validation', $required ) );
+		}
 	}
+
+	// Load AJAX scripts, if enabled
+	if( edd_is_ajax_enabled() ) {
+		wp_enqueue_script( 'edd-ajax', EDD_PLUGIN_URL . 'assets/js/edd-ajax.js', array( 'jquery' ), EDD_VERSION );
+		wp_localize_script( 'edd-ajax', 'edd_scripts', array(
+				'ajaxurl' 					=> edd_get_ajax_url(),
+				'ajax_nonce' 				=> wp_create_nonce( 'edd_ajax_nonce' ),
+				'position_in_cart' 			=> isset( $position ) ? $position : -1,
+				'already_in_cart_message' 	=> __('You have already added this item to your cart', 'edd'), // Item already in the cart message
+				'empty_cart_message' 		=> __('Your cart is empty', 'edd'), // Item already in the cart message
+				'loading' 					=> __('Loading', 'edd') , // General loading message
+				'ajax_loader' 				=> EDD_PLUGIN_URL . 'assets/images/loading.gif', // Ajax loading image
+				'redirect_to_checkout'      => edd_straight_to_checkout() ? '1' : '0',
+				'checkout_page' 			=> edd_get_checkout_uri(),
+				'permalinks' 				=> get_option( 'permalink_structure' ) ? '1' : '0'
+			)
+		);
+	}
+
 }
 add_action( 'wp_enqueue_scripts', 'edd_load_scripts' );
 
@@ -215,3 +217,19 @@ function edd_admin_downloads_icon() {
     <?php
 }
 add_action( 'admin_head','edd_admin_downloads_icon' );
+
+/**
+ * EDD Version in Header
+ *
+ * Adds Version to header
+ *
+ * @access      private
+ * @since       1.4.2
+ * @return      void
+*/
+
+function edd_version_in_header(){
+	// Newline on both sides to avoid being in a blob
+	echo '<meta name="generator" content="Easy Digital Downloads v'.EDD_VERSION.'" />'."\n";
+}
+add_action('wp_head', 'edd_version_in_header');

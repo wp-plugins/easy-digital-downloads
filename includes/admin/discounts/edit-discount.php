@@ -102,7 +102,7 @@ $discount    = edd_get_discount( $discount_id );
 			</tr>
 			<tr class="form-field">
 				<th scope="row" valign="top">
-					<label for="edd-type"><?php _e( 'Status', 'edd' ); ?></label>
+					<label for="edd-status"><?php _e( 'Status', 'edd' ); ?></label>
 				</th>
 				<td>
 					<select name="status" id="edd-status">
@@ -113,8 +113,8 @@ $discount    = edd_get_discount( $discount_id );
 				</td>
 			</tr>
 		</tbody>
-		<?php do_action( 'edd_edit_discount_form_bottom', $discount_id, $discount ); ?>
 	</table>
+	<?php do_action( 'edd_edit_discount_form_bottom', $discount_id, $discount ); ?>
 	<p class="submit">
 		<input type="hidden" name="edd-action" value="edit_discount"/>
 		<input type="hidden" name="discount-id" value="<?php echo absint( $_GET['discount'] ); ?>"/>
