@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.3
 Tested up to: 3.5.1
 
-Stable Tag: 1.4.2
+Stable Tag: 1.4.2.1
 License: GNU Version 2 or Any Later Version
 
 
@@ -170,6 +170,10 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.4.2.1 =
+
+* Fix: Purchase receipts were getting sent when payments were marked as "failed"
 
 = 1.4.2 =
 
