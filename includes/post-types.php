@@ -107,7 +107,24 @@ function edd_setup_edd_post_types() {
 
 	/* discounts post type */
 
+	$discount_labels = array(
+		'name' 				=> _x( 'Discounts', 'post type general name', 'edd' ),
+		'singular_name' 	=> _x( 'Discount', 'post type singular name', 'edd' ),
+		'add_new' 			=> __( 'Add New', 'edd' ),
+		'add_new_item' 		=> __( 'Add New Discount', 'edd' ),
+		'edit_item' 		=> __( 'Edit Discount', 'edd' ),
+		'new_item' 			=> __( 'New Discount', 'edd' ),
+		'all_items' 		=> __( 'All Discounts', 'edd' ),
+		'view_item' 		=> __( 'View Discount', 'edd' ),
+		'search_items' 		=> __( 'Search Discounts', 'edd' ),
+		'not_found' 		=> __( 'No Discounts found', 'edd' ),
+		'not_found_in_trash'=> __( 'No Discounts found in Trash', 'edd' ),
+		'parent_item_colon' => '',
+		'menu_name' 		=> __( 'Discounts', 'edd' )
+	);
+
 	$discount_args = array(
+		'labels' 			=> apply_filters( 'edd_discount_labels', $discount_labels ),
 		'public' 			=> false,
 		'query_var' 		=> false,
 		'rewrite' 			=> false,
@@ -132,7 +149,7 @@ add_action( 'init', 'edd_setup_edd_post_types', 100 );
 
 function edd_get_default_labels() {
 	$defaults = array(
-	   'singular' => __('Download','edd'),
+	   'singular' => __('Download','edd' ),
 	   'plural' => __('Downloads','edd')
 	);
 	return apply_filters( 'edd_default_downloads_name', $defaults );
@@ -165,6 +182,27 @@ function edd_get_label_plural( $lowercase = false ) {
 	$defaults = edd_get_default_labels();
 	return ( $lowercase ) ? strtolower( $defaults['plural'] ) : $defaults['plural'];
 }
+
+/**
+ * Change default "enter title here" input
+ *
+ * @access      public
+ * @since       1.4.0.2
+ * @return      string
+*/
+
+function edd_change_default_title( $title ){
+     $screen = get_current_screen();
+
+     if  ( 'download' == $screen->post_type ) {
+     	$label = edd_get_label_singular();
+        $title = sprintf( __('Enter %s title here', 'edd'), $label);
+     }
+
+     return $title;
+}
+
+add_filter( 'enter_title_here', 'edd_change_default_title' );
 
 
 /**
@@ -246,11 +284,12 @@ add_action( 'init', 'edd_setup_download_taxonomies', 10 );
  */
 function edd_register_post_type_statuses() {
 
-	// payment statuses
+	// Payment statuses
 	register_post_status( 'refunded' );
 	register_post_status( 'failed' );
+	register_post_status( 'revoked' );
 
-	// discount code statuses
+	// Discount code statuses
 	register_post_status( 'active' );
 	register_post_status( 'inactive' );
 
@@ -275,11 +314,11 @@ function edd_updated_messages( $messages ) {
 	$url3 = '</a>';
 
 	$messages['download'] = array(
-		1 => sprintf( __('Download updated. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
-		4 => sprintf( __('Download updated. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
-		6 => sprintf( __('Download published. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
-		7 => sprintf( __('Download saved. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
-		8 => sprintf( __('Download submitted. %1$sView %2$s%3$s.', 'edd'), $url1, $url2, $url3 )
+		1 => sprintf( __('%2$s updated. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
+		4 => sprintf( __('%2$s updated. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
+		6 => sprintf( __('%2$s published. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
+		7 => sprintf( __('%2$s saved. %1$sView %2$s%3$s.', 'edd' ), $url1, $url2, $url3 ),
+		8 => sprintf( __('%2$s submitted. %1$sView %2$s%3$s.', 'edd'), $url1, $url2, $url3 )
 	);
 
 	return $messages;

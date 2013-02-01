@@ -29,9 +29,9 @@ if ( !defined( 'ABSPATH' ) ) exit;
 function edd_complete_purchase( $payment_id, $new_status, $old_status ) {
 
 	if( $old_status == 'publish' || $old_status == 'complete' )
-		return; // make sure that payments are only completed once
+		return; // Make sure that payments are only completed once
 
-	// make sure the payment completion is only processed when new status is complete
+	// Make sure the payment completion is only processed when new status is complete
 	if( $new_status != 'publish' && $new_status != 'complete' )
 		return;
 
@@ -45,7 +45,7 @@ function edd_complete_purchase( $payment_id, $new_status, $old_status ) {
 
 
 	if( is_array( $downloads ) ) {
-		// increase purchase count and earnings
+		// Increase purchase count and earnings
 		foreach( $downloads as $download ) {
 
 			edd_record_sale_in_log( $download['id'], $payment_id, $user_info );
@@ -70,15 +70,41 @@ function edd_complete_purchase( $payment_id, $new_status, $old_status ) {
 		}
 	}
 
-	if( isset( $user_info['discount'] ) ) {
+	if( isset( $user_info['discount'] ) && $user_info['discount'] != 'none' ) {
 		edd_increase_discount_usage( $user_info['discount'] );
 	}
 
-	// empty the shopping cart
+	// Empty the shopping cart
 	edd_empty_cart();
 
 }
-add_action( 'edd_update_payment_status', 'edd_complete_purchase', 10, 3 );
+add_action( 'edd_update_payment_status', 'edd_complete_purchase', 100, 3 );
+
+
+/**
+ * Record payment status change
+ *
+ *
+ * @param		int $payment_id the ID number of the payment
+ * @param		string $new_status the status of the payment, probably "publish"
+ * @param		string $old_status the status of the payment prior to being marked as "complete", probably "pending"
+ * @access      private
+ * @since       1.4.3
+ * @return      void
+*/
+
+function edd_record_status_change( $payment_id, $new_status, $old_status ) {
+
+	if( $new_status == 'publish' )
+		$new_status = 'complete';
+	if( $old_status == 'publish' )
+		$old_status = 'complete';
+
+	$status_change = sprintf( __( 'Status changed from %s to %s', 'edd' ), $old_status, $new_status );
+
+	edd_insert_payment_note( $payment_id, $status_change );
+}
+add_action( 'edd_update_payment_status', 'edd_record_status_change', 100, 3 );
 
 
 /**
@@ -120,7 +146,7 @@ function edd_update_edited_purchase( $data ) {
 
 		update_post_meta( $payment_id, '_edd_payment_user_email', $payment_data['email'] );
 
-		if( isset( $_POST['edd-payment-note'] ) ) {
+		if( ! empty( $_POST['edd-payment-note'] ) ) {
 			$note    = wp_kses( $_POST['edd-payment-note'], array() );
 			$note_id = edd_insert_payment_note( $payment_id, $note );
 		}
@@ -130,7 +156,7 @@ function edd_update_edited_purchase( $data ) {
 		}
 
 		if( $_POST['edd-payment-status'] == 'publish' && isset( $_POST['edd-payment-send-email'] ) ) {
-			// send the purchase receipt
+			// Send the purchase receipt
 			edd_email_purchase_receipt( $payment_id, false );
 		}
 	}
