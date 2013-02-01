@@ -86,6 +86,7 @@ function edd_get_purchase_link( $args = array() ) {
 
 	ob_start();
 ?>
+	<!--dynamic-cached-content-->
 	<form id="edd_purchase_<?php echo $args['download_id']; ?>" class="edd_download_purchase_form" method="post">
 
 		<?php do_action( 'edd_purchase_link_top', $args['download_id'] ); ?>
@@ -132,6 +133,7 @@ function edd_get_purchase_link( $args = array() ) {
 		<?php do_action( 'edd_purchase_link_end', $args['download_id'] ); ?>
 
 	</form><!--end #edd_purchase_<?php echo esc_attr( $args['download_id'] ); ?>-->
+	<!--/dynamic-cached-content-->
 <?php
 	$purchase_form = ob_get_clean();
 
@@ -384,7 +386,7 @@ function edd_get_purchase_download_links( $purchase_data ) {
 			if ( is_array( $files ) ) {
 				foreach( $files as $filekey => $file ) {
 					$links .= '<div class="edd_download_link_file">';
-						$links .= '<a href="' . esc_url( edd_get_download_file_url( $purchase_data['purchase_key'], $purchase_data['user_email'], $filekey, $download['id'] ) ) . '">';
+						$links .= '<a href="' . esc_url( edd_get_download_file_url( $purchase_data['purchase_key'], $purchase_data['user_email'], $filekey, $download['id'], $price_id ) ) . '">';
 							if( isset( $file['name'] ) )
 								$links .= esc_html( $file['name'] );
 							else

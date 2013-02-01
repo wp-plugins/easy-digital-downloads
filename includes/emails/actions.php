@@ -39,6 +39,7 @@ function edd_trigger_purchase_receipt( $payment_id, $new_status, $old_status ) {
 }
 add_action( 'edd_update_payment_status', 'edd_trigger_purchase_receipt', 10, 3 );
 
+
 /**
  * Resend Email Purchase Receipt
  *
