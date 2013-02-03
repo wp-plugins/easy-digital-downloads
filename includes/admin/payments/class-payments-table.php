@@ -4,7 +4,7 @@
  *
  * @package     Easy Digital Downloads
  * @subpackage  Payment History List Table Class
- * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  */
 
@@ -471,21 +471,19 @@ class EDD_Payment_History_Table extends WP_List_Table {
 
 		if ( isset( $_GET['paged'] ) ) $page = $_GET['paged']; else $page = 1;
 
-		$per_page = $this->per_page;
-
-		$mode = edd_is_test_mode() ? 'test' : 'live';
-
-		$orderby 		= isset( $_GET['orderby'] ) ? $_GET['orderby'] : 'ID';
-		$order 			= isset( $_GET['order'] ) ? $_GET['order'] : 'DESC';
-		$order_inverse 	= $order == 'DESC' ? 'ASC' : 'DESC';
+		$per_page       = $this->per_page;
+		$mode           = edd_is_test_mode()            ? 'test'                            : 'live';
+		$orderby 		= isset( $_GET['orderby'] )     ? $_GET['orderby']                  : 'ID';
+		$order 			= isset( $_GET['order'] )       ? $_GET['order']                    : 'DESC';
+		$order_inverse 	= $order == 'DESC'              ? 'ASC'                             : 'DESC';
 		$order_class 	= strtolower( $order_inverse );
-		$user 			= isset( $_GET['user'] ) ? $_GET['user'] : null;
-		$status 		= isset( $_GET['status'] ) ? $_GET['status'] : 'any';
-		$meta_key		= isset( $_GET['meta_key'] ) ? $_GET['meta_key'] : null;
-		$year 			= isset( $_GET['year'] ) ? $_GET['year'] : null;
-		$month 			= isset( $_GET['m'] ) ? $_GET['m'] : null;
-		$day 			= isset( $_GET['day'] ) ? $_GET['day'] : null;
-		$search         = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : null;
+		$user 			= isset( $_GET['user'] )        ? $_GET['user']                     : null;
+		$status 		= isset( $_GET['status'] )      ? $_GET['status']                   : 'any';
+		$meta_key		= isset( $_GET['meta_key'] )    ? $_GET['meta_key']                 : null;
+		$year 			= isset( $_GET['year'] )        ? $_GET['year']                     : null;
+		$month 			= isset( $_GET['m'] )           ? $_GET['m']                        : null;
+		$day 			= isset( $_GET['day'] )         ? $_GET['day']                      : null;
+		$search         = isset( $_GET['s'] )           ? sanitize_text_field( $_GET['s'] ) : null;
 
 		$payments = edd_get_payments( array(
 			'number'   => $per_page,

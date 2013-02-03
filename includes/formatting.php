@@ -4,7 +4,7 @@
  *
  * @package     Easy Digital Downloads
  * @subpackage  Formatting functions
- * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.2
 */
@@ -157,6 +157,10 @@ function edd_currency_decimal_filter( $decimals = 2 ) {
 	switch( $currency ) {
 
 		case 'RIAL' :
+			$decimals = 0;
+			break;
+
+		case 'JPY' :
 			$decimals = 0;
 			break;
 
