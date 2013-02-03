@@ -4,7 +4,7 @@
  *
  * @package     Easy Digital Downloads
  * @subpackage  Email Actions
- * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0.8.2
 */
@@ -25,15 +25,15 @@ if ( !defined( 'ABSPATH' ) ) exit;
 
 function edd_trigger_purchase_receipt( $payment_id, $new_status, $old_status ) {
 
-	// check if the payment was already set to complete
-	if( $old_status == 'publish' || $old_status == 'complete')
+	// Check if the payment was already set to complete
+	if( $old_status == 'publish' || $old_status == 'complete' )
+		return; // Make sure that payments are only completed once
+
+	// Make sure the receipt is only sent when new status is complete
+	if( $new_status != 'publish' && $new_status != 'complete' )
 		return;
 
-	// make sure the purchase receipt is only sent if the new status is complete -- No idea why, but this returns even when $new_status is 'publish'
-	//if( $new_status != 'publish' && $new_status != 'complete' );
-		//return;
-
-	// send email with secure download link
+	// Send email with secure download link
 	edd_email_purchase_receipt( $payment_id );
 
 }
@@ -54,8 +54,8 @@ function edd_resend_purchase_receipt( $data ) {
 	edd_email_purchase_receipt( $purchase_id, false );
 
 
-	// grab all downloads of the purchase and update their file download limits, if needed
-	// this allows admins to resend purchase receipts to grant additional file downloads
+	// Grab all downloads of the purchase and update their file download limits, if needed
+	// This allows admins to resend purchase receipts to grant additional file downloads
 	$downloads = edd_get_payment_meta_downloads( $purchase_id );
 	if( is_array( $downloads ) ) {
 		foreach( $downloads as $download ) {

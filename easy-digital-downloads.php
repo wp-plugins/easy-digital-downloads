@@ -5,7 +5,7 @@ Plugin URI: http://easydigitaldownloads.com
 Description: Serve Digital Downloads Through WordPress
 Author: Pippin Williamson
 Author URI: http://pippinsplugins.com
-Version: 1.4.0.2
+Version: 1.4.3.1
 Text Domain: edd
 Domain Path: languages
 
@@ -25,14 +25,6 @@ along with Easy Digital Downloads. If not, see <http://www.gnu.org/licenses/>.
 
 // Exit if accessed directly
 if ( !defined( 'ABSPATH' ) ) exit;
-
-/* PHP Hack to Get Plugin Headers in the .POT File */
-	$edd_plugin_header_translate = array(
-		__( 'Easy Digital Downloads', 'edd' ),
-    	__( 'Serve Digital Downloads Through WordPress', 'edd' ),
-    	__( 'Pippin Williamson', 'edd' ),
-    	__( 'http://easydigitaldownloads.com/', 'edd' ),
-    );
 
 if ( !class_exists( 'Easy_Digital_Downloads' ) ) :
 
@@ -90,7 +82,7 @@ final class Easy_Digital_Downloads {
 
 		// Plugin version
 		if( !defined( 'EDD_VERSION' ) )
-			define( 'EDD_VERSION', '1.4.0.2' );
+			define( 'EDD_VERSION', '1.4.3.1' );
 
 		// Plugin Folder URL
 		if( !defined( 'EDD_PLUGIN_URL' ) )
@@ -103,10 +95,6 @@ final class Easy_Digital_Downloads {
 		// Plugin Root File
 		if( !defined( 'EDD_PLUGIN_FILE' ) )
 			define( 'EDD_PLUGIN_FILE', __FILE__ );
-
-		// make sure the cookie is defined
-		if( ! defined( 'WP_SESSION_COOKIE' ) )
-			define( 'WP_SESSION_COOKIE', '_wp_session' );
 
 	}
 
@@ -124,17 +112,11 @@ final class Easy_Digital_Downloads {
 
 		global $edd_options;
 
-		require_once EDD_PLUGIN_DIR . 'includes/register-settings.php';
+		require_once EDD_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
 		$edd_options = edd_get_settings();
 		require_once EDD_PLUGIN_DIR . 'includes/install.php';
 		require_once EDD_PLUGIN_DIR . 'includes/actions.php';
 
-		// Only include the functionality if it's not pre-defined.
-		/*
-		if ( ! class_exists( 'WP_Session' ) ) {
-			require_once EDD_PLUGIN_DIR . 'includes/libraries/wp_session/class-wp-session.php';
-			require_once EDD_PLUGIN_DIR . 'includes/libraries/wp_session/wp-session.php';
-		}*/
 
 		require_once EDD_PLUGIN_DIR . 'includes/deprecated-functions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/ajax-functions.php';
@@ -166,6 +148,9 @@ final class Easy_Digital_Downloads {
 		require_once EDD_PLUGIN_DIR . 'includes/user-functions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/query-filters.php';
 		require_once EDD_PLUGIN_DIR . 'includes/tax-functions.php';
+		require_once EDD_PLUGIN_DIR . 'includes/process-purchase.php';
+		require_once EDD_PLUGIN_DIR . 'includes/login-register.php';
+
 		if( is_admin() ) {
 			require_once EDD_PLUGIN_DIR . 'includes/admin/add-ons.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/admin-actions.php';
@@ -187,16 +172,15 @@ final class Easy_Digital_Downloads {
 			require_once EDD_PLUGIN_DIR . 'includes/admin/reporting/reports.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/reporting/pdf-reports.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/reporting/graphing.php';
-			require_once EDD_PLUGIN_DIR . 'includes/admin/settings/settings.php';
+			require_once EDD_PLUGIN_DIR . 'includes/admin/settings/display-settings.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/settings/contextual-help.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/upgrades/upgrade-functions.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/upgrades/upgrades.php';
 			require_once EDD_PLUGIN_DIR . 'includes/admin/welcome.php';
 		} else {
-			require_once EDD_PLUGIN_DIR . 'includes/process-purchase.php';
 			require_once EDD_PLUGIN_DIR . 'includes/process-download.php';
 			require_once EDD_PLUGIN_DIR . 'includes/shortcodes.php';
-			require_once EDD_PLUGIN_DIR . 'includes/login-register.php';
+			require_once EDD_PLUGIN_DIR . 'includes/theme-compatibility.php';
 		}
 
 	}
@@ -244,7 +228,7 @@ final class Easy_Digital_Downloads {
 	}
 }
 
-endif; // end if class_exists check
+endif; // End if class_exists check
 
 
 /**

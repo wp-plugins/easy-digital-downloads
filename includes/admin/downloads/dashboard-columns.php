@@ -4,7 +4,7 @@
  *
  * @package     Easy Digital Downloads
  * @subpackage  Dashboard Columns
- * @copyright   Copyright (c) 2012, Pippin Williamson
+ * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
 */
@@ -118,9 +118,9 @@ add_filter( 'manage_edit-download_sortable_columns', 'edd_sortable_download_colu
 */
 
 function edd_sort_downloads( $vars ) {
-	// check if we're viewing the "download" post type
+	// Check if we're viewing the "download" post type
 	if ( isset( $vars['post_type'] ) && 'download' == $vars['post_type'] ) {
-		// check if 'orderby' is set to "sales"
+		// Check if 'orderby' is set to "sales"
 		if ( isset( $vars['orderby'] ) && 'sales' == $vars['orderby'] ) {
 			$vars = array_merge(
 				$vars,
@@ -131,7 +131,7 @@ function edd_sort_downloads( $vars ) {
 			);
 		}
 
-		// check if "orderby" is set to "earnings"
+		// Check if "orderby" is set to "earnings"
 		if ( isset( $vars['orderby'] ) && 'earnings' == $vars['orderby'] ) {
 			$vars = array_merge(
 				$vars,
@@ -142,7 +142,7 @@ function edd_sort_downloads( $vars ) {
 			);
 		}
 
-		// check if "orderby" is set to "earnings"
+		// Check if "orderby" is set to "earnings"
 		if ( isset( $vars['orderby'] ) && 'price' == $vars['orderby'] ) {
 			$vars = array_merge(
 				$vars,
