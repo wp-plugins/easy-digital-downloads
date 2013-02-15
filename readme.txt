@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.3
 Tested up to: 3.5.1
 
-Stable Tag: 1.4.3.1
+Stable Tag: 1.4.4.2
 License: GNU Version 2 or Any Later Version
 
 
@@ -51,7 +51,7 @@ Easy Digital Downloads has an [integration pack for the awesome Affiliates Pro p
 
 **Build Up Your Email Subscribers**
 
-With add-ons for [Mail Chimp](http://easydigitaldownloads.com/extension/mail-chimp/), [Campaign Monitor](http://easydigitaldownloads.com/extension/campaign-monitor/), and [AWeber](http://easydigitaldownloads.com/extension/aweber/), Easy Digital Downloads can easily grow your email subscription lists while making you money at the same time.
+With add-ons for [Mail Chimp](http://easydigitaldownloads.com/extension/mail-chimp/), [Campaign Monitor](http://easydigitaldownloads.com/extension/campaign-monitor/), and [AWeber](http://easydigitaldownloads.com/extension/aweber/), [Wysija](https://easydigitaldownloads.com/extension/wysija/), [ActiveCampaign](https://easydigitaldownloads.com/extension/active-campaign/), [iContact](https://easydigitaldownloads.com/extension/icontact/), [Campaign Monitor](https://easydigitaldownloads.com/extension/campaign-monitor/), [Constant Contact](https://easydigitaldownloads.com/extension/constant-contact/), and more, Easy Digital Downloads can easily grow your email subscription lists while making you money at the same time.
 
 **Languages**
 
@@ -170,6 +170,38 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.4.4.2 =
+
+* URGENT: Fixed a crucial security bug. PLEASE UPDATE.
+
+= 1.4.4.1 =
+
+* Fix: Fixed an issue with the ajax add to cart introduced in 1.4.4
+* Fix: re-enabled the multi-option purchase mode removed by accident in 1.4.4
+
+= 1.4.4 =
+
+* New: Added new EDD_Export class to more flexible export system
+* New: Pages are auto created and saved to the EDD options on activation
+* New: Added excerpt support to download post type
+* New: Added new filter for [downloads] short code HTML
+* New: Added dashboard alert to payment history when in Test Mode
+* New: Added dashboard alert if the checkout page is deleted
+* New: Show price range for variable priced products in Downloads list
+* New: Introduced edd_get_lowest_price_option() and edd_get_highest_price_option()
+* New: Added support for bulk editing product prices
+* New: Add new shop management user roles
+* New: Validate zip codes during purchase based on country code
+* Fix: Missing DIV tag in Dashboard Summary widget
+* Fix: HTML encoding on total amount returned after applying discount
+* Fix: Discounts on prices over 1000 failed
+* Fix: Set post_date_gmt when creating payments
+* Fix: Japanese YEN decimal display
+* Fix: "All" view in Payment History didn't count custom statuses
+* Fix: Purchase receipt sent when changing payment status
+* Fix: First name required but not enforced
+* Fix: File URLs didn't save when file name wasn't provided
 
 = 1.4.3.1 =
 
@@ -1010,4 +1042,4 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Upgrade Notice ==
 
-Fixed a very important bug with prices over 1000. Added new views the reports page. Improved the purchase confirmation page. Fixed a large number of other small bugs and made a significant number of minor improvements throughout the plugin.
+URGENT: Fixed a very critical security bug. Please update immediately.
