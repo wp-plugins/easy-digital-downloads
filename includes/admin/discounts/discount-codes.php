@@ -2,28 +2,23 @@
 /**
  * Discount Codes
  *
- * @package     Easy Digital Downloads
- * @subpackage  Discount Codes
+ * @package     EDD
+ * @subpackage  Admin/Discounts
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
-*/
+ */
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-
 /**
- * Discounts Page
+ * Renders the Discount Pages Admin Page
  *
- * Renders the discount page contents.
- *
- * @access      private
- * @since       1.4
- * @author      Sunny Ratilal
- * @return      void
+ * @since 1.4
+ * @author Sunny Ratilal
+ * @return void
 */
-
 function edd_discounts_page() {
 	global $edd_options;
 

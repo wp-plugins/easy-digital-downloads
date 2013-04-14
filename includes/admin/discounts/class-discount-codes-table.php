@@ -2,8 +2,8 @@
 /**
  * Discount Codes Table Class
  *
- * @package     Easy Digital Downloads
- * @subpackage  Discount Codes List Table Class
+ * @package     EDD
+ * @subpackage  Admin/Discounts
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.4
@@ -13,46 +13,62 @@
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-
 // Load WP_List_Table if not loaded
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
 /**
- * EDD Discount Codes Table Class
+ * EDD_Discount_Codes_Table Class
  *
  * Renders the Discount Codes table on the Discount Codes page
  *
- * @access      private
- * @since       1.4
- * @author      Sunny Ratilal
+ * @since 1.4
+ * @author Sunny Ratilal
  */
-
 class EDD_Discount_Codes_Table extends WP_List_Table {
-
-
 	/**
 	 * Number of results to show per page
 	 *
-	 * @since       1.4
+	 * @var string
+	 * @since 1.4
 	 */
 	public $per_page = 30;
 
+	/**
+	 *
+	 * Total number of discounts
+	 * @var string
+	 * @since 1.4
+	 */
 	public $total_count;
-	public $active_count;
-	public $inactive_count;
 
+	/**
+	 * Active number of discounts
+	 *
+	 * @var string
+	 * @since 1.4
+	 */
+	public $active_count;
+
+	/**
+	 * Inactive number of discounts
+	 *
+	 * @var string
+	 * @since 1.4
+	 */
+	public $inactive_count;
 
 	/**
 	 * Get things started
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      void
+	 * @access public
+	 * @since 1.4
+	 * @uses EDD_Discount_Codes_Table::get_discount_code_counts()
+	 * @see WP_List_Table::__construct()
+	 * @return void
 	 */
-
-	function __construct(){
+	public function __construct() {
 		global $status, $page;
 
 		parent::__construct( array(
@@ -64,18 +80,18 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		$this->get_discount_code_counts();
 	}
 
-
 	/**
 	 * Show the search field
 	 *
-	 * @access      private
-	 * @param       string $text Label for the search box
-	 * @param       string $input_id ID of the search box
-	 * @since       1.4
-	 * @return      void
+	 * @access public
+	 * @since 1.4
+	 *
+	 * @param string $text Label for the search box
+	 * @param string $input_id ID of the search box
+	 *
+	 * @return svoid
 	 */
-
-	function search_box( $text, $input_id ) {
+	public function search_box( $text, $input_id ) {
 		if ( empty( $_REQUEST['s'] ) && !$this->has_items() )
 			return;
 
@@ -94,16 +110,14 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 	<?php
 	}
 
-
 	/**
 	 * Retrieve the view types
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return array $views All the views available
 	 */
-
-	function get_views() {
+	public function get_views() {
 		$base           = admin_url('edit.php?post_type=download&page=edd-discounts');
 
 		$current        = isset( $_GET['status'] ) ? $_GET['status'] : '';
@@ -120,16 +134,14 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		return $views;
 	}
 
-
 	/**
-	 * Retrieve the table columnds
+	 * Retrieve the table columns
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return array $columns Array of all the list table columns
 	 */
-
-	function get_columns() {
+	public function get_columns() {
 		$columns = array(
 			'cb'        => '<input type="checkbox" />',
 			'ID'     	=> __( 'ID', 'edd' ),
@@ -146,33 +158,31 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		return $columns;
 	}
 
-
 	/**
 	 * Retrieve the table's sortable columns
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return array Array of all the sortable columns
 	 */
-
-	function get_sortable_columns() {
+	public function get_sortable_columns() {
 		return array(
 			'ID'     => array( 'ID', true ),
 			'name'   => array( 'name', false )
 		);
 	}
 
-
 	/**
-	 * Render most columns
+	 * This function renders most of the columns in the list table.
 	 *
-	 * @access      private
-	 * @param       array $item Contains all the data of the discount code
-	 * @param       string $column_name The name of the column
-	 * @since       1.4
-	 * @return      string
+	 * @access public
+	 * @since 1.4
+	 *
+	 * @param array $item Contains all the data of the discount code
+	 * @param string $column_name The name of the column
+	 *
+	 * @return string Column Name
 	 */
-
 	function column_default( $item, $column_name ) {
 		switch( $column_name ){
 			default:
@@ -183,10 +193,10 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 	/**
 	 * Render the Name Column
 	 *
-	 * @access      private
-	 * @param       array $item Contains all the data of the discount code
-	 * @since       1.4
-	 * @return      string
+	 * @access public
+	 * @since 1.4
+	 * @param array $item Contains all the data of the discount code
+	 * @return string Data shown in the Name column
 	 */
 	function column_name( $item ) {
 		$discount     = get_post( $item['ID'] );
@@ -207,16 +217,15 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		return $item['name'] . $this->row_actions( $row_actions );
 	}
 
-
 	/**
 	 * Render the checkbox column
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      string
+	 * @access public
+	 * @since 1.4
+	 * @param array $item Contains all the data for the checkbox column
+	 * @return string Displays a checkbox
 	 */
-
-	function column_cb( $item ){
+	function column_cb( $item ) {
 		return sprintf(
 			'<input type="checkbox" name="%1$s[]" value="%2$s" />',
 			/*$1%s*/ $this->_args['singular'],
@@ -224,16 +233,14 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		);
 	}
 
-
 	/**
 	 * Retrieve the bulk actions
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return array $actions Array of the bulk actions
 	 */
-
-	function get_bulk_actions() {
+	public function get_bulk_actions() {
 		$actions = array(
 			'delete' => __( 'Delete', 'edd' )
 		);
@@ -241,16 +248,14 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 		return $actions;
 	}
 
-
 	/**
 	 * Process the bulk actions
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      void
+	 * @access public
+	 * @since 1.4
+	 * @return void
 	 */
-
-	function process_bulk_action() {
+	public function process_bulk_action() {
 		$ids = isset( $_GET['download'] ) ? $_GET['download'] : false;
 
 		if ( ! is_array( $ids ) )
@@ -264,30 +269,28 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 
 	}
 
-
 	/**
 	 * Retrieve the discount code counts
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return void
 	 */
-	function get_discount_code_counts() {
+	public function get_discount_code_counts() {
 		$discount_code_count  = wp_count_posts( 'edd_discount' );
 		$this->active_count   = $discount_code_count->active;
 		$this->inactive_count = $discount_code_count->inactive;
 		$this->total_count    = $discount_code_count->active + $discount_code_count->inactive;
 	}
 
-
 	/**
 	 * Retrieve all the data for all the discount codes
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @return array $discount_codes_data Array of all the data for the discount codes
 	 */
-	function discount_codes_data() {
+	public function discount_codes_data() {
 		$discount_codes_data = array();
 
 		if ( isset( $_GET['paged'] ) ) $page = $_GET['paged']; else $page = 1;
@@ -355,19 +358,24 @@ class EDD_Discount_Codes_Table extends WP_List_Table {
 				);
 			}
 		}
+
 		return $discount_codes_data;
 	}
-
 
 	/**
 	 * Setup the final data for the table
 	 *
-	 * @access      private
-	 * @since       1.4
-	 * @return      array
+	 * @access public
+	 * @since 1.4
+	 * @uses EDD_Discount_Codes_Table::get_columns()
+	 * @uses EDD_Discount_Codes_Table::get_sortable_columns()
+	 * @uses EDD_Discount_Codes_Table::process_bulk_action()
+	 * @uses EDD_Discount_Codes_Table::discount_codes_data()
+	 * @uses WP_List_Table::get_pagenum()
+	 * @uses WP_List_Table::set_pagination_args()
+	 * @return void
 	 */
-	function prepare_items() {
-
+	public function prepare_items() {
 		$per_page = $this->per_page;
 
 		$columns = $this->get_columns();

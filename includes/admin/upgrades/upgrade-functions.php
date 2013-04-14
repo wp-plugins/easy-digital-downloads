@@ -1,27 +1,23 @@
 <?php
-
 /**
  * Upgrade Functions
  *
- * @package     Easy Digital Downloads
- * @subpackage  Download Functions
+ * @package     EDD
+ * @subpackage  Admin/Upgrades
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.3.1
-*/
+ */
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-
 /**
  * Display Upgrade Notices
  *
- * @access      private
- * @since       1.3.1
- * @return      void
+ * @since 1.3.1
+ * @return void
 */
-
 function edd_show_upgrade_notices() {
 	if ( isset( $_GET['page'] ) && $_GET['page'] == 'edd-upgrades' )
 		return; // Don't show notices on the upgrades page
@@ -45,7 +41,7 @@ function edd_show_upgrade_notices() {
 
 	if ( version_compare( $edd_version, '1.3.2', '<' ) && ! get_option( 'edd_logs_upgraded' ) ) {
 		printf(
-			'<div class="updated"><p>' . esc_html__( 'The purchase and file download history in Easy Digital Downloads needs upgraded, click %shere%s to start the upgrade.', 'edd' ) . '</p></div>',
+			'<div class="updated"><p>' . esc_html__( 'The Purchase and File Download History in Easy Digital Downloads needs to be upgraded, click %shere%s to start the upgrade.', 'edd' ) . '</p></div>',
 			'<a href="' . esc_url( admin_url( 'options.php?page=edd-upgrades' ) ) . '">',
 			'</a>'
 		);
@@ -58,20 +54,25 @@ function edd_show_upgrade_notices() {
 			'</a>'
 		);
 	}
+
+	if ( version_compare( $edd_version, '1.5', '<' ) ) {
+		printf(
+			'<div class="updated"><p>' . esc_html__( 'Easy Digital Downloads needs to upgrade the database, click %shere%s to start the upgrade.', 'edd' ) . '</p></div>',
+			'<a href="' . esc_url( admin_url( 'options.php?page=edd-upgrades' ) ) . '">',
+			'</a>'
+		);
+	}
 }
 add_action( 'admin_notices', 'edd_show_upgrade_notices' );
-
 
 /**
  * Triggers all upgrade functions
  *
- * This function is usually triggered via ajax
+ * This function is usually triggered via AJAX
  *
- * @access      private
- * @since       1.3.1
- * @return      void
+ * @since 1.3.1
+ * @return void
 */
-
 function edd_trigger_upgrades() {
 	$edd_version = get_option( 'edd_version' );
 
@@ -93,22 +94,25 @@ function edd_trigger_upgrades() {
 		edd_v14_upgrades();
 	}
 
+	if ( version_compare( $edd_version, '1.5', '<' ) ) {
+		edd_v15_upgrades();
+	}
+
 	update_option( 'edd_version', EDD_VERSION );
 
 	if ( DOING_AJAX )
-		die( 'complete' ); // Let ajax know we are done
+		die( 'complete' ); // Let AJAX know that the upgrade is complete
 }
 add_action( 'wp_ajax_edd_trigger_upgrades', 'edd_trigger_upgrades' );
-
 
 /**
  * Converts old sale and file download logs to new logging system
  *
- * @access      private
- * @since       1.3.1
- * @return      void
-*/
-
+ * @since 1.3.1
+ * @uses WP_Query
+ * @uses EDD_Logging
+ * @return void
+ */
 function edd_v131_upgrades() {
 	if ( get_option( 'edd_logs_upgraded' ) )
 		return;
@@ -180,15 +184,12 @@ function edd_v131_upgrades() {
 	add_option( 'edd_logs_upgraded', '1' );
 }
 
-
 /**
  * Upgrade routine for v1.3.4
  *
- * @access      private
- * @since       1.3.4
- * @return      void
-*/
-
+ * @since 1.3.4
+ * @return void
+ */
 function edd_v134_upgrades() {
 	$general_options = get_option( 'edd_settings_general' );
 
@@ -213,15 +214,13 @@ function edd_v134_upgrades() {
 	update_option( 'edd_settings_general', $general_options );
 }
 
-
 /**
  * Upgrade routine for v1.4
  *
- * @access      private
- * @since       1.4
- * @return      void
-*/
-
+ * @since 1.4
+ * @global $edd_options Array of all the EDD Options
+ * @return void
+ */
 function edd_v14_upgrades() {
 	global $edd_options;
 
@@ -233,7 +232,6 @@ function edd_v14_upgrades() {
 		$page_content = $success_page->post_content .= "\n[edd_receipt]";
 		wp_update_post( array( 'ID' => $edd_options['success_page'], 'post_content' => $page_content ) );
 	}
-
 
 	/** Convert Discounts to new Custom Post Type **/
 	$discounts = get_option( 'edd_discounts' );
@@ -266,7 +264,32 @@ function edd_v14_upgrades() {
 
 		// Remove old discounts from database
 		delete_option( 'edd_discounts' );
+	}
+}
 
+
+/**
+ * Upgrade routine for v1.5
+ *
+ * @since 1.5
+ * @return void
+ */
+function edd_v15_upgrades() {
+	// Update options for missing tax settings
+	$tax_options = get_option( 'edd_settings_taxes' );
+
+	// Set include tax on checkout to off
+	$tax_options['checkout_include_tax'] = 'no';
+
+	// Check if prices are displayed with taxes
+	if( isset( $tax_options['taxes_on_prices'] ) ) {
+		$tax_options['prices_include_tax'] = 'yes';
+	} else {
+		$tax_options['prices_include_tax'] = 'no';
 	}
 
+	update_option( 'edd_settings_taxes', $tax_options );
+
+	// Flush the rewrite rules for the new /edd-api/ end point
+	flush_rewrite_rules();
 }

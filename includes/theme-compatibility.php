@@ -4,32 +4,32 @@
  *
  * Functions for compatibility with specific themes.
  *
- * @package     Easy Digital Downloads
- * @subpackage  Theme Compatibility
+ * @package     EDD
+ * @subpackage  Functions/Compatibility
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0
-*/
+ * @since       1.4.3
+ */
 
 // Exit if accessed directly
-if ( !defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * Remove Restrict Meta Box
+ * Remove the "download" post class from single Download pages
  *
- * Removes the "Restrict This Content" meta box from Restrict Content Pro.
+ * The Responsive theme applies special styling the .download class resulting in really terrible display.
  *
- * @access      private
- * @since       1.0
- * @return      array
-*/
-
-function edd_responsive_download_post_class( $classes, $class, $post_id ) {
-
-	if( ! is_singular( 'download' ) )
+ * @since 1.4.3
+ * @param array $classes Post classes
+ * @param string $class
+ * @param int $post_id Post ID
+ * @return array
+ */
+function edd_responsive_download_post_class( $classes = array(), $class = '', $post_id = 0 ) {
+	if ( ! is_singular( 'download' ) )
 		return $classes;
 
-	if( ( $key = array_search( 'download', $classes ) ) )
+	if ( ( $key = array_search( 'download', $classes ) ) )
 		unset( $classes[ $key ] );
 
 	return $classes;

@@ -5,9 +5,9 @@ Contributors: mordauk, sksmatt, sunnyratilal, SpencerFinnell, chriscct7
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.3
-Tested up to: 3.5.1
+Tested up to: 3.6
 
-Stable Tag: 1.4.3.1
+Stable Tag: 1.5.2
 License: GNU Version 2 or Any Later Version
 
 
@@ -37,7 +37,7 @@ Features of the plugin include:
 
 More information at [Easy Digital Downloads.com](http://easydigitaldownloads.com/).
 
-[youtube http://www.youtube.com/watch?v=SjOeSZ08_IA]
+[youtube http://www.youtube.com/watch?v=japHPcIFs4I]
 
 **Sell and Track Software License Keys**
 
@@ -51,13 +51,13 @@ Easy Digital Downloads has an [integration pack for the awesome Affiliates Pro p
 
 **Build Up Your Email Subscribers**
 
-With add-ons for [Mail Chimp](http://easydigitaldownloads.com/extension/mail-chimp/), [Campaign Monitor](http://easydigitaldownloads.com/extension/campaign-monitor/), and [AWeber](http://easydigitaldownloads.com/extension/aweber/), Easy Digital Downloads can easily grow your email subscription lists while making you money at the same time.
+With add-ons for [Mail Chimp](http://easydigitaldownloads.com/extension/mail-chimp/), [Campaign Monitor](http://easydigitaldownloads.com/extension/campaign-monitor/), and [AWeber](http://easydigitaldownloads.com/extension/aweber/), [Wysija](https://easydigitaldownloads.com/extension/wysija/), [ActiveCampaign](https://easydigitaldownloads.com/extension/active-campaign/), [iContact](https://easydigitaldownloads.com/extension/icontact/), [Campaign Monitor](https://easydigitaldownloads.com/extension/campaign-monitor/), [Constant Contact](https://easydigitaldownloads.com/extension/constant-contact/), and more, Easy Digital Downloads can easily grow your email subscription lists while making you money at the same time.
 
 **Languages**
 
 Easy Digital Downloads as been translated into the following languages:
 
-1. English
+1. English (and British English)
 2. German
 3. Spanish
 4. French
@@ -67,6 +67,10 @@ Easy Digital Downloads as been translated into the following languages:
 8. Turkish
 9. Arabic
 10. Polish
+11. Russian
+12. Czech
+13. Japanese
+14. Farsi
 
 Would you like to help translate the plugin into more languages? [Contact Pippin](http://easydigitaldownloads.com/contact-developer/).
 
@@ -171,13 +175,135 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
-= 1.4.3.1 =
+= 1.5.2: April 13, 2013 =
+
+* New: Discount codes now automatically removed from cart when the required cart items are removed
+* New: Added PHP safe_mode indicator to System Info
+* New: The price option purchased is now shown in [edd_receipt]
+* New: Added get_output() method to the EDD_API
+* New: Added new "upgraded from" option to better help with support issues
+* New: Added symlinks on/off to System Info
+* New: Added a link to the EDD iOS sales / earnings tracker
+* New: Added ability to export file download history by date
+* New: Added category filtering to Downloads > Reports > Downloads
+* New: Added option to disable admin sales notices
+* Tweaked: Better options to disable the price in the [purchase_link] short code
+* Tweaked: Improved the checkout error fields
+* Fix: Issue with purchase receipt CSS
+* Fix: SQL error with comments_clauses
+* Fix: EDD_API retrieved pending sales when it shouldn't
+* Fix: Default currency now set
+* Fix: Issue with edd_show_added_to_cart_messages() showing on incorrect pages
+* Fix: Force redirect when adding items to the cart from the checkout page
+* Fix: EDD_API &number=-1 returned null
+* Fix: Product price formatting screws up when saving products without a thousands separator set
+* Fix: Not all products shown in the drop down for Discount Code Requirements
+* Fix: "Total sales for period shown" displayed as $0.00
+* Fix: Issue with cart fees not being taxed
+
+= 1.5.1: March 21, 2013 =
+
+* Fix: Tags / Categories couldn't be assigned by anyone except shop_manager and admins
+* Fix: Improved memory usage by removing file download log meta box
+* Fix: Couldn't change the email associated with purchases
+* Fix: Comment feeds showed payment notes
+* Fix: Corrected some filters for text outputs
+* Fix: Raw HTML displayed on checkout after opting into taxes
+* Fix: Total shown twice on the checkout page
+* New: Added link to File Download Log from Edit download screen
+* New: Made file download symlinks disabled by default
+* New: Added hour::minute::second to payment history export
+* New: Improved CSS for payment method select
+* New: Allowed store vendors to see sales / earnings for their own products
+* New: Added new hooks to the export page
+
+= 1.5: March 13, 2013 =
+
+* New: Added [EDD_API class](https://github.com/pippinsplugins/Easy-Digital-Downloads/issues/857) to provide a fully RESTful API to retrieve sales and earnings stats
+* New: Dramatically improved layout, design, and UX for the checkout page
+* New: Changed payment method select to radio buttons
+* New: Added option to define a default payment method
+* New: Added option to export all payments of a specific status
+* New: Added an option to export all buyers of specific products
+* New: Added per-product discount codes
+* New: Added option to enable/disable one-use-per cusomter discount codes
+* New: Added estimated monthly earnings / sales to Reports
+* New: Added product microdata for Schema.org
+* New: Added ability to edit a payment's user ID
+* New: Added option to send a test purchase receipt
+* New: Added new template files for the shopping cart and shopping cart widget
+* New: Added improved file download delivery to better support large files
+* New: Added improved session management with WP_Session and removed reliance on PHP $_SESSION
+* New: Added [arbitrary cart fees class](https://github.com/pippinsplugins/Easy-Digital-Downloads/issues/418)
+* New: Added option to edit purchased price options in the edit payment screen
+* New: Added option to view purchase receipts in the browser
+* New: Dramatically improved tax options
+
+* Fixed: A critical bug that made it possible to find download files via Google
+* Fixed: Prices lose decimal points when saving if thousands / decimal separators are left blank
+* Fixed: Payment History layout bug when viewing from small (mobile) screens
+* Fixed: Updating payment record removes buyer's email address
+* Fixed: Non-object notice during uninstall
+* Fixed: Problem with downloading files after purchasing multipe price options for the same product
+* Fixed: Issue with India and zip code validation
+* Fixed: PayPal purchases marked as complete more than once
+* Fixed: csv_cols_out() didn't correctly apply_filters()
+* Fixed: Bug with SSL and ajax
+* Fixed: Report times were out of sync
+* Fixed: No Permission to Download error when purchasing products with multiple files
+* Fixed: Gateway redirect sometimes fails with ajax
+* Fixed: Multiple price options mode doesn't save
+* Fixed: Missing parameter in edd_log_user_in()
+* Fixed: Undefined index error on checkout
+* Fixed: shop_vendor role can't assign categories
+* Fixed: Products can't be removed from edit payment screen
+* Fixed: Sorry, Trouble retrieving payment receipt error
+* Fixed: Issue with Show Price with Taxes bug
+
+
+= 1.4.4.3: February 25, 2013 =
+
+* Fixed: error with discount codes and PayPal
+
+= 1.4.4.2: February 15, 2013 =
+
+* URGENT: Fixed a crucial security bug. PLEASE UPDATE.
+
+= 1.4.4.1: February 10, 2013 =
+
+* Fix: Fixed an issue with the ajax add to cart introduced in 1.4.4
+* Fix: re-enabled the multi-option purchase mode removed by accident in 1.4.4
+
+= 1.4.4: February 9, 2013 =
+
+* New: Added new EDD_Export class to more flexible export system
+* New: Pages are auto created and saved to the EDD options on activation
+* New: Added excerpt support to download post type
+* New: Added new filter for [downloads] short code HTML
+* New: Added dashboard alert to payment history when in Test Mode
+* New: Added dashboard alert if the checkout page is deleted
+* New: Show price range for variable priced products in Downloads list
+* New: Introduced edd_get_lowest_price_option() and edd_get_highest_price_option()
+* New: Added support for bulk editing product prices
+* New: Add new shop management user roles
+* New: Validate zip codes during purchase based on country code
+* Fix: Missing DIV tag in Dashboard Summary widget
+* Fix: HTML encoding on total amount returned after applying discount
+* Fix: Discounts on prices over 1000 failed
+* Fix: Set post_date_gmt when creating payments
+* Fix: Japanese YEN decimal display
+* Fix: "All" view in Payment History didn't count custom statuses
+* Fix: Purchase receipt sent when changing payment status
+* Fix: First name required but not enforced
+* Fix: File URLs didn't save when file name wasn't provided
+
+= 1.4.3.1: February 3, 2013 =
 
 * Fix: Securtity Check Failed message when logging in during purchase
 * Fix: Added missing alt tag to fix HTML validation
 * New: Added new edd_show_has_purchased_item_message filter
 
-= 1.4.3 =
+= 1.4.3: February 1, 2013 =
 
 * New: PayPal refunds are now automatically detected
 * New: Removed jQuery Validation option
@@ -197,11 +323,11 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fix: Fixed a bug with retrieving the purchase receipt on the confirmation page
 * Fix: Corrected some post type labels
 
-= 1.4.2.1 =
+= 1.4.2.1: January 28, 2013 =
 
 * Fix: Purchase receipts were getting sent when payments were marked as "failed"
 
-= 1.4.2 =
+= 1.4.2: January 25, 2013 =
 
 * New: Added sample product import xml file in easy-digital-downloads/assets/
 * New: Variable price purchased now displayed in admin sale notifications

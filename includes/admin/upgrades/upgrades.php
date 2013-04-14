@@ -1,14 +1,13 @@
 <?php
-
 /**
  * Upgrade Screen
  *
- * @package     Easy Digital Downloads
- * @subpackage  admin/upgrades
+ * @package     EDD
+ * @subpackage  Admin/Upgrades
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.3.1
-*/
+ */
 
 // Exit if accessed directly
 if ( !defined( 'ABSPATH' ) ) exit;
@@ -16,11 +15,9 @@ if ( !defined( 'ABSPATH' ) ) exit;
 /**
  * Render Upgrades Screen
  *
- * @access      private
- * @since       1.3.1
- * @return      void
+ * @since 1.3.1
+ * @return void
 */
-
 function edd_upgrades_screen() {
 	?>
 	<div class="wrap">

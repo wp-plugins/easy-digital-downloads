@@ -2,26 +2,26 @@
 /**
  * Shortcodes
  *
- * @package     Easy Digital Downloads
+ * @package     EDD
  * @subpackage  Shortcodes
  * @copyright   Copyright (c) 2013, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
-*/
+ */
 
 // Exit if accessed directly
-if ( !defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
  * Purchase Link Shortcode
  *
  * Retrieves a download and displays the purchase form.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string Fully formatted purchase link
+ */
 function edd_download_shortcode( $atts, $content = null ) {
 	global $post, $edd_options;
 
@@ -47,17 +47,14 @@ function edd_download_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'purchase_link', 'edd_download_shortcode' );
 
-
 /**
  * Download History Shortcode
  *
  * Displays a user's download history.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @return string
+ */
 function edd_download_history() {
 	if ( is_user_logged_in() ) {
 		ob_start();
@@ -67,17 +64,14 @@ function edd_download_history() {
 }
 add_shortcode( 'download_history', 'edd_download_history' );
 
-
 /**
  * Purchase History Shortcode
  *
  * Displays a user's purchsae history.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @return string
+ */
 function edd_purchase_history() {
 	if ( is_user_logged_in() ) {
 		ob_start();
@@ -87,49 +81,48 @@ function edd_purchase_history() {
 }
 add_shortcode( 'purchase_history', 'edd_purchase_history' );
 
-
 /**
  * Checkout Form Shortcode
  *
  * Show the checkout form.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string
+ */
 function edd_checkout_form_shortcode( $atts, $content = null ) {
 	return edd_checkout_form();
 }
 add_shortcode( 'download_checkout', 'edd_checkout_form_shortcode' );
-
 
 /**
  * Download Cart Shortcode
  *
  * Show the shopping cart.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string
+ */
 function edd_cart_shortcode( $atts, $content = null ) {
 	return edd_shopping_cart();
 }
 add_shortcode( 'download_cart', 'edd_cart_shortcode' );
 
-
 /**
  * Login Shortcode
  *
- * Shows the login form.
+ * Shows a login form allowing users to users to log in. This function simply
+ * calls the edd_login_form function to display the login form.
  *
- * @access      public
- * @since       1.0
- * @return      string
-*/
-
+ * @since 1.0
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @uses edd_login_form()
+ * @return string
+ */
 function edd_login_form_shortcode( $atts, $content = null ) {
 	extract( shortcode_atts( array(
 			'redirect' => '',
@@ -139,17 +132,18 @@ function edd_login_form_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'edd_login', 'edd_login_form_shortcode' );
 
-
 /**
  * Discounts short code
  *
- * Displays a list of all active discounts
+ * Displays a list of all the active discounts. The active discounts can be configured
+ * from the Discount Codes admin screen.
  *
- * @access      public
- * @since       1.0.8.2
- * @return      string
-*/
-
+ * @since 1.0.8.2
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @uses edd_get_discounts()
+ * @return string $discounts_lists List of all the active discount codes
+ */
 function edd_discounts_shortcode( $atts, $content = null ) {
 	$discounts = edd_get_discounts();
 
@@ -176,18 +170,17 @@ function edd_discounts_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'download_discounts', 'edd_discounts_shortcode' );
 
-
 /**
  * Purchase Collection Shortcode
  *
- * Displays a collection purchase link for adding all
- * items in a taxonomy term to the cart.
+ * Displays a collection purchase link for adding all items in a taxonomy term
+ * to the cart.
  *
- * @access      public
- * @since       1.0.6
- * @return      string
-*/
-
+ * @since 1.0.6
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string
+ */
 function edd_purchase_collection_shortcode( $atts, $content = null ) {
 	extract( shortcode_atts( array(
 			'taxonomy' => '',
@@ -202,19 +195,20 @@ function edd_purchase_collection_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'purchase_collection', 'edd_purchase_collection_shortcode' );
 
-
 /**
  * Downloads Shortcode
  *
- * Incomplete short code for querying downloads.
+ * This shortcodes uses the WordPress Query API to get downloads with the
+ * arguments specified when using the shortcode. A list of the arguments
+ * can be found from the EDD Dccumentation. The shortcode will take all the
+ * paramaters and display the downloads queried in a valid HTML <div> tags.
  *
- * Contributor: Sunny Ratilal
- *
- * @access      public
- * @since       1.0.6
- * @return      string
-*/
-
+ * @since 1.0.6
+ * @internal Incomplete shortcode
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string $display Output generated from the downloads queried
+ */
 function edd_downloads_query( $atts, $content = null ) {
 	extract( shortcode_atts( array(
 			'category'         => '',
@@ -230,7 +224,8 @@ function edd_downloads_query( $atts, $content = null ) {
 			'columns'          => 3,
 			'thumbnails'       => 'true',
 			'orderby'          => 'post_date',
-			'order'            => 'DESC'
+			'order'            => 'DESC',
+			'ids'              => ''
 		), $atts )
 	);
 
@@ -266,7 +261,6 @@ function edd_downloads_query( $atts, $content = null ) {
 	}
 
 	if ( $tags || $category || $exclude_category || $exclude_tags ) {
-
 		$query['tax_query'] = array(
 			'relation'     => $relation
 		);
@@ -304,8 +298,10 @@ function edd_downloads_query( $atts, $content = null ) {
 				'operator' => 'NOT IN',
 			);
 		}
-
 	}
+
+	if( ! empty( $ids ) )
+		$query['post__in'] = explode( ',', $ids );
 
 	if ( get_query_var( 'paged' ) )
 		$query['paged'] = get_query_var('paged');
@@ -338,7 +334,7 @@ function edd_downloads_query( $atts, $content = null ) {
 		ob_start(); ?>
 		<div class="edd_downloads_list">
 			<?php while ( $downloads->have_posts() ) : $downloads->the_post(); ?>
-				<div class="edd_download" id="edd_download_<?php echo get_the_ID(); ?>" style="width: <?php echo $column_width; ?>; float: left;">
+				<div itemscope itemtype="http://schema.org/Product" class="edd_download" id="edd_download_<?php echo get_the_ID(); ?>" style="width: <?php echo $column_width; ?>; float: left;">
 					<div class="edd_download_inner">
 						<?php
 
@@ -390,21 +386,20 @@ function edd_downloads_query( $atts, $content = null ) {
 		$display = sprintf( _x( 'No %s found', 'download post type name', 'edd' ), edd_get_label_plural() );
 	endif;
 
-	return apply_filters( 'downloads_shortcode', $display, $atts, $buy_button, $columns, $column_width, $downloads, $excerpt, $full_content, $price, $thumbnails );
+	return apply_filters( 'downloads_shortcode', $display, $atts, $buy_button, $columns, $column_width, $downloads, $excerpt, $full_content, $price, $thumbnails, $query );
 }
 add_shortcode( 'downloads', 'edd_downloads_query' );
-
 
 /**
  * Price Shortcode
  *
  * Shows the price of a download.
  *
- * @access      public
- * @since       1.1.3.3
- * @return      string
-*/
-
+ * @since 1.1.3.3
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string
+ */
 function edd_download_price_shortcode( $atts, $content = null ) {
 	extract( shortcode_atts( array(
 			'id' => NULL,
@@ -418,15 +413,15 @@ function edd_download_price_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'edd_price', 'edd_download_price_shortcode' );
 
-
 /**
  * Receipt Shortcode
  *
  * Shows an order receipt.
  *
- * @access      public
- * @since       1.4
- * @return      string
+ * @since 1.4
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return string
  */
 function edd_receipt_shortcode( $atts, $content = null ) {
 	global $edd_receipt_args;
@@ -452,14 +447,14 @@ function edd_receipt_shortcode( $atts, $content = null ) {
 	}
 
 	// No key found
-	if ( ! isset($purchase_key) )
+	if ( ! isset( $purchase_key ) )
 		return $edd_receipt_args[ 'error' ];
 
 	$edd_receipt_args[ 'id' ] = edd_get_purchase_id_by_key( $purchase_key );
 	$user = edd_get_payment_meta_user_info( $edd_receipt_args[ 'id' ] );
 
 	// Not the proper user
-	if ( $user[ 'id' ] != get_current_user_id() ) {
+	if ( is_user_logged_in() && $user[ 'id' ] != get_current_user_id() ) {
 		return $edd_receipt_args[ 'error' ];
 	}
 
@@ -473,19 +468,24 @@ function edd_receipt_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'edd_receipt', 'edd_receipt_shortcode' );
 
-
 /**
  * Profile Editor Shortcode
  *
- * Outputs the EDD Profile Editor to allow users to amend their details from the front-end
+ * Outputs the EDD Profile Editor to allow users to amend their details from the
+ * front-end. This function uses the EDD templating system allowing users to
+ * override the default profile editor template. The profile editor template is located
+ * under templates/profile-editor.php, however, it can be altered by creating a
+ * file called profile-editor.php in the edd_template directory in your active theme's
+ * folder. Please visit the EDD Documentation for more information on how the
+ * templating system is used.
  *
- * @access      public
- * @since       1.4
- * @author      Sunny Ratilal
+ * @since 1.4
+ * @author Sunny Ratilal
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @return $display Output generated from the profile editor
  */
-
 function edd_profile_editor_shortcode( $atts, $content = null ) {
-
 	ob_start();
 
 	edd_get_template_part( 'shortcode', 'profile-editor' );
@@ -496,23 +496,23 @@ function edd_profile_editor_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'edd_profile_editor', 'edd_profile_editor_shortcode' );
 
-
 /**
  * Process Profile Updater Form
  *
  * Processes the profile updater form by updating the necessary fields
  *
- * @access      private
- * @since       1.4
-*/
+ * @since 1.4
+ * @author Sunny Ratilal
+ * @param array $data Data sent from the profile editor
+ * @return void
+ */
 function edd_process_profile_editor_updates( $data ) {
-
 	// Profile field change request
 	if ( empty( $_POST['edd_profile_editor_submit'] ) && !is_user_logged_in() )
 		return false;
 
 	// Nonce security
-	if ( !wp_verify_nonce( $data['edd_profile_editor_nonce'], 'edd-profile-editor-nonce' ) )
+	if ( ! wp_verify_nonce( $data['edd_profile_editor_nonce'], 'edd-profile-editor-nonce' ) )
 		return false;
 
 	$user_id = get_current_user_id();
@@ -543,6 +543,7 @@ function edd_process_profile_editor_updates( $data ) {
 	$updated = wp_update_user( $userdata );
 
 	if ( $updated ) {
+		do_action( 'edd_user_profile_updated', $user_id, $userdata );
 		wp_redirect( add_query_arg( 'updated', 'true', $data['edd_redirect'] ) );
 		exit;
 	}
