@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.3
 Tested up to: 3.6
 
-Stable Tag: 1.5.2.2
+Stable Tag: 1.5.2.3
 License: GNU Version 2 or Any Later Version
 
 
@@ -17,7 +17,7 @@ Sell digital downloads through WordPress with this complete digital downloads ma
 
 Selling digital downloads is something that not a single one of the large WordPress ecommerce plugins has ever gotten really right. This plugin aims to fix that. Instead of focusing on providing every single feature under the sun, Easy Digital Downloads tries to provide only the ones that you really need. It aims to make selling digital downloads through WordPress easy, and complete.
 
-**Follow this plugin on [Git Hub](https://github.com/easydigitaldownloads/Easy-Digital-Downloads)**
+**Follow this plugin on [Git Hub](https://github.com/pippinsplugins/Easy-Digital-Downloads)**
 
 Features of the plugin include:
 
@@ -174,6 +174,10 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 
 == Changelog ==
+
+= 1.5.2.3: May 23, 2013 =
+
+* Fix: An uninstall error
 
 = 1.5.2.2: May 9, 2013 =
 
