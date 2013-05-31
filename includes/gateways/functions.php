@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_get_payment_gateways() {
 	// Default, built-in gateways
 	$gateways = array(
-		'paypal' => array( 'admin_label' => 'PayPal', 'checkout_label' => 'PayPal' ),
+		'paypal' => array( 'admin_label' => __( 'PayPal Standard', 'edd' ), 'checkout_label' => __( 'PayPal', 'edd' ) ),
 		'manual' => array( 'admin_label' => __( 'Test Payment', 'edd' ), 'checkout_label' => __( 'Test Payment', 'edd' ) ),
 	);
 
@@ -48,7 +48,7 @@ function edd_get_enabled_payment_gateways() {
 		endif;
 	endforeach;
 
-	return $gateway_list;
+	return apply_filters( 'edd_enabled_payment_gateways', $gateway_list );
 }
 
 /**
@@ -217,3 +217,29 @@ function edd_load_ajax_gateway() {
 }
 add_action( 'wp_ajax_edd_load_gateway', 'edd_load_ajax_gateway' );
 add_action( 'wp_ajax_nopriv_edd_load_gateway', 'edd_load_ajax_gateway' );
+
+
+/**
+ * Counts the number of purchases made with a gateway
+ *
+ * @since 1.6
+ * @return int
+ */
+function edd_count_sales_by_gateway( $gateway_id = 'paypal', $status = 'publish' ) {
+
+	$ret  = 0;
+	$args = array(
+		'meta_key'    => '_edd_payment_gateway',
+		'meta_value'  => $gateway_id,
+		'nopaging'    => true,
+		'post_type'   => 'edd_payment',
+		'post_status' => $status,
+		'fields'      => 'ids'
+	);
+
+	$payments = new WP_Query( $args );
+
+	if( $payments )
+		$ret = $payments->post_count;
+	return $ret;
+}

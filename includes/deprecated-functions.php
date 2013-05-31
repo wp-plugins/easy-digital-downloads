@@ -14,20 +14,6 @@
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * Checks whether AJAX is enabled.
- *
- * @since 1.0
- * @deprecated 1.0.8.3
- * @return bool
- */
-function edd_is_ajax_enabled() {
-	global $edd_options;
-	if ( ! isset( $edd_options['disable_ajax_cart'] ) ) {
-		return true;
-	}
-	return false;
-}
 
 /**
  * Count Payments
@@ -181,4 +167,28 @@ function edd_get_menu_access_level() {
 	_edd_deprecated_function( __FUNCTION__, '1.4.4', 'current_user_can(\'manage_shop_settings\')', $backtrace );
 
 	return apply_filters( 'edd_menu_access_level', 'manage_options' );
+}
+
+
+
+/**
+ * Check if only local taxes are enabled meaning users must opt in by using the
+ * option set from the EDD Settings.
+ *
+ * @since 1.3.3
+ * @deprecated 1.6
+ * @global $edd_options
+ * @return bool $local_only
+ */
+function edd_local_taxes_only() {
+
+	$backtrace = debug_backtrace();
+
+	_edd_deprecated_function( __FUNCTION__, '1.6', 'no alternatives', $backtrace );
+
+	global $edd_options;
+
+	$local_only = isset( $edd_options['tax_condition'] ) && $edd_options['tax_condition'] == 'local';
+
+	return apply_filters( 'edd_local_taxes_only', $local_only );
 }
