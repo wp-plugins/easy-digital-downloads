@@ -377,6 +377,9 @@ function edd_reports_graph_controls() {
 function edd_get_report_dates() {
 	$dates = array();
 
+	// Make sure the reports are based off of the correct timezone
+	date_default_timezone_set( edd_get_timezone_id() );
+
 	$dates['range']		= isset( $_GET['range'] )	? $_GET['range']	: 'this_month';
 	$dates['day']		= isset( $_GET['day'] ) 	? $_GET['day'] 		: null;
 	$dates['m_start'] 	= isset( $_GET['m_start'] ) ? $_GET['m_start'] 	: 1;
@@ -414,7 +417,8 @@ function edd_get_report_dates() {
 		break;
 
 		case 'this_week' :
-			$dates['day']       = date( 'd', time() - ( date( 'w' ) - 1 ) *60*60*24 );
+			$dates['day']       = date( 'd', time() - ( date( 'w' ) - 1 ) *60*60*24 ) - 1;
+			$dates['day']      += get_option( 'start_of_week' );
 			$dates['day_end']   = $dates['day'] + 6;
 			$dates['m_start'] 	= date( 'n' );
 			$dates['m_end']		= date( 'n' );
@@ -422,7 +426,8 @@ function edd_get_report_dates() {
 		break;
 
 		case 'last_week' :
-			$dates['day']       = date( 'd', time() - ( date( 'w' ) - 1 ) *60*60*24 ) - 6;
+			$dates['day']       = date( 'd', time() - ( date( 'w' ) - 1 ) *60*60*24 ) - 8;
+			$dates['day']      += get_option( 'start_of_week' );
 			$dates['day_end']   = $dates['day'] + 6;
 			$dates['m_start'] 	= date( 'n' );
 			$dates['m_end']		= date( 'n' );
@@ -517,6 +522,6 @@ function edd_parse_report_dates( $data ) {
 
 	$view = isset( $_GET['view'] ) ? $_GET['view'] : 'earnings';
 
-	wp_redirect( add_query_arg( $dates, admin_url( 'edit.php?post_type=download&page=edd-reports&view=' . $view ) ) ); exit;
+	wp_redirect( add_query_arg( $dates, admin_url( 'edit.php?post_type=download&page=edd-reports&view=' . $view ) ) ); edd_die();
 }
 add_action( 'edd_filter_reports', 'edd_parse_report_dates' );

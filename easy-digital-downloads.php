@@ -5,7 +5,7 @@
  * Description: Serve Digital Downloads Through WordPress
  * Author: Pippin Williamson
  * Author URI: http://pippinsplugins.com
- * Version: 1.5.2.2
+ * Version: 1.6
  * Text Domain: edd
  * Domain Path: languages
  *
@@ -25,7 +25,7 @@
  * @package EDD
  * @category Core
  * @author Pippin Williamson
- * @version 1.5.2.2
+ * @version 1.6
  */
 
 // Exit if accessed directly
@@ -53,7 +53,7 @@ final class Easy_Digital_Downloads {
 	 * @var object
 	 * @since 1.4.4
 	 */
-	private $roles;
+	public $roles;
 
 	/**
 	 * EDD Cart Fees Object
@@ -90,6 +90,7 @@ final class Easy_Digital_Downloads {
 	 */
 	public $html;
 
+
 	/**
 	 * Main Easy_Digital_Downloads Instance
 	 *
@@ -106,7 +107,7 @@ final class Easy_Digital_Downloads {
 	 * @return The one true Easy_Digital_Downloads
 	 */
 	public static function instance() {
-		if ( ! isset( self::$instance ) ) {
+		if ( ! isset( self::$instance ) && ! ( self::$instance instanceof Easy_Digital_Downloads ) ) {
 			self::$instance = new Easy_Digital_Downloads;
 			self::$instance->setup_constants();
 			self::$instance->includes();
@@ -121,6 +122,33 @@ final class Easy_Digital_Downloads {
 	}
 
 	/**
+	 * Throw error on object clone
+	 *
+	 * The whole idea of the singleton design pattern is that there is a single
+	 * object therefore, we don't want the object to be cloned.
+	 *
+	 * @since 1.6
+	 * @access protected
+	 * @return void
+	 */
+	public function __clone() {
+		// Cloning instances of the class is forbidden
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'edd' ), '1.6' );
+	}
+
+	/**
+	 * Disable unserializing of the class
+	 *
+	 * @since 1.6
+	 * @access protected
+	 * @return void
+	 */
+	public function __wakeup() {
+		// Unserializing instances of the class is forbidden
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'edd' ), '1.6' );
+	}
+
+	/**
 	 * Setup plugin constants
 	 *
 	 * @access private
@@ -130,15 +158,15 @@ final class Easy_Digital_Downloads {
 	private function setup_constants() {
 		// Plugin version
 		if ( ! defined( 'EDD_VERSION' ) )
-			define( 'EDD_VERSION', '1.5.2.2' );
-
-		// Plugin Folder URL
-		if ( ! defined( 'EDD_PLUGIN_URL' ) )
-			define( 'EDD_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+			define( 'EDD_VERSION', '1.6' );
 
 		// Plugin Folder Path
 		if ( ! defined( 'EDD_PLUGIN_DIR' ) )
-			define( 'EDD_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+			define( 'EDD_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . basename( dirname( __FILE__ ) ) . '/' );
+
+		// Plugin Folder URL
+		if ( ! defined( 'EDD_PLUGIN_URL' ) )
+			define( 'EDD_PLUGIN_URL', plugin_dir_url( EDD_PLUGIN_DIR ) . basename( dirname( __FILE__ ) ) . '/' );
 
 		// Plugin Root File
 		if ( ! defined( 'EDD_PLUGIN_FILE' ) )
@@ -169,11 +197,13 @@ final class Easy_Digital_Downloads {
 		require_once EDD_PLUGIN_DIR . 'includes/cart/functions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/cart/actions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-api.php';
+		require_once EDD_PLUGIN_DIR . 'includes/class-edd-cron.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-fees.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-html-elements.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-logging.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-session.php';
 		require_once EDD_PLUGIN_DIR . 'includes/class-edd-roles.php';
+		require_once EDD_PLUGIN_DIR . 'includes/country-functions.php';
 		require_once EDD_PLUGIN_DIR . 'includes/formatting.php';
 		require_once EDD_PLUGIN_DIR . 'includes/widgets.php';
 		require_once EDD_PLUGIN_DIR . 'includes/mime-types.php';

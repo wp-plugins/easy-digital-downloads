@@ -125,6 +125,7 @@ class EDD_API {
 		$vars[] = 'startdate';
 		$vars[] = 'enddate';
 		$vars[] = 'customer';
+		$vars[] = 'discount';
 		$vars[] = 'format';
 
 		return $vars;
@@ -270,7 +271,7 @@ class EDD_API {
 			case 'stats' :
 
 				$data = $this->get_stats( array(
-					'type'      => $wp_query->query_vars['type'],
+					'type'      => isset( $wp_query->query_vars['type'] )      ? $wp_query->query_vars['type']      : null,
 					'product'   => isset( $wp_query->query_vars['product'] )   ? $wp_query->query_vars['product']   : null,
 					'date'      => isset( $wp_query->query_vars['date'] )      ? $wp_query->query_vars['date']      : null,
 					'startdate' => isset( $wp_query->query_vars['startdate'] ) ? $wp_query->query_vars['startdate'] : null,
@@ -298,6 +299,14 @@ class EDD_API {
 			case 'sales' :
 
 				$data = $this->get_recent_sales();
+
+				break;
+
+			case 'discounts' :
+
+				$discount = isset( $wp_query->query_vars['discount'] ) ? $wp_query->query_vars['discount']  : null;
+
+				$data = $this->get_discounts( $discount );
 
 				break;
 
@@ -329,13 +338,14 @@ class EDD_API {
 			'stats',
 			'products',
 			'customers',
-			'sales'
+			'sales',
+			'discounts'
 		) );
 
 		$query = isset( $wp_query->query_vars['edd-api'] ) ? $wp_query->query_vars['edd-api'] : null;
 
 		// Make sure our query is valid
-		if ( ! in_array( $query, $accepted ) || ( $query == 'stats' && ! isset( $wp_query->query_vars['type'] ) ) ) {
+		if ( ! in_array( $query, $accepted ) ) {
 			$error['error'] = __( 'Invalid query!', 'edd' );
 
 			$this->data = $error;
@@ -417,6 +427,8 @@ class EDD_API {
 		);
 
 		$args = wp_parse_args( $args, $defaults );
+
+		date_default_timezone_set( edd_get_timezone_id() );
 
 		if ( 'range' === $args['date'] ) {
 			$startdate          = strtotime( $args['startdate'] );
@@ -725,7 +737,7 @@ class EDD_API {
 	 */
 	public function get_stats( $args = array() ) {
 		$defaults = array(
-			'type'      => '',
+			'type'      => null,
 			'product'   => null,
 			'date'      => null,
 			'startdate' => null,
@@ -739,13 +751,7 @@ class EDD_API {
 		if ( $args['type'] == 'sales' ) {
 			if ( $args['product'] == null ) {
 				if ( $args['date'] == null ) {
-					// Default sales return
-					$previous_month = date( 'n' ) == 1 ? 12 : date( 'n' ) - 1;
-					$previous_year  = date( 'n' ) == 1 ? date( 'Y' ) - 1 : date( 'Y' );
-
-					$sales['sales']['current_month'] = edd_get_sales_by_date( null, date( 'n' ), date( 'Y' ) );
-					$sales['sales']['last_month']    = edd_get_sales_by_date( null, $previous_month, $previous_year );
-					$sales['sales']['totals']        = edd_get_total_sales();
+					$sales = $this->get_default_sales_stats();
 				} elseif( $args['date'] === 'range' ) {
 					// Return sales for a date range
 
@@ -827,13 +833,7 @@ class EDD_API {
 		} elseif ( $args['type'] == 'earnings' ) {
 			if ( $args['product'] == null ) {
 				if ( $args['date'] == null ) {
-					// Default earnings return
-					$previous_month = date( 'n' ) == 1 ? 12 : date( 'n' ) - 1;
-					$previous_year  = date( 'n' ) == 1 ? date( 'Y' ) - 1 : date( 'Y' );
-
-					$earnings['earnings']['current_month'] = edd_get_earnings_by_date( null, date( 'n' ), date( 'Y' ) );
-					$earnings['earnings']['last_month'] = edd_get_earnings_by_date( null, $previous_month, $previous_year );
-					$earnings['earnings']['totals'] = edd_get_total_earnings();
+					$earnings = $this->get_default_earnings_stats();
 				} elseif ( $args['date'] === 'range' ) {
 					// Return sales for a date range
 
@@ -923,6 +923,12 @@ class EDD_API {
 			$stats['customers']['total_customers'] = $count[0];
 
 			return $stats;
+		} elseif ( empty( $args['type'] ) ) {
+			$stats = array();
+			$stats = array_merge( $stats, $this->get_default_sales_stats() );
+			$stats = array_merge ( $stats, $this->get_default_earnings_stats() );
+
+			return array( 'stats' => $stats );
 		}
 	}
 
@@ -981,6 +987,81 @@ class EDD_API {
 		}
 		return $sales;
 	}
+
+	/**
+	 * Process Get Discounts API Request
+	 *
+	 * @access public
+	 * @since 1.6
+	 * @global object $wpdb Used to query the database using the WordPress
+	 *   Database API
+	 * @param int $discount Discount ID
+	 * @return array $discounts Multidimensional array of the discounts
+	 */
+	public function get_discounts( $discount = null ) {
+
+		if ( empty( $discount ) ) {
+
+			global $wpdb;
+
+			$paged     = $this->get_paged();
+			$per_page  = $this->per_page();
+			$discounts = edd_get_discounts( array( 'posts_per_page' => $per_page, 'paged' => $paged ) );
+			$count     = 0;
+
+			foreach ( $discounts as $discount ) {
+
+				$discount_list['discounts'][$count]['ID']                    = $discount->ID;
+				$discount_list['discounts'][$count]['name']                  = $discount->post_title;
+				$discount_list['discounts'][$count]['code']                  = edd_get_discount_code( $discount->ID );
+				$discount_list['discounts'][$count]['amount']                = edd_get_discount_amount( $discount->ID );
+				$discount_list['discounts'][$count]['min_price']             = edd_get_discount_min_price( $discount->ID );
+				$discount_list['discounts'][$count]['type']                  = edd_get_discount_type( $discount->ID );
+				$discount_list['discounts'][$count]['uses']                  = edd_get_discount_uses( $discount->ID );
+				$discount_list['discounts'][$count]['max_uses']              = edd_get_discount_max_uses( $discount->ID );
+				$discount_list['discounts'][$count]['start_date']            = edd_get_discount_start_date( $discount->ID );
+				$discount_list['discounts'][$count]['exp_date']              = edd_get_discount_expiration( $discount->ID );
+				$discount_list['discounts'][$count]['status']                = $discount->post_status;
+				$discount_list['discounts'][$count]['product_requirements']  = edd_get_discount_product_reqs( $discount->ID );
+				$discount_list['discounts'][$count]['requirement_condition'] = edd_get_discount_product_condition( $discount->ID );
+				$discount_list['discounts'][$count]['global_discount']       = edd_is_discount_not_global( $discount->ID );
+				$discount_list['discounts'][$count]['single_use']            = edd_discount_is_single_use( $discount->ID );
+
+				$count++;
+			}
+
+		} else {
+
+			if ( is_numeric( $discount ) && get_post( $discount ) ) {
+
+				$discount_list['discounts'][0]['ID']                         = $discount;
+				$discount_list['discounts'][0]['name']                       = get_post_field( 'post_title', $discount );
+				$discount_list['discounts'][0]['code']                       = edd_get_discount_code( $discount );
+				$discount_list['discounts'][0]['amount']                     = edd_get_discount_amount( $discount );
+				$discount_list['discounts'][0]['min_price']                  = edd_get_discount_min_price( $discount );
+				$discount_list['discounts'][0]['type']                       = edd_get_discount_type( $discount );
+				$discount_list['discounts'][0]['uses']                       = edd_get_discount_uses( $discount );
+				$discount_list['discounts'][0]['max_uses']                   = edd_get_discount_max_uses( $discount );
+				$discount_list['discounts'][0]['start_date']                 = edd_get_discount_start_date( $discount );
+				$discount_list['discounts'][0]['exp_date']                   = edd_get_discount_expiration( $discount );
+				$discount_list['discounts'][0]['status']                     = get_post_field( 'post_status', $discount );
+				$discount_list['discounts'][0]['product_requirements']       = edd_get_discount_product_reqs( $discount );
+				$discount_list['discounts'][0]['requirement_condition']      = edd_get_discount_product_condition( $discount );
+				$discount_list['discounts'][0]['global_discount']            = edd_is_discount_not_global( $discount );
+				$discount_list['discounts'][0]['single_use']                 = edd_discount_is_single_use( $discount );
+
+			} else {
+
+				$error['error'] = sprintf( __( 'Discount %s not found!', 'edd' ), $discount );
+				return $error;
+
+			}
+
+		}
+
+		return $discount_list;
+	}
+
 
 	/**
 	 * Log each API request, if enabled
@@ -1089,7 +1170,7 @@ class EDD_API {
 
 		do_action( 'edd_api_output_after', $data, $this, $format );
 
-		exit;
+		edd_die();
 	}
 
 	/**
@@ -1121,9 +1202,9 @@ class EDD_API {
 							<input name="edd_set_api_key" type="checkbox" id="edd_set_api_key" value="0" />
 							<span class="description"><?php _e( 'Generate API Key', 'edd' ); ?></span>
 							<?php } else { ?>
-								<strong><?php _e( 'Public key:' ); ?>&nbsp;</strong><span id="publickey"><?php echo $user->edd_user_public_key; ?></span><br/>
-								<strong><?php _e( 'Secret key:' ); ?>&nbsp;</strong><span id="privatekey"><?php echo $user->edd_user_secret_key; ?></span><br/>
-								<strong><?php _e( 'Token:' ); ?>&nbsp;</strong><span id="token"><?php echo hash( 'md5', $user->edd_user_secret_key . $user->edd_user_public_key ); ?></span><br/>
+								<strong><?php _e( 'Public key:', 'edd' ); ?>&nbsp;</strong><span id="publickey"><?php echo $user->edd_user_public_key; ?></span><br/>
+								<strong><?php _e( 'Secret key:', 'edd' ); ?>&nbsp;</strong><span id="privatekey"><?php echo $user->edd_user_secret_key; ?></span><br/>
+								<strong><?php _e( 'Token:', 'edd' ); ?>&nbsp;</strong><span id="token"><?php echo hash( 'md5', $user->edd_user_secret_key . $user->edd_user_public_key ); ?></span><br/>
 								<input name="edd_set_api_key" type="checkbox" id="edd_set_api_key" value="0" />
 								<span class="description"><?php _e( 'Revoke API Keys', 'edd' ); ?></span>
 							<?php } ?>
@@ -1163,5 +1244,43 @@ class EDD_API {
 				delete_user_meta( $user_id, 'edd_user_secret_key' );
 			}
 		}
+	}
+
+	/**
+	 * Generate the default sales stats returned by the 'stats' endpoint
+	 *
+	 * @access private
+	 * @since 1.5.3
+	 * @return array default sales statistics
+	 */
+	private function get_default_sales_stats() {
+		// Default sales return
+		$previous_month = date( 'n' ) == 1 ? 12 : date( 'n' ) - 1;
+		$previous_year  = date( 'n' ) == 1 ? date( 'Y' ) - 1 : date( 'Y' );
+
+		$sales['sales']['current_month'] = edd_get_sales_by_date( null, date( 'n' ), date( 'Y' ) );
+		$sales['sales']['last_month']    = edd_get_sales_by_date( null, $previous_month, $previous_year );
+		$sales['sales']['totals']        = edd_get_total_sales();
+
+		return $sales;
+	}
+
+	/**
+	 * Generate the default earnings stats returned by the 'stats' endpoint
+	 *
+	 * @access private
+	 * @since 1.5.3
+	 * @return array default eranings statistics
+	 */
+	private function get_default_earnings_stats() {
+		// Default earnings return
+		$previous_month = date( 'n' ) == 1 ? 12 : date( 'n' ) - 1;
+		$previous_year  = date( 'n' ) == 1 ? date( 'Y' ) - 1 : date( 'Y' );
+
+		$earnings['earnings']['current_month'] = edd_get_earnings_by_date( null, date( 'n' ), date( 'Y' ) );
+		$earnings['earnings']['last_month']    = edd_get_earnings_by_date( null, $previous_month, $previous_year );
+		$earnings['earnings']['totals']        = edd_get_total_earnings();
+
+		return $earnings;
 	}
 }

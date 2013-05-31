@@ -30,11 +30,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_install() {
 	global $wpdb, $edd_options, $wp_version;
 
-	if ( (float) $wp_version < 3.3 ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( __( 'Looks like you\'re running an older version of WordPress, you need to be running at least WordPress 3.3 to use Easy Digital Downloads.', 'edd' ), __( 'Easy Digital Downloads is not compatible with this version of WordPress.', 'edd' ), array( 'back_link' => true ) );
-	}
-
 	// Setup the Downloads Custom Post Type
 	edd_setup_edd_post_types();
 
@@ -92,7 +87,7 @@ function edd_install() {
 		$history = wp_insert_post(
 			array(
 				'post_title'     => __( 'Purchase History', 'edd' ),
-				'post_content'   => '[download_history]',
+				'post_content'   => '[purchase_history]',
 				'post_status'    => 'publish',
 				'post_author'    => 1,
 				'post_type'      => 'page',
@@ -117,6 +112,6 @@ function edd_install() {
 		return;
 
 	// Add the transient to redirect
-    set_transient( '_edd_activation_redirect', true, 30 );
+	set_transient( '_edd_activation_redirect', true, 30 );
 }
 register_activation_hook( EDD_PLUGIN_FILE, 'edd_install' );

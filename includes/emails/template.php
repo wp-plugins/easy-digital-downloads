@@ -71,11 +71,17 @@ function edd_email_template_tags( $message, $payment_data, $payment_id ) {
 
 		foreach ( $cart_items as $item ) {
 
+			if ( edd_use_skus() )
+				$sku = edd_get_download_sku( $item['id'] );
+
 			$price_id = edd_get_cart_item_price_id( $item );
 
 			if ( $show_names ) {
 
 				$title = get_the_title( $item['id'] );
+
+				if( ! empty( $sku ) )
+					$title .= "&nbsp;&ndash;&nbsp;" . __( 'SKU', 'edd' ) . ': ' . $sku;
 
 				if( $price_id !== false )
 					$title .= "&nbsp;&ndash;&nbsp;" . edd_get_price_option_name( $item['id'], $price_id );
@@ -91,11 +97,29 @@ function edd_email_template_tags( $message, $payment_data, $payment_id ) {
 				foreach ( $files as $filekey => $file ) {
 					$download_list .= '<li>';
 					$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $item['id'], $price_id );
-					$download_list .= '<a href="' . esc_url( $file_url ) . '">' . $file['name'] . '</a>';
-
+					$download_list .= '<a href="' . esc_url( $file_url ) . '">' . edd_get_file_name( $file ) . '</a>';
 					$download_list .= '</li>';
 
 					$file_urls .= esc_html( $file_url ) . '<br/>';
+				}
+			} elseif( edd_is_bundled_product( $item['id'] ) ) {
+
+				$bundled_products = edd_get_bundled_products( $item['id'] );
+
+				foreach( $bundled_products as $bundle_item ) {
+
+					$download_list .= '<li class="edd_bundled_product"><strong>' . get_the_title( $bundle_item ) . '</strong></li>';
+
+					$files = edd_get_download_files( $bundle_item );
+
+					foreach ( $files as $filekey => $file ) {
+						$download_list .= '<li>';
+						$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $bundle_item, $price_id );
+						$download_list .= '<a href="' . esc_url( $file_url ) . '">' . $file['name'] . '</a>';
+						$download_list .= '</li>';
+
+						$file_urls .= esc_html( $file_url ) . '<br/>';
+					}
 				}
 			}
 
@@ -396,7 +420,7 @@ function edd_render_receipt_in_browser() {
 <body class="<?php echo apply_filters('edd_receipt_page_body_class', 'edd_receipt_page' ); ?>">
 	<div id="edd_receipt_wrapper">
 		<?php do_action( 'edd_render_receipt_in_browser_before' ); ?>
-		<?php echo do_shortcode('[edd_receipt purchase_key='. $key .']'); ?>
+		<?php echo do_shortcode('[edd_receipt payment_key='. $key .']'); ?>
 		<?php do_action( 'edd_render_receipt_in_browser_after' ); ?>
 	</div>
 <?php wp_footer(); ?>
