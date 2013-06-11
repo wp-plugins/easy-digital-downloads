@@ -214,21 +214,7 @@ function edd_register_settings() {
 				'purchase_receipt' => array(
 					'id' => 'purchase_receipt',
 					'name' => __('Purchase Receipt', 'edd'),
-					'desc' => __('Enter the email that is sent to users after completing a successful purchase. HTML is accepted. Available template tags:', 'edd') . '<br/>' .
-						'{download_list} - ' . __('A list of download links for each download purchased', 'edd') . '<br/>' .
-						'{file_urls} - ' . __('A plain-text list of download URLs for each download purchased', 'edd') . '<br/>' .
-						'{name} - ' . __('The buyer\'s first name', 'edd') . '<br/>' .
-						'{fullname} - ' . __('The buyer\'s full name, first and last', 'edd') . '<br/>' .
-						'{username} - ' . __('The buyer\'s user name on the site, if they registered an account', 'edd') . '<br/>' .
-						'{date} - ' . __('The date of the purchase', 'edd') . '<br/>' .
-						'{subtotal} - ' . __('The price of the purchase before taxes', 'edd') . '<br/>' .
-						'{tax} - ' . __('The taxed amount of the purchase', 'edd') . '<br/>' .
-						'{price} - ' . __('The total price of the purchase', 'edd') . '<br/>' .
-						'{payment_id} - ' . __('The unique ID number for this purchase', 'edd') . '<br/>' .
-						'{receipt_id} - ' . __('The unique ID number for this purchase receipt', 'edd') . '<br/>' .
-						'{payment_method} - ' . __('The method of payment used for this purchase', 'edd') . '<br/>' .
-						'{sitename} - ' . __('Your site name', 'edd') . '<br/>' .
-						'{receipt_link} - ' . __( 'Adds a link so users can view their receipt directly on your website if they are unable to view it in the browser correctly.', 'edd' ),
+					'desc' => edd_get_purchase_receipt_template_tags(),
 					'type' => 'rich_editor'
 				),
 				'admin_notice_emails' => array(
@@ -241,7 +227,7 @@ function edd_register_settings() {
 				'disable_admin_notices' => array(
 					'id' => 'disable_admin_notices',
 					'name' => __( 'Disable Admin Notifications', 'edd' ),
-					'desc' => __( 'Check this box if you do not want to receive emails when no sales are made.', 'edd' ),
+					'desc' => __( 'Check this box if you do not want to receive emails when new sales are made.', 'edd' ),
 					'type' => 'checkbox'
 				)
 			)
@@ -1085,6 +1071,7 @@ function edd_tax_rates_callback($args) {
 			<tr>
 				<th scope="col" class="edd_tax_country"><?php _e( 'Country', 'edd' ); ?></th>
 				<th scope="col" class="edd_tax_state"><?php _e( 'State / Province', 'edd' ); ?></th>
+				<th scope="col" class="edd_tax_global" title="<?php _e( 'Apply rate to whole country, regardless of state / province', 'edd' ); ?>"><?php _e( 'Country Wide', 'edd' ); ?></th>
 				<th scope="col" class="edd_tax_rate"><?php _e( 'Rate', 'edd' ); ?></th>
 				<th scope="col"><?php _e( 'Remove', 'edd' ); ?></th>
 			</tr>
@@ -1103,23 +1090,25 @@ function edd_tax_rates_callback($args) {
 					}
 					?>
 				</td>
+				<td>
+					<input type="checkbox" name="tax_rates[<?php echo $key; ?>][global]" id="tax_rates[<?php echo $key; ?>][global]" value="1"<?php checked( true, ! empty( $rate['global'] ) ); ?>/>
+					<label for="tax_rates[<?php echo $key; ?>][global]"><?php _e( 'Apply to whole country', 'edd' ); ?></a>
+				</td>
 				<td><input type="number" class="small-text" step="0.1" min="0.0" max="99" name="tax_rates[<?php echo $key; ?>][rate]" value="<?php echo $rate['rate']; ?>"/></td>
 				<td><span class="edd_remove_tax_rate button-secondary"><?php _e( 'Remove Rate', 'edd' ); ?></span></td>
 			</tr>
 			<?php endforeach; ?>
 		<?php else : ?>
 			<tr>
-				<td><?php echo EDD()->html->select( edd_get_country_list(), 'tax_rates[0][country]', edd_get_shop_country() ); ?></td>
+				<td><?php echo EDD()->html->select( edd_get_country_list(), 'tax_rates[0][country]', 0 ); ?></td>
 				<td>
-					<?php
-					if( edd_get_shop_states() ) {
-						echo EDD()->html->select( edd_get_shop_states(), 'tax_rates[0][state]' );
-					} else {
-						echo EDD()->html->text( 'tax_rates[0][state]' );
-					}
-					?>
+					<?php echo EDD()->html->text( 'tax_rates[0][state]' ); ?>
 				</td>
 				<td><input type="number" class="small-text" step="0.1" min="0.0" name="tax_rates[0][rate]" value=""/></td>
+				<td>
+					<input type="checkbox" name="tax_rates[0][global]" value="1"/>
+					<label for="tax_rates[0][global]"><?php _e( 'Apply to whole country', 'edd' ); ?></a>
+				</td>
 				<td><span class="edd_remove_tax_rate button-secondary"><?php _e( 'Remove Rate', 'edd' ); ?></span></td>
 			</tr>
 		<?php endif; ?>
@@ -1204,12 +1193,9 @@ function edd_settings_sanitize( $input ) {
  */
 function edd_settings_sanitize_taxes( $input ) {
 
-	$new_rates = array_values( $_POST['tax_rates'] );
+	$new_rates = ! empty( $_POST['tax_rates'] ) ? array_values( $_POST['tax_rates'] ) : array();
 
-	if( ! empty( $new_rates ) ) {
-
-		update_option( 'edd_tax_rates', $new_rates );
-	}
+	update_option( 'edd_tax_rates', $new_rates );
 
 	add_settings_error( 'edd-notices', '', __('Settings Updated', 'edd'), 'updated' );
 	return $input;

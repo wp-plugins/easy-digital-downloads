@@ -501,7 +501,7 @@ function edd_decrease_earnings( $download_id, $amount ) {
 }
 
 /**
- * Retreives the average monthly earnings for a specific download
+ * Retrieves the average monthly earnings for a specific download
  *
  * @since 1.3
  * @param int $download_id Download ID
@@ -522,7 +522,7 @@ function edd_get_average_monthly_download_earnings( $download_id ) {
 }
 
 /**
- * Retreives the average monthly sales for a specific download
+ * Retrieves the average monthly sales for a specific download
  *
  * @since 1.3
  * @param int $download_id Download ID
@@ -565,7 +565,7 @@ function edd_get_download_files( $download_id, $variable_price_id = null ) {
 		if ( ! is_null( $variable_price_id ) ) {
 			foreach ( $download_files as $key => $file_info ) {
 				if ( isset( $file_info['condition'] ) ) {
-					if ( $file_info['condition'] == $variable_price_id || $file_info['condition'] == 'all' ) {
+					if ( $file_info['condition'] == $variable_price_id || $file_info['condition'] === 'all' ) {
 						$files[ $key ] = $file_info;
 					}
 				}

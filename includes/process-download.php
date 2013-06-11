@@ -100,7 +100,6 @@ function edd_process_download() {
 			default:
 
 				$direct    = false;
-				$file_path = realpath( $requested_file );
 
 				if ( strpos( $requested_file, 'http://' ) === false && strpos( $requested_file, 'https://' ) === false && strpos( $requested_file, 'ftp://' ) === false && file_exists( $file_path ) ) {
 
@@ -128,6 +127,8 @@ function edd_process_download() {
 
 				} elseif ( stristr( getenv( 'SERVER_SOFTWARE' ), 'nginx' ) || stristr( getenv( 'SERVER_SOFTWARE' ), 'cherokee' ) ) {
 
+					// We need a path relative to the domain
+					$file_path = str_ireplace( $_SERVER[ 'DOCUMENT_ROOT' ], '', $file_path );
 					header( "X-Accel-Redirect: /$file_path" );
 
 				} elseif( $direct ) {

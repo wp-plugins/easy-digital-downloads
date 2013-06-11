@@ -71,7 +71,7 @@ function edd_get_payments( $args = array() ) {
 			$payment_args['meta_key'] = '_edd_payment_total';
 			break;
 		default :
-			$payment_args['orderby'] = $args['status'];
+			$payment_args['orderby'] = $args['orderby'];
 			break;
 	endswitch;
 
@@ -746,12 +746,6 @@ function edd_payment_amount( $payment_id = 0 ) {
  */
 function edd_get_payment_amount( $payment_id ) {
 	$amount = get_post_meta( $payment_id, '_edd_payment_total', true );
-
-	if ( ! is_numeric( $amount ) ) {
-		$payment_meta = edd_get_payment_meta( $payment_id );
-		$amount       = $payment_meta['amount'];
-	}
-
 	return apply_filters( 'edd_payment_amount', $amount );
 }
 

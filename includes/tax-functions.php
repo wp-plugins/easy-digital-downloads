@@ -56,6 +56,14 @@ function edd_taxes_after_discounts() {
 	return apply_filters( 'edd_taxes_after_discounts', isset( $edd_options['taxes_after_discounts'] ) );
 }
 
+
+/**
+ * Retrieve tax rates
+ *
+ * @since 1.6
+ * @global $edd_options
+ * @return array Defined tax rates
+ */
 function edd_get_tax_rates() {
 
 	$rates = get_option( 'edd_tax_rates', array() );
@@ -89,15 +97,24 @@ function edd_get_tax_rate( $country = false, $state = false ) {
 			// Locate the tax rate for this country / state, if it exists
 			foreach( $tax_rates as $key => $tax_rate ) {
 
+				$whole_country = false;
+
 				if( $country != $tax_rate['country'] )
 					continue;
 
-				if( strtolower( $state ) != strtolower( $tax_rate['state'] ) )
-					continue;
+				if( ! empty( $tax_rate['global'] ) ) {
+					if( ! empty( $tax_rate['rate'] ) ) {
+						$rate = number_format( $tax_rate['rate'], 2 );
+					}
+				} else {
 
-				$state_rate = $tax_rate['rate'];
-				if( ! empty( $state_rate ) ) {
-					$rate = number_format( $state_rate, 2 );
+					if( strtolower( $state ) != strtolower( $tax_rate['state'] ) )
+						continue;
+
+					$state_rate = $tax_rate['rate'];
+					if( ! empty( $state_rate ) ) {
+						$rate = number_format( $state_rate, 2 );
+					}
 				}
 			}
 		}

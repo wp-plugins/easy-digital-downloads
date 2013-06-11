@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.3
 Tested up to: 3.6
 
-Stable Tag: 1.6
+Stable Tag: 1.6.2
 License: GNU Version 2 or Any Later Version
 
 Sell digital downloads through WordPress with this complete digital downloads management plugin
@@ -183,6 +183,26 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 9. Checkout screen
 
 == Changelog ==
+
+= 1.6.2: June 1, 2013 =
+
+* Fix: Positive cart fees overwrote PayPal items after sending purchase to PayPal
+* Fix: Hide tax billing fields if checkout amount is 0.00
+* Fix: Fix equality operator in edd_get_download_files()
+* Fix: X-Accel-Redirect needs relative path but gets absolute
+* Fix: Wrong description for taxes on checkout
+* Fix: Cannot delete all tax rates
+* Fix: Spelling error on option to disable admin notifications
+* Fix: Issue with edd_before/after_download_content hooks being added on pages that are not Downloads
+
+* Tweak: Added minor tax rate option to make tax rate country wide
+* Tweak: Change "Purchase to "Download" on checkout if cart total is 0.00
+
+= 1.6.1: June 1, 2013 =
+
+* Fix: Fatal error for users that had modified the checkout_cart.php template files
+* Fix: Fatal memory error for some users when viewing the File Downloads logs
+* Fix: Warning about urldecode() on some pages, including Dashboard Sales Summary widget
 
 = 1.6: May 31, 2013 =
 
