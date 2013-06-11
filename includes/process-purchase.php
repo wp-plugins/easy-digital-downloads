@@ -25,6 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_process_purchase_form() {
 	// Make sure the cart isn't empty
 	if ( ! edd_get_cart_contents() ) {
+		$valid_data = array();
 		edd_set_error( 'empty_cart', __( 'Your cart is empty', 'edd') );
 	} else {
 		// Validate the form $_POST data
@@ -84,6 +85,12 @@ function edd_process_purchase_form() {
 	// Allow themes and plugins to hook before the gateway
 	do_action( 'edd_checkout_before_gateway', $_POST, $user_info, $valid_data );
 
+	// If the total amount in the cart is 0, send to the manual gateway. This emulates a free download purchase
+	if ( !$purchase_data['price'] ) {
+		// Revert to manual
+		$valid_data['gateway'] = 'manual';
+	}
+
 	// Allow the purchase data to be modified before it is sent to the gateway
 	$purchase_data = apply_filters(
 		'edd_purchase_data_before_gateway',
@@ -91,17 +98,11 @@ function edd_process_purchase_form() {
 		$valid_data
 	);
 
-	// If the total amount in the cart is 0, send to the manaul gateway. This emulates a free download purchase
-	if ( !$purchase_data['price'] ) {
-		// Revert to manual
-		$valid_data['gateway'] = 'manual';
-	}
-
 	// Used for showing download links to non logged-in users after purchase, and for other plugins needing purchase data.
 	edd_set_purchase_session( $purchase_data );
 
 	// Send info to the gateway for payment processing
-	edd_send_to_gateway( $valid_data['gateway'], $purchase_data );
+	edd_send_to_gateway( $purchase_data['gateway'], $purchase_data );
 	edd_die();
 }
 add_action( 'edd_purchase', 'edd_process_purchase_form' );
