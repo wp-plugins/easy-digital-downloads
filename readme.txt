@@ -6,7 +6,6 @@ Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.3
 Tested up to: 3.6
-
 Stable Tag: 1.6.4
 License: GNU Version 2 or Any Later Version
 
