@@ -21,7 +21,11 @@ if ( !defined( 'ABSPATH' ) ) exit;
 function edd_checkout_cart() {
 	do_action( 'edd_before_checkout_cart' );
 	echo '<!--dynamic-cached-content-->';
-	edd_get_template_part( 'checkout_cart' );
+	echo '<form id="edd_checkout_cart_form" method="post">';
+		echo '<div id="edd_checkout_cart_wrap">';
+			edd_get_template_part( 'checkout_cart' );
+		echo '</div>';
+	echo '</form>';
 	echo '<!--/dynamic-cached-content-->';
 	do_action( 'edd_after_checkout_cart' );
 }
@@ -108,7 +112,7 @@ function edd_get_cart_item_template( $cart_key, $item, $ajax = false ) {
 	$item = str_replace( '{remove_url}', $remove_url, $item );
   	$subtotal = '';
   	if ( $ajax ){
-   	 $subtotal = edd_currency_filter( edd_get_cart_amount( false ) ) ;
+   	 $subtotal = edd_currency_filter( edd_format_amount( edd_get_cart_amount( false ) ) ) ;
   	}
  	$item = str_replace( '{subtotal}', $subtotal, $item );
 

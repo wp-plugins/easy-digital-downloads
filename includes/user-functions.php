@@ -78,8 +78,6 @@ function edd_get_users_purchases( $user = 0, $number = 20, $pagination = false, 
  * @return      boolean - true if has purchased, false otherwise
  */
 function edd_has_user_purchased( $user_id, $downloads, $variable_price_id = null ) {
-	if ( ! is_user_logged_in() )
-		return false; // At some point this should support email checking
 
 	$users_purchases = edd_get_users_purchases( $user_id );
 
@@ -312,3 +310,19 @@ function edd_add_past_purchases_to_new_user( $user_id ) {
 
 }
 add_action( 'user_register', 'edd_add_past_purchases_to_new_user' );
+
+
+/**
+ * Counts the total number of customers.
+ *
+ * @access 		public
+ * @since 		1.7
+ * @global object $wpdb Used to query the database using the WordPress
+ *   Database API
+ * @return 		int - The total number of customers.
+ */
+function edd_count_total_customers() {
+	global $wpdb;
+	$count = $wpdb->get_col( "SELECT COUNT(DISTINCT meta_value) FROM $wpdb->postmeta WHERE meta_key = '_edd_payment_user_email'" );
+	return $count[0];
+}
