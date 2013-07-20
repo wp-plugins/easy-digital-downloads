@@ -780,9 +780,9 @@ function edd_get_download_file_url( $key, $email, $filekey, $download_id, $price
 
 	$hours = isset( $edd_options['download_link_expiration'] )
 			&& is_numeric( $edd_options['download_link_expiration'] )
-			? absint($edd_options['download_link_expiration']) : 24;
+			? absint( $edd_options['download_link_expiration'] ) : 24;
 
-	if ( ! ( $date = strtotime( '+' . $hours . 'hours' ) ) )
+	if ( ! ( $date = strtotime( '+' . $hours . 'hours', current_time( 'timestamp') ) ) )
 		$date = 2147472000; // Highest possible date, January 19, 2038
 
 	$params = array(
@@ -813,6 +813,7 @@ function edd_get_download_file_url( $key, $email, $filekey, $download_id, $price
  * @return bool True if payment and link was verified, false otherwise
  */
 function edd_verify_download_link( $download_id = 0, $key = '', $email = '', $expire = '', $file_key = 0 ) {
+
 	$meta_query = array(
 		'relation'  => 'AND',
 		array(
@@ -866,6 +867,8 @@ function edd_verify_download_link( $download_id = 0, $key = '', $email = '', $ex
 
 		}
 
+	} else {
+		wp_die( __( 'No payments matching your request were found.', 'edd' ), __( 'Error', 'edd' ) );
 	}
 	// Payment not verified
 	return false;
@@ -904,6 +907,21 @@ function edd_get_download_sku( $download_id = 0 ) {
 }
 
 /**
+ * get the Download button behavior, either add to cart or direct
+ *
+ * @since 1.7
+ * @param int $download Download ID
+ * @return string $behavior Add to Cart or Direct
+ */
+function edd_get_download_button_behavior( $download_id = 0 ) {
+	$behavior = get_post_meta( $download_id, '_edd_button_behavior', true );
+	if( empty( $behavior ) ) {
+		$behavior = 'add_to_cart';
+	}
+	return apply_filters( 'edd_get_download_button_behavior', $behavior, $download_id );
+}
+
+/**
  * Get the file Download method
  *
  * @since 1.6
@@ -913,4 +931,34 @@ function edd_get_file_download_method() {
 	global $edd_options;
 	$method = isset( $edd_options['download_method'] ) ? $edd_options['download_method'] : 'direct';
 	return apply_filters( 'edd_file_download_method', $method );
+}
+
+/**
+ * Returns a random download
+ *
+ * @since 1.7
+ * @author Chris Christoff
+ * @param bool $post_ids True for array of post ids, false if array of posts
+ */
+function edd_get_random_download( $post_ids = true ) {
+	 edd_get_random_downloads( 1, $post_ids );
+}
+
+/**
+ * Returns random downloads
+ *
+ * @since 1.7
+ * @author Chris Christoff
+ * @param int $num The number of posts to return
+ * @param bool $post_ids True for array of post objects, else array of ids
+ * @return mixed $query Returns an array of id's or an array of post objects
+ */
+function edd_get_random_downloads( $num = 3, $post_ids = true ) {
+	if ( $post_ids ) {
+		$args = array( 'post_type' => 'download', 'orderby' => 'rand', 'post_count' => $num, 'fields' => 'ids' );
+	} else {
+		$args = array( 'post_type' => 'download', 'orderby' => 'rand', 'post_count' => $num );
+	}
+	$args  = apply_filters( 'edd_get_random_downloads', $args );
+	return get_posts( $args );
 }
