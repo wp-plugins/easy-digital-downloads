@@ -67,6 +67,10 @@ function edd_get_purchase_link( $args = array() ) {
 
 	$args = wp_parse_args( $args, $defaults );
 
+	if( 'publish' != get_post_field( 'post_status', $args['download_id'] ) && ! current_user_can( 'edit_product', $args['download_id'] ) ) {
+		return false; // Product not published or user doesn't have permission to view drafts
+	}
+
 	// Override color if color == inherit
 	$args['color'] = ( $args['color'] == 'inherit' ) ? '' : $args['color'];
 
@@ -98,10 +102,6 @@ function edd_get_purchase_link( $args = array() ) {
 	<form id="edd_purchase_<?php echo $args['download_id']; ?>" class="edd_download_purchase_form" method="post">
 
 		<?php do_action( 'edd_purchase_link_top', $args['download_id'] ); ?>
-
-		<?php if( edd_display_tax_rate() ) {
-			echo '<div class="edd_purchase_tax_rate">' . sprintf( __( 'Includes %1$s&#37; tax', 'edd' ), $edd_options['tax_rate'] ) . '</div>';
-		} ?>
 
 		<div class="edd_purchase_submit_wrapper">
 			<?php
@@ -149,7 +149,11 @@ function edd_get_purchase_link( $args = array() ) {
 				</span>
 			<?php endif; ?>
 		</div><!--end .edd_purchase_submit_wrapper-->
-
+		
+		<?php if( edd_display_tax_rate() ) {
+			echo '<div class="edd_purchase_tax_rate">' . sprintf( __( 'Includes %1$s&#37; tax', 'edd' ), $edd_options['tax_rate'] ) . '</div>';
+		} ?>
+		
 		<input type="hidden" name="download_id" value="<?php echo esc_attr( $args['download_id'] ); ?>">
 		<?php if( ! empty( $args['direct'] ) ) { ?>
 			<input type="hidden" name="edd_action" class="edd_action_input" value="straight_to_gateway">
@@ -543,7 +547,9 @@ function edd_get_theme_template_dir_name() {
  * @return bool
  */
 function edd_add_schema_microdata() {
-	return apply_filters( 'edd_add_schema_microdata', true );
+	// Don't modify anything until after wp_head() is callsed
+	$ret = did_action( 'wp_head' );
+	return apply_filters( 'edd_add_schema_microdata', $ret );
 }
 
 /**

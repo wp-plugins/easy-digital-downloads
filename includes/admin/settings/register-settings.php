@@ -327,7 +327,7 @@ function edd_register_settings() {
 				'display_tax_rate' => array(
 					'id' => 'display_tax_rate',
 					'name' => __( 'Display Tax Rate on Prices', 'edd' ),
-					'desc' => __( 'Some contries require a notice when product prices include tax.', 'edd' ),
+					'desc' => __( 'Some countries require a notice when product prices include tax.', 'edd' ),
 					'type' => 'checkbox',
 					'std' => 'no'
 				),
@@ -999,10 +999,15 @@ function edd_missing_callback($args) {
 function edd_select_callback($args) {
 	global $edd_options;
 
+	if ( isset( $edd_options[ $args['id'] ] ) )
+		$value = $edd_options[ $args['id'] ];
+	else
+		$value = isset( $args['std'] ) ? $args['std'] : '';
+
 	$html = '<select id="edd_settings_' . $args['section'] . '[' . $args['id'] . ']" name="edd_settings_' . $args['section'] . '[' . $args['id'] . ']"/>';
 
 	foreach ( $args['options'] as $option => $name ) :
-		$selected = isset( $edd_options[ $args['id'] ] ) ? selected( $option, $edd_options[$args['id']], false ) : '';
+		$selected = selected( $option, $value, false );
 		$html .= '<option value="' . $option . '" ' . $selected . '>' . $name . '</option>';
 	endforeach;
 
