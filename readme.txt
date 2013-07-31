@@ -187,6 +187,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 = 1.7.2: July 30, 2013 =
 
+
 * Fix: Translation error with GB file
 * Fix: Payment method icons not showing with only one payment gateway enabled
 * Fix: HTML being outputted even when no excerpt
