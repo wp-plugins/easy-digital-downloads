@@ -31,7 +31,7 @@ function edd_process_purchase_form() {
 		// Validate the form $_POST data
 		$valid_data = edd_purchase_form_validate_fields();
 
-		// Allow themes and plugins to hoook to errors
+		// Allow themes and plugins to hook to errors
 		do_action( 'edd_checkout_error_checks', $valid_data, $_POST );
 	}
 
@@ -151,7 +151,7 @@ function edd_purchase_form_validate_fields() {
 		// Collect logged in user data
 		$valid_data['logged_in_user'] = edd_purchase_form_validate_logged_in_user();
 	} else if ( isset( $_POST['edd-purchase-var'] ) && $_POST['edd-purchase-var'] == 'needs-to-register' ) {
-	   // Set new user registrarion as required
+	   // Set new user registration as required
 	  $valid_data['need_new_user'] = true;
 
 	   // Validate new user data
@@ -277,10 +277,6 @@ function edd_purchase_form_required_fields() {
 		'edd_first' => array(
 			'error_id' => 'invalid_first_name',
 			'error_message' => __( 'Please enter your first name', 'edd' )
-		),
-		'edd_email' => array(
-			'error_id' => 'invalid_email',
-			'error_message' => __( 'Please enter a valid email address', 'edd' )
 		)
 	);
 	return apply_filters( 'edd_purchase_form_required_fields', $required_fields );
@@ -704,11 +700,13 @@ function edd_get_purchase_cc_info() {
 
 /**
  * Validate zip code based on country code
- *
- * @access		private
  * @since		1.4.4
- * @return		bool
-*/
+ *
+ * @param int    $zip
+ * @param string $country_code
+ *
+ * @return bool|mixed|void
+ */
 function edd_purchase_form_validate_cc_zip( $zip = 0, $country_code = '' ) {
 	$ret = false;
 

@@ -102,14 +102,13 @@ function edd_process_download() {
 
 				$direct       = false;
 				$file_details = parse_url( $requested_file );
+				$schemes      = array( 'http', 'https' ); // Direct URL schemes
 
-				if ( ! isset( $file_details['scheme'] ) && isset( $file_details['path'] ) && file_exists( $requested_file ) ) {
+				if ( ( ! isset( $file_details['scheme'] ) || ! in_array( $file_details['scheme'], $schemes ) ) && isset( $file_details['path'] ) && file_exists( $requested_file ) ) {
 
 					/** This is an absolute path */
 					$direct    = true;
 					$file_path = $requested_file;
-
-
 
 				} else if( strpos( $requested_file, WP_CONTENT_URL ) !== false ) {
 
@@ -119,7 +118,7 @@ function edd_process_download() {
 					$direct     = true;
 
 				}
-
+				/*
 				// Now deliver the file based on the kind of software the server is running / has enabled
 				if ( function_exists( 'apache_get_modules' ) && in_array( 'mod_xsendfile', apache_get_modules() ) ) {
 
@@ -127,7 +126,7 @@ function edd_process_download() {
 
 				} elseif ( stristr( getenv( 'SERVER_SOFTWARE' ), 'lighttpd' ) ) {
 
-					header( "X-Lighttpd-Sendfile: $file_path" );
+					header( "X-LIGHTTPD-send-file: $file_path" );
 
 				} elseif ( stristr( getenv( 'SERVER_SOFTWARE' ), 'nginx' ) || stristr( getenv( 'SERVER_SOFTWARE' ), 'cherokee' ) ) {
 
@@ -135,7 +134,9 @@ function edd_process_download() {
 					$file_path = str_ireplace( $_SERVER[ 'DOCUMENT_ROOT' ], '', $file_path );
 					header( "X-Accel-Redirect: /$file_path" );
 
-				} elseif( $direct ) {
+				} else
+*/
+				if( $direct ) {
 					edd_deliver_download( $file_path );
 				} else {
 					// The file supplied does not have a discoverable absolute path
@@ -547,8 +548,8 @@ function edd_readfile_chunked( $file, $retbytes = TRUE ) {
 	while ( ! feof( $handle ) ) :
 	   $buffer = fread( $handle, $chunksize );
 	   echo $buffer;
-	   ob_flush();
-	   flush();
+	   //ob_flush();
+	   //flush();
 
 	   if ( $retbytes ) $cnt += strlen( $buffer );
 	endwhile;
