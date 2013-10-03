@@ -22,6 +22,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_admin_messages() {
 	global $edd_options;
 
+	if ( isset( $_GET['edd-message'] ) && 'discount_added' == $_GET['edd-message'] && current_user_can( 'manage_shop_discounts' ) ) {
+		 add_settings_error( 'edd-notices', 'edd-discount-added', __( 'Discount code added.', 'edd' ), 'updated' );
+	}
+
+	if ( isset( $_GET['edd-message'] ) && 'discount_add_failed' == $_GET['edd-message'] && current_user_can( 'manage_shop_discounts' ) ) {
+		add_settings_error( 'edd-notices', 'edd-discount-add-fail', __( 'There was a problem adding your discount code, please try again.', 'edd' ), 'error' );
+	}
+
 	if ( isset( $_GET['edd-message'] ) && 'discount_updated' == $_GET['edd-message'] && current_user_can( 'manage_shop_discounts' ) ) {
 		 add_settings_error( 'edd-notices', 'edd-discount-updated', __( 'Discount code updated.', 'edd' ), 'updated' );
 	}
@@ -46,6 +54,18 @@ function edd_admin_messages() {
 		add_settings_error( 'edd-notices', 'set-checkout', sprintf( __( 'No checkout page has been configured. Visit <a href="%s">Settings</a> to set one.', 'edd' ), admin_url( 'edit.php?post_type=download&page=edd-settings' ) ) );
 	}
 
+	if ( isset( $_GET['edd-message'] ) && 'settings-imported' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
+		add_settings_error( 'edd-notices', 'edd-settings-imported', __( 'The settings have been imported.', 'edd' ), 'updated' );
+	}
+
+	if( ! edd_htaccess_exists() && ! get_user_meta( get_current_user_id(), '_edd_htaccess_missing_dismissed', true ) ) {
+		echo '<div class="error">';
+			echo '<p>' . sprintf( __( 'The Easy Digital Downloads .htaccess file is missing from <strong>%s</strong>. Please create a file called ".htaccess", place it in <strong>%s</strong>, and put the following contents inside the file:', 'edd' ), edd_get_upload_dir(), edd_get_upload_dir() ) . '</p>';
+			echo '<p><pre>' . edd_get_htaccess_rules() . '</pre></pre>';
+			echo '<p><a href="' . add_query_arg( array( 'edd_action' => 'dismiss_notices', 'edd_notice' => 'htaccess_missing' ) ) . '">' . __( 'Dismiss Notice', 'edd' ) . '</a></p>';
+		echo '</div>';
+	}
+
 	settings_errors( 'edd-notices' );
 }
 add_action( 'admin_notices', 'edd_admin_messages' );
@@ -60,3 +80,23 @@ function edd_admin_addons_notices() {
 	add_settings_error( 'edd-notices', 'edd-addons-feed-error', __( 'There seems to be an issue with the server. Please try again in a few minutes.', 'edd' ), 'error' );
 	settings_errors( 'edd-notices' );
 }
+
+/**
+ * Dismisses admin notices when Dismiss links are clicked
+ *
+ * @since 1.8
+ * @return void
+*/
+function edd_dismiss_notices() {
+
+	$notice = isset( $_GET['edd_notice'] ) ? $_GET['edd_notice'] : false;
+
+	if( ! $notice )
+		return; // No notice, so get out of here
+
+	update_user_meta( get_current_user_id(), '_edd_' . $notice . '_dismissed', 1 );
+
+	wp_redirect( remove_query_arg( array( 'edd_action', 'edd_notice' ) ) ); exit;
+
+}
+add_action( 'edd_dismiss_notices', 'edd_dismiss_notices' );

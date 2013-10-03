@@ -32,8 +32,8 @@ function edd_print_errors() {
 		) );
 		echo '<div class="' . implode( ' ', $classes ) . '">';
 		    // Loop error codes and display errors
-		   foreach ( $errors as $error_id => $error ){
-		        echo '<p class="edd_error" id="edd_error_' . $error_id . '"><strong>' . __('Error', 'edd') . '</strong>: ' . $error . '</p>';
+		   foreach ( $errors as $error_id => $error ) {
+		        echo '<p class="edd_error" id="edd_error_' . $error_id . '"><strong>' . __( 'Error', 'edd' ) . '</strong>: ' . $error . '</p>';
 		   }
 		echo '</div>';
 		edd_clear_errors();
@@ -129,5 +129,5 @@ function _edd_die_handler() {
 function edd_die() {
 	add_filter( 'wp_die_ajax_handler', '_edd_die_handler', 10, 3 );
 	add_filter( 'wp_die_handler', '_edd_die_handler', 10, 3 );
-	wp_die();
+	wp_die('');
 }

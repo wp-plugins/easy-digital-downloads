@@ -19,10 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  *
  * @access      private
  * @since       1.0
- * @version     1.0.8.1
  * @return      void
  */
 function edd_process_purchase_form() {
+
 	// Make sure the cart isn't empty
 	if ( ! edd_get_cart_contents() ) {
 		$valid_data = array();
@@ -31,7 +31,7 @@ function edd_process_purchase_form() {
 		// Validate the form $_POST data
 		$valid_data = edd_purchase_form_validate_fields();
 
-		// Allow themes and plugins to hoook to errors
+		// Allow themes and plugins to hook to errors
 		do_action( 'edd_checkout_error_checks', $valid_data, $_POST );
 	}
 
@@ -59,7 +59,8 @@ function edd_process_purchase_form() {
 		'email'      => $user['user_email'],
 		'first_name' => $user['user_first'],
 		'last_name'  => $user['user_last'],
-		'discount'   => $valid_data['discount']
+		'discount'   => $valid_data['discount'],
+		'address'    => $user['address']
 	);
 	// Setup purchase information
 	$purchase_data = array(
@@ -88,7 +89,8 @@ function edd_process_purchase_form() {
 	// If the total amount in the cart is 0, send to the manual gateway. This emulates a free download purchase
 	if ( !$purchase_data['price'] ) {
 		// Revert to manual
-		$valid_data['gateway'] = 'manual';
+		$purchase_data['gateway'] = 'manual';
+		$_POST['edd-gateway'] = 'manual';
 	}
 
 	// Allow the purchase data to be modified before it is sent to the gateway
@@ -98,8 +100,14 @@ function edd_process_purchase_form() {
 		$valid_data
 	);
 
+	// Setup the data we're storing in the purchase session
+	$session_data = $purchase_data;
+
+	// Make sure credit card numbers are never stored in sessions
+	unset( $session_data['card_info']['card_number'] );
+
 	// Used for showing download links to non logged-in users after purchase, and for other plugins needing purchase data.
-	edd_set_purchase_session( $purchase_data );
+	edd_set_purchase_session( $session_data );
 
 	// Send info to the gateway for payment processing
 	edd_send_to_gateway( $purchase_data['gateway'], $purchase_data );
@@ -143,7 +151,7 @@ function edd_purchase_form_validate_fields() {
 		// Collect logged in user data
 		$valid_data['logged_in_user'] = edd_purchase_form_validate_logged_in_user();
 	} else if ( isset( $_POST['edd-purchase-var'] ) && $_POST['edd-purchase-var'] == 'needs-to-register' ) {
-	   // Set new user registrarion as required
+	   // Set new user registration as required
 	  $valid_data['need_new_user'] = true;
 
 	   // Validate new user data
@@ -199,33 +207,43 @@ function edd_purchase_form_validate_gateway() {
  * @return      string
  */
 function edd_purchase_form_validate_discounts() {
+
 	// Retrieve the discount stored in cookies
 	$discounts = edd_get_cart_discounts();
+	$user      = isset( $_POST['edd_user_login'] ) ? sanitize_text_field( $_POST['edd_user_login'] ) : sanitize_email( $_POST['edd_email'] );
+	$error     = false;
 
-	// Check for valid discount is present
-	if ( ! empty( $_POST['edd-discount'] ) || $discounts !== false  ) {
-		if( empty( $discounts ) ) {
-			$discount = sanitize_text_field( $_POST['edd-discount'] );
-		} else {
-			// Use the discount stored in the cookies
-			$discount = $discounts[0];
+	// Check for valid discount(s) is present
+	if ( ! empty( $_POST['edd-discount'] ) && empty( $discounts ) ) {
+		// Check for a posted discount
+		$posted_discount = isset( $_POST['edd-discount'] ) ? trim( $_POST['edd-discount'] ) : false;
 
-			// Note: At some point this will support multiple discounts
-		}
-
-		$user = isset( $_POST['edd_user_login'] ) ? sanitize_text_field( $_POST['edd_user_login'] ) : sanitize_email( $_POST['edd_email'] );
-
-		// Check if validates
-		if (  edd_is_discount_valid( $discount, $user ) ) {
-			// Return clean discount
-			return $discount;
-		} else {
-			// Set invalid discount error
-			edd_set_error( 'invalid_discount', __( 'The discount you entered is invalid', 'edd' ) );
+		if ( $posted_discount ) {
+			$discounts   = array();
+			$discounts[] = $posted_discount;
 		}
 	}
-	// Return default value
-	return 'none';
+
+	// If we have discounts, loop through them
+	if( ! empty( $discounts ) ) {
+
+		foreach ( $discounts as $discount ) {
+			// Check if valid
+			if (  ! edd_is_discount_valid( $discount, $user ) ) {
+				// Discount is not valid
+				$error = true;
+			}
+		}
+	} else {
+		// No discounts
+		return 'none';
+	}
+
+	if( $error ) {
+		edd_set_error( 'invalid_discount', __( 'One or more of the discounts you entered is invalid', 'edd' ) );
+	}
+
+	return implode( ', ', $discounts );
 }
 
 /**
@@ -252,6 +270,10 @@ function edd_purchase_form_validate_agree_to_terms() {
 */
 function edd_purchase_form_required_fields() {
 	$required_fields = array(
+		'edd_email' => array(
+			'error_id' => 'invalid_email',
+			'error_message' => __( 'Please enter a valid email address', 'edd' )
+		),
 		'edd_first' => array(
 			'error_id' => 'invalid_first_name',
 			'error_message' => __( 'Please enter your first name', 'edd' )
@@ -280,10 +302,6 @@ function edd_purchase_form_validate_logged_in_user() {
 	if ( $user_ID > 0 ) {
 		// Get the logged in user data
 		$user_data = get_userdata( $user_ID );
-
-		if ( ! is_email( $_POST['edd_email'] ) ) {
-			edd_set_error( 'invalid_email', __( 'Please enter a valid email address', 'edd' ) );
-		}
 
 		// Loop through required fields and show error messages
 		foreach ( edd_purchase_form_required_fields() as $field_name => $value ) {
@@ -614,6 +632,23 @@ function edd_get_purchase_form_user( $valid_data = array() ) {
 		$user['user_last'] = isset( $_POST["edd_last"] ) ? strip_tags( trim( $_POST["edd_last"] ) ) : '';
 	}
 
+	// Get the user's billing address details
+	$user['address'] = array();
+	$user['address']['line1']   = ! empty( $_POST['card_address']    ) ? sanitize_text_field( $_POST['card_address']    ) : false;
+	$user['address']['line2']   = ! empty( $_POST['card_address_2']  ) ? sanitize_text_field( $_POST['card_address_2']  ) : false;
+	$user['address']['city']    = ! empty( $_POST['card_city']       ) ? sanitize_text_field( $_POST['card_city']       ) : false;
+	$user['address']['state']   = ! empty( $_POST['card_state']      ) ? sanitize_text_field( $_POST['card_state']      ) : false;
+	$user['address']['country'] = ! empty( $_POST['billing_country'] ) ? sanitize_text_field( $_POST['billing_country'] ) : false;
+	$user['address']['zip']     = ! empty( $_POST['card_zip']        ) ? sanitize_text_field( $_POST['card_zip']        ) : false;
+
+	if( empty( $user['address']['country'] ) )
+		$user['address'] = false; // Country will always be set if address fields are present
+
+	if( ! empty( $user['user_id'] ) && $user['user_id'] > 0 && ! empty( $user['address'] ) ) {
+		// Store the address in the user's meta so the cart can be pre-populated with it on return purchases
+		update_user_meta( $user['user_id'], '_edd_user_address', $user['address'] );
+	}
+
 	// Return valid user
 	return $user;
 }
@@ -665,11 +700,13 @@ function edd_get_purchase_cc_info() {
 
 /**
  * Validate zip code based on country code
- *
- * @access		private
  * @since		1.4.4
- * @return		bool
-*/
+ *
+ * @param int    $zip
+ * @param string $country_code
+ *
+ * @return bool|mixed|void
+ */
 function edd_purchase_form_validate_cc_zip( $zip = 0, $country_code = '' ) {
 	$ret = false;
 
@@ -834,8 +871,23 @@ function edd_purchase_form_validate_cc_zip( $zip = 0, $country_code = '' ) {
 	    "ZM" => "\d{5}"
     );
 
-	if ( preg_match( "/" . $zip_regex[ $country_code ] . "/i", $zip ) )
+	if ( ! isset ( $zip_regex[ $country_code ] ) || preg_match( "/" . $zip_regex[ $country_code ] . "/i", $zip ) )
 		$ret = true;
 
 	return apply_filters( 'edd_is_zip_valid', $ret, $zip, $country_code );
 }
+
+/**
+ * Process a straight-to-gateway purchase
+ *
+ * @since 1.7
+ * @return void
+ */
+function edd_process_straight_to_gateway( $data ) {
+	$download_id   = $data['download_id'];
+	$options       = isset( $data['edd_options'] ) ? $data['edd_options'] : array();
+	$purchase_data = edd_build_straight_to_gateway_data( $download_id, $options );
+	edd_set_purchase_session( $purchase_data );
+	edd_send_to_gateway( $purchase_data['gateway'], $purchase_data );
+}
+add_action( 'edd_straight_to_gateway', 'edd_process_straight_to_gateway' );
