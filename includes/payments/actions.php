@@ -50,20 +50,7 @@ function edd_complete_purchase( $payment_id, $new_status, $old_status ) {
 
 					edd_record_sale_in_log( $download['id'], $payment_id, $user_info );
 					edd_increase_purchase_count( $download['id'] );
-					$amount = null;
-
-					if ( is_array( $cart_details ) ) {
-						foreach ( $cart_details as $key => $item ) {
-							if ( array_search( $download['id'], $item ) ) {
-								$cart_item_id = $key;
-							}
-						}
-
-						$amount = isset( $download['price'] ) ? $download['price'] : null;
-					}
-
-					$amount = edd_get_download_final_price( $download['id'], $user_info, $amount );
-					edd_increase_earnings( $download['id'], $amount );
+					edd_increase_earnings( $download['id'], $download['price'] );
 
 				}
 
@@ -302,7 +289,7 @@ function edd_trigger_payment_note_deletion( $data ) {
 	if( ! wp_verify_nonce( $data['_wpnonce'], 'edd_delete_payment_note' ) )
 		return;
 
-	$edit_order_url = admin_url( 'edit.php?post_type=download&page=edd-payment-history&edd-action=edit-payment&purchase_id=' . absint( $data['purchase_id'] ) );
+	$edit_order_url = admin_url( 'edit.php?post_type=download&page=edd-payment-history&view=edit-payment&edd-message=payment_note_deleted&purchase_id=' . absint( $data['purchase_id'] ) );
 
 	edd_delete_payment_note( $data['note_id'], $data['purchase_id'] );
 
