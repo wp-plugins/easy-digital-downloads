@@ -70,26 +70,42 @@ function edd_get_tax_rates() {
 	return apply_filters( 'edd_get_tax_rates', $rates );
 }
 
-
 /**
  * Get taxation rate
  *
  * @since 1.3.3
  * @global $edd_options
- * @return float $trate Taxation rate
+ *
+ * @param bool $country
+ * @param bool $state
+ * @return mixed|void
  */
 function edd_get_tax_rate( $country = false, $state = false ) {
 	global $edd_options;
 
 	$rate = isset( $edd_options['tax_rate'] ) ? (float) $edd_options['tax_rate'] : 0;
 
-	if( empty( $country ) )
-		$country = isset( $_POST['country'] ) ? $_POST['country'] : edd_get_shop_country();
+	$user_address = edd_get_customer_address();
 
-	if( empty( $state ) )
-		$state = isset( $_POST['state'] ) ? $_POST['state'] : edd_get_shop_state();
+	if( empty( $country ) ) {
+		if( ! empty( $_POST['country'] ) ) {
+			$country = $_POST['country'];
+		} elseif( is_user_logged_in() && ! empty( $user_address ) ) {
+			$country = $user_address['country'];
+		}
+		$country = ! empty( $country ) ? $country : edd_get_shop_country();
+	}
 
-	if( ! empty( $country ) && ! empty( $state ) ) {
+	if( empty( $state ) ) {
+		if( ! empty( $_POST['state'] ) ) {
+			$state = $_POST['state'];
+		} elseif( is_user_logged_in() && ! empty( $user_address ) ) {
+			$state = $user_address['state'];
+		}
+		$state = ! empty( $state ) ? $state : edd_get_shop_state();
+	}
+
+	if( ! empty( $country ) ) {
 		$tax_rates   = edd_get_tax_rates();
 
 		if( ! empty( $tax_rates ) ) {
@@ -97,14 +113,12 @@ function edd_get_tax_rate( $country = false, $state = false ) {
 			// Locate the tax rate for this country / state, if it exists
 			foreach( $tax_rates as $key => $tax_rate ) {
 
-				$whole_country = false;
-
 				if( $country != $tax_rate['country'] )
 					continue;
 
 				if( ! empty( $tax_rate['global'] ) ) {
 					if( ! empty( $tax_rate['rate'] ) ) {
-						$rate = number_format( $tax_rate['rate'], 2 );
+						$rate = number_format( $tax_rate['rate'], 4 );
 					}
 				} else {
 
@@ -113,7 +127,7 @@ function edd_get_tax_rate( $country = false, $state = false ) {
 
 					$state_rate = $tax_rate['rate'];
 					if( ! empty( $state_rate ) ) {
-						$rate = number_format( $state_rate, 2 );
+						$rate = number_format( $state_rate, 4 );
 					}
 				}
 			}
@@ -138,24 +152,26 @@ function edd_calculate_tax( $amount, $sum = true, $country = false, $state = fal
 	global $edd_options;
 
 	// Not using taxes
-	if ( ! edd_use_taxes() ) return $amount;
-
-	$rate = edd_get_tax_rate( $country, $state );
-	$tax = 0.00;
-	$prices_include_tax = edd_prices_include_tax();
-
-	if ( $prices_include_tax ) {
-		$tax = $amount - ( $amount / ( $rate + 1 ) );
-	} else {
-		$tax = $amount * $rate;
+	if ( ! edd_use_taxes() ) {
+		return $amount;
 	}
+	$rate = edd_get_tax_rate( $country, $state );
+	$tax  = 0.00;
 
 	if ( $sum ) {
 
-		if ( $prices_include_tax ) {
-			$tax = $amount - $tax;
+		if ( edd_prices_include_tax() ) {
+			$tax = $amount - ( ( $amount / ( 1 + $rate ) ) * $rate );
 		} else {
-			$tax = $amount + $tax;
+			$tax = $amount + ( $amount * $rate );
+		}
+
+	} else {
+
+		if ( edd_prices_include_tax() ) {
+			$tax = ( $amount / ( 1 + $rate ) ) * $rate;
+		} else {
+			$tax = $amount * $rate;
 		}
 
 	}
@@ -248,6 +264,24 @@ function edd_prices_include_tax() {
  */
 function edd_is_cart_taxed() {
 	return edd_use_taxes();
+}
+
+
+/**
+ * Check to see if we should show included taxes
+ *
+ * Some countries (notably in the EU) require included taxes to be displayed.
+ *
+ * @since 1.7
+ * @author Daniel J Griffiths
+ * @return bool
+ */
+function edd_display_tax_rate() {
+	global $edd_options;
+
+	$ret = edd_use_taxes() && isset( $edd_options['display_tax_rate'] );
+
+	return apply_filters( 'edd_display_tax_rate', $ret );
 }
 
 
