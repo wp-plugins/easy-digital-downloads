@@ -362,7 +362,7 @@ function edd_get_cart_item_price_id( $item = array() ) {
 function edd_get_cart_item_price_name( $item = array() ) {
 	$price_id = (int) edd_get_cart_item_price_id( $item );
 	$prices   = edd_get_variable_prices( $item['id'] );
-	$name     = $prices[ $price_id ]['name'];
+	$name     = !empty( $prices ) ? $prices[ $price_id ]['name'] : '';
 	return apply_filters( 'edd_get_cart_item_price_name', $name, $item['id'], $price_id, $item );
 }
 
@@ -383,7 +383,7 @@ function edd_cart_subtotal() {
 
 	if ( edd_is_cart_taxed() ) {
 		if ( edd_prices_show_tax_on_checkout() ) {
-			$price .= '<br/><span style="font-weight:normal;text-transform:none;">' . __( '(inc. tax)', 'edd' ) . '</span>';
+			$price .= '<br/><span style="font-weight:normal;text-transform:none;">' . __( '(excl. tax)', 'edd' ) . '</span>';
 		}
 	}
 
