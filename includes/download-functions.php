@@ -587,7 +587,7 @@ function edd_get_average_monthly_download_sales( $download_id ) {
  * @param int $variable_price_id Variable pricing option ID
  * @return array $files Download files
  */
-function edd_get_download_files( $download_id, $variable_price_id = null ) {
+function edd_get_download_files( $download_id = 0, $variable_price_id = null ) {
 	$files = array();
 
 	// Bundled products are not allowed to have files
@@ -610,7 +610,7 @@ function edd_get_download_files( $download_id, $variable_price_id = null ) {
 		}
 	}
 
-	return $files;
+	return apply_filters( 'edd_download_files', $files, $download_id, $variable_price_id );
 }
 
 /**
@@ -826,7 +826,7 @@ function edd_get_download_file_url( $key, $email, $filekey, $download_id, $price
 		'email' 		=> rawurlencode( $email ),
 		'file' 			=> $filekey,
 		'price_id'      => (int) $price_id,
-		'download' 		=> $download_id,
+		'download_id' 	=> $download_id,
 		'expire' 		=> rawurlencode( base64_encode( $date ) )
 	);
 
@@ -871,7 +871,9 @@ function edd_verify_download_link( $download_id = 0, $key = '', $email = '', $ex
 
 			$cart_details = edd_get_payment_meta_cart_details( $payment->ID, true );
 
-			if ( $payment->post_status != 'publish' && $payment->post_status != 'complete' )
+			$accepted_stati = apply_filters( 'edd_allowed_download_stati', array( 'publish', 'complete' ) );
+
+			if ( ! in_array( $payment->post_status, $accepted_stati ) )
 				return false;
 
 			if ( ! empty( $cart_details ) ) {

@@ -374,7 +374,7 @@ function edd_get_sale_notification_body_content( $payment_id = 0, $payment_data 
 	$default_email_body .= __( 'Payment Method: ', 'edd' ) . " " . $gateway . "\n\n";
 	$default_email_body .= __( 'Thank you', 'edd' );
 
-	$email = isset( $edd_options['sale_notification'] ) ? $edd_options['sale_notification'] : $default_email_body;
+	$email = isset( $edd_options['sale_notification'] ) ? stripslashes( $edd_options['sale_notification'] ) : $default_email_body;
 
 	$email_body = nl2br( edd_email_template_tags( $email, $payment_data, $payment_id, true ) );
 
@@ -444,7 +444,7 @@ add_filter( 'edd_purchase_receipt', 'edd_apply_email_template', 20, 3 );
  */
 function edd_default_email_template() {
 	echo '<div style="margin: 0; background-color: #fafafa; width: auto; padding: 30px;"><center>';
-		echo '<div style="border: 1px solid #ddd; width: 550px; background: #f0f0f0; padding: 8px; margin: 0;">';
+		echo '<div style="border: 1px solid #ddd; width: 660px; background: #f0f0f0; padding: 8px; margin: 0;">';
 			echo '<div id="edd-email-content" style="background: #fff; border: 1px solid #ddd; padding: 15px; text-align: left !important;">';
 				echo '{email}'; // This tag is required in order for the contents of the email to be shown
 			echo '</div>';

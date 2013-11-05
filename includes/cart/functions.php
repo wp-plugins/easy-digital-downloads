@@ -64,15 +64,22 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 
 	$to_add = array();
 
+	if( isset( $options['quantity'] ) ) {
+		$quantity = absint( $options['quantity'] );
+		unset( $options['quantity'] );
+	} else {
+		$quantity = 1;
+	}
+
 	if ( isset( $options['price_id'] ) && is_array( $options['price_id'] ) ) {
 		// Process multiple price options at once
 		foreach ( $options['price_id'] as $price ) {
 			$price_options = array( 'price_id' => $price );
-			$to_add[] = apply_filters( 'edd_add_to_cart_item', array( 'id' => $download_id, 'options' => $price_options, 'quantity' => 1 ) );
+			$to_add[] = apply_filters( 'edd_add_to_cart_item', array( 'id' => $download_id, 'options' => $price_options, 'quantity' => $quantity ) );
 		}
 	} else {
 		// Add a single item
-		$to_add[] = apply_filters( 'edd_add_to_cart_item', array( 'id' => $download_id, 'options' => $options, 'quantity' => 1 ) );
+		$to_add[] = apply_filters( 'edd_add_to_cart_item', array( 'id' => $download_id, 'options' => $options, 'quantity' => $quantity ) );
 	}
 
 	if ( is_array( $cart ) ) {
@@ -383,7 +390,7 @@ function edd_cart_subtotal() {
 
 	if ( edd_is_cart_taxed() ) {
 		if ( edd_prices_show_tax_on_checkout() ) {
-			$price .= '<br/><span style="font-weight:normal;text-transform:none;">' . __( '(excl. tax)', 'edd' ) . '</span>';
+			$price .= '<span class="edd_cart_subtotal_tax_text" style="font-weight:normal;text-transform:none;">' . __( '(excl. tax)', 'edd' ) . '</span>';
 		}
 	}
 
