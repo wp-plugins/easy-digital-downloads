@@ -24,9 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_payment_history_page() {
 	global $edd_options;
 
-	if ( isset( $_GET['edd-action'] ) && 'edit-payment' == $_GET['edd-action'] ) {
+	if ( isset( $_GET['view'] ) && 'edit-payment' == $_GET['view'] ) {
 		require_once EDD_PLUGIN_DIR . 'includes/admin/payments/edit-payment.php';
-	} elseif ( isset( $_GET['edd-action'] ) && 'view-order-details' == $_GET['edd-action'] ) {
+	} elseif ( isset( $_GET['view'] ) && 'view-order-details' == $_GET['view'] ) {
 		require_once EDD_PLUGIN_DIR . 'includes/admin/payments/view-order-details.php';
 	} else {
 		require_once EDD_PLUGIN_DIR . 'includes/admin/payments/class-payments-table.php';
@@ -64,6 +64,9 @@ function edd_payment_history_page() {
  * Payment History admin titles
  *
  * @since 1.6
+ *
+ * @param $admin_title
+ * @param $title
  * @return string
  */
 function edd_view_order_details_title( $admin_title, $title ) {
@@ -89,3 +92,28 @@ function edd_view_order_details_title( $admin_title, $title ) {
 	return $title;
 }
 add_filter( 'admin_title', 'edd_view_order_details_title', 10, 2 );
+
+/**
+ * Intercept default Edit post links for EDD payments and rewrite them to the View Order Details screen
+ *
+ * @since 1.8.3
+ *
+ * @param $url
+ * @param $post_id
+ * @param $context
+ * @return string
+ */
+function edd_override_edit_post_for_payment_link( $url, $post_id = 0, $context ) {
+
+	$post = get_post( $post_id );
+	if( ! $post )
+		return $url;
+
+	if( 'edd_payment' != $post->post_type )
+		return $url;
+
+	$url = admin_url( 'edit.php?post_type=download&page=edd-payment-history&view=view-order-details&id=' . $post_id );
+
+	return $url;
+}
+add_filter( 'get_edit_post_link', 'edd_override_edit_post_for_payment_link', 10, 3 );
