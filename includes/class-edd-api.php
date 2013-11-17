@@ -174,23 +174,28 @@ class EDD_API {
 
 		$this->override = false;
 
-		// Make sure we have both user and api key
-		if ( empty( $wp_query->query_vars['token'] ) || empty( $wp_query->query_vars['key'] ) )
-			$this->missing_auth();
+        // Make sure we have both user and api key
+		if ( ! empty( $wp_query->query_vars['edd-api'] ) && ( $wp_query->query_vars['edd-api'] != 'products' || ! empty( $wp_query->query_vars['token'] ) ) ) {
+			if ( empty( $wp_query->query_vars['token'] ) || empty( $wp_query->query_vars['key'] ) )
+				$this->missing_auth();
 
-		// Retrieve the user by public API key and ensure they exist
-		if ( ! ( $user = $this->get_user( $wp_query->query_vars['key'] ) ) ) :
-			$this->invalid_key();
-		else :
-			$token  = urldecode( $wp_query->query_vars['token'] );
-			$secret = get_user_meta( $user, 'edd_user_secret_key', true );
-			$public = urldecode( $wp_query->query_vars['key'] );
+			// Retrieve the user by public API key and ensure they exist
+			if ( ! ( $user = $this->get_user( $wp_query->query_vars['key'] ) ) ) :
+				$this->invalid_key();
+			else :
+				$token  = urldecode( $wp_query->query_vars['token'] );
+				$secret = get_user_meta( $user, 'edd_user_secret_key', true );
+				$public = urldecode( $wp_query->query_vars['key'] );
 
-			if ( hash( 'md5', $secret . $public ) === $token )
-				$this->is_valid_request = true;
-			else
-				$this->invalid_auth();
-		endif;
+				if ( hash( 'md5', $secret . $public ) === $token )
+					$this->is_valid_request = true;
+				else
+					$this->invalid_auth();
+			endif;
+		} elseif ( !empty( $wp_query->query_vars['edd-api'] ) && $wp_query->query_vars['edd-api'] == 'products' ) {
+			$this->is_valid_request = true;
+			$wp_query->set( 'key', 'public' );
+		}
 	}
 
 	/**
@@ -1289,7 +1294,7 @@ class EDD_API {
 	function user_key_field( $user ) {
 		global $edd_options;
 
-		if ( ( isset( $edd_options['api_allow_user_keys'] ) || current_user_can( 'manage_shop_settings' ) ) && current_user_can( 'view_shop_reports' ) ) {
+		if ( ( isset( $edd_options['api_allow_user_keys'] ) || current_user_can( 'manage_shop_settings' ) ) && current_user_can( 'edit_user', $user->ID ) ) {
 			$user = get_userdata( $user->ID );
 			?>
 			<table class="form-table">
