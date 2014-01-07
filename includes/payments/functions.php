@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Payments
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -18,143 +18,28 @@ if ( !defined( 'ABSPATH' ) ) exit;
  * Retrieve payments from the database.
  *
  * Since 1.2, this function takes an array of arguments, instead of individual
- * parameters. All of the original paremeters remain, but can be passed in any
+ * parameters. All of the original parameters remain, but can be passed in any
  * order via the array.
  *
  * $offset = 0, $number = 20, $mode = 'live', $orderby = 'ID', $order = 'DESC',
  * $user = null, $status = 'any', $meta_key = null
+ *
+ * As of EDD 1.8 this simply wraps EDD_Payments_Query
  *
  * @since 1.0
  * @param array $args Arguments passed to get payments
  * @return object $payments Payments retrieved from the database
  */
 function edd_get_payments( $args = array() ) {
-	$defaults = array(
-		'number'   => 20,
-		'page'     => null,
-		'mode'     => 'live',
-		'orderby'  => 'ID',
-		'order'    => 'DESC',
-		'user'     => null,
-		'status'   => 'any',
-		'meta_key' => null,
-		'year'     => null,
-		'month'    => null,
-		'day'      => null,
-		's'        => null,
-		'children' => false,
-		'fields'   => null
-	);
 
-	$args = wp_parse_args( $args, $defaults );
-
-	$payment_args = array(
-		'post_type'      => 'edd_payment',
-		'paged'          => $args['page'],
-		'order'          => $args['order'],
-		'orderby'        => $args['orderby'],
-		'post_status'    => $args['status'],
-		'year'           => $args['year'],
-		'monthnum'       => $args['month'],
-		'day'            => $args['day'],
-		'fields'         => $args['fields']
-	);
-
-	if( $args['number'] == -1 )
-		$payment_args['nopaging'] = true;
-	else
-		$payment_args['posts_per_page'] = $args['number'];
-
-	switch ( $args['orderby'] ) :
-		case 'amount' :
-			$payment_args['orderby']  = 'meta_value_num';
-			$payment_args['meta_key'] = '_edd_payment_total';
-			break;
-		default :
-			$payment_args['orderby'] = $args['orderby'];
-			break;
-	endswitch;
-
-	if ( ! $args['children'] )
-		$payment_args['post_parent'] = 0; // Only get top level payments
-
-	if ( ! is_null( $args['meta_key'] ) )
-		$payment_args['meta_key'] = $args['meta_key'];
-
-	if ( ! is_null( $args['user'] ) ) {
-		if ( is_numeric( $args['user'] ) ) {
-			$user_key = '_edd_payment_user_id';
-		} else {
-			$user_key = '_edd_payment_user_email';
-		}
-		$payment_args['meta_query'] = array(
-			array(
-				'key'   => $user_key,
-				'value' => $args['user']
-			)
-		);
+	// Fallback to post objects to ensure backwards compatibility
+	if( ! isset( $args['output'] ) ) {
+		$args['output'] = 'posts';
 	}
 
-	$search = trim( $args['s'] );
-
-	if ( is_email( $search ) || strlen( $search ) == 32 ) {
-		// This is a purchase key search
-		$key = is_email( $search ) ? '_edd_payment_user_email' : '_edd_payment_purchase_key';
-
-		$search_meta = array(
-			'key'   => $key,
-			'value' => $search
-		);
-
-		if ( isset( $payment_args['meta_query'] ) ) {
-			$payment_args['meta_query'][1] = $search_meta;
-		} else {
-			// Create a new meta query
-			$payment_args['meta_query'] = array( $search_meta );
-		}
-	} elseif ( is_numeric( $search ) ) {
-		// Searching for payments by user ID
-		$search_meta = array(
-			'key'   => '_edd_payment_user_id',
-			'value' => $search
-		);
-
-		if ( isset( $payment_args['meta_query'] ) ) {
-			$payment_args['meta_query'][1] = $search_meta;
-		} else {
-			// Create a new meta query
-			$payment_args['meta_query'] = array( $search_meta );
-		}
-	} else {
-		$payment_args['s'] = $search;
-	}
-
-	if ( $args['mode'] != 'all' ) {
-		if ( isset( $payment_args['meta_query'] ) ) {
-
-			// Append to the user meta query
-			$payment_args['meta_query'][2] = array(
-				'key'   => '_edd_payment_mode',
-				'value' => $args['mode']
-			);
-		} else {
-			// Create a new meta query
-			$payment_args['meta_query'] = array(
-				array(
-					'key'   => '_edd_payment_mode',
-					'value' => $args['mode']
-				)
-			);
-		}
-	}
-
-	$payment_args = apply_filters( 'edd_get_payments_args', $payment_args );
-	$payments     = new WP_Query;
-	if ( $payments ) {
-		return $payments->query( $payment_args );
-	}
-
-	return false;
+	$args     = apply_filters( 'edd_get_payments_args', $args );
+	$payments = new EDD_Payments_Query( $args );
+	return $payments->get_payments();
 }
 
 /**
@@ -162,7 +47,7 @@ function edd_get_payments( $args = array() ) {
  *
  * @since 1.0
  * @param array $payment_data
- * @return bool true if payment is inserted, false otherwise
+ * @return int|bool Payment ID if payment is inserted, false otherwise
  */
 function edd_insert_payment( $payment_data = array() ) {
 	if ( empty( $payment_data ) )
@@ -196,16 +81,26 @@ function edd_insert_payment( $payment_data = array() ) {
 	$payment = wp_insert_post( $args );
 
 	if ( $payment ) {
+
+		$taxes    = wp_list_pluck( $payment_data['cart_details'], 'tax' );
+		$cart_tax = array_sum( $taxes );
+
 		$payment_meta = array(
 			'currency'     => $payment_data['currency'],
 			'downloads'    => serialize( $payment_data['downloads'] ),
 			'user_info'    => serialize( $payment_data['user_info'] ),
 			'cart_details' => serialize( $payment_data['cart_details'] ),
-			'tax'          => edd_is_cart_taxed() ? edd_get_cart_tax() : 0,
+			'tax'          => $cart_tax,
 		);
 
 		$mode    = edd_is_test_mode() ? 'test' : 'live';
-		$gateway = isset( $_POST['edd-gateway'] ) ? $_POST['edd-gateway'] : '';
+		$gateway = ! empty( $payment_data['gateway'] ) ? $payment_data['gateway'] : '';
+		$gateway = empty( $gateway ) && isset( $_POST['edd-gateway'] ) ? $_POST['edd-gateway'] : $gateway;
+
+		if( ! $payment_data['price'] ) {
+			// Ensures the _edd_payment_total meta key is created for purchases with an amount of 0
+			$payment_data['price'] = '0.00';
+		}
 
 		// Record the payment details
 		update_post_meta( $payment, '_edd_payment_meta',         apply_filters( 'edd_payment_meta', $payment_meta, $payment_data ) );
@@ -283,6 +178,16 @@ function edd_delete_purchase( $payment_id = 0 ) {
 		}
 	}
 
+	$amount = edd_get_payment_amount( $payment_id );
+	$status = get_post( $payment_id )->post_status;
+
+	if( $status == 'revoked' || $status == 'publish' ) {
+		// Only decrease earnings if they haven't already been decreased (or were never increased for this payment)
+		edd_decrease_total_earnings( $amount );
+		// Clear the This Month earnings (this_monththis_month is NOT a typo)
+		delete_transient( md5( 'edd_earnings_this_monththis_month' ) );
+	}
+
 	do_action( 'edd_payment_delete', $payment_id );
 
 	// Remove the payment
@@ -313,28 +218,138 @@ function edd_delete_purchase( $payment_id = 0 ) {
  * @return void
  */
 function edd_undo_purchase( $download_id, $payment_id ) {
+	if ( edd_is_test_mode() )
+        return;
+ 
 	$payment = get_post( $payment_id );
-
-	$status  = $payment->post_status;
-
-	if ( $status != 'publish' )
-		return; // Payment has already been reversed, or was never completed
-
-	edd_decrease_purchase_count( $download_id );
-	$purchase_meta      = edd_get_payment_meta( $payment_id );
-	$user_purchase_info = maybe_unserialize( $purchase_meta['user_info'] );
-	$cart_details       = maybe_unserialize( $purchase_meta['cart_details'] );
-	$amount             = null;
-
+	$cart_details = edd_get_payment_meta_cart_details( $payment_id );
+ 
 	if ( is_array( $cart_details ) ) {
-		$cart_item_id   = array_search( $download_id, $cart_details );
-		$amount         = isset( $cart_details[$cart_item_id]['price'] ) ? $cart_details[$cart_item_id]['price'] : null;
+		foreach ( $cart_details as $item ) {
+			// Decrease earnings/sales and fire action once per quantity number
+			for( $i = 0; $i < $item['quantity']; $i++ ) {
+				$user_info = edd_get_payment_meta_user_info( $payment_id );
+
+				// get the item's price
+ 				$amount = isset( $item['price'] ) ? $item['price'] : false;
+
+ 				// variable priced downloads
+				if ( edd_has_variable_prices( $download_id ) ) {
+					$price_id 	= isset( $item['item_number']['options']['price_id'] ) ? $item['item_number']['options']['price_id'] : null;
+					$amount 	= ! isset( $item['price'] ) && 0 !== $item['price'] ? edd_get_price_option_amount( $download_id, $price_id ) : $item['price'];
+				}
+ 				
+ 				if ( ! $amount ) {
+ 					// This function is only used on payments with near 1.0 cart data structure
+ 					$amount = edd_get_download_final_price( $download_id, $user_info, $amount );
+ 				}
+				
+				// decrease earnings
+				edd_decrease_earnings( $download_id, $amount );
+
+				// decrease purchase count
+				edd_decrease_purchase_count( $download_id );
+			}
+		}
+	}
+}
+
+
+/**
+ * Count Payments
+ *
+ * Returns the total number of payments recorded.
+ *
+ * @since 1.0
+ * @param array $args
+ * @return array $count Number of payments sorted by payment status
+ */
+function edd_count_payments( $args = array() ) {
+
+	global $wpdb;
+
+	$defaults = array(
+		'user' => null,
+		's'    => null
+	);
+
+	$args = wp_parse_args( $args, $defaults );
+
+	$join = '';
+	$where = "WHERE p.post_type = 'edd_payment'";
+
+	// Count payments for a specific user
+	if( ! empty( $args['user'] ) ) {
+
+		if( is_email( $args['user'] ) )
+			$field = 'email';
+		elseif( is_numeric( $args['user'] ) )
+			$field = 'id';
+
+		$join = "LEFT JOIN $wpdb->postmeta m ON (p.ID = m.post_id)";
+		$where .= "
+			AND m.meta_key = '_edd_payment_user_{$field}'
+			AND m.meta_value = '{$args['user']}'";
+
+	// Count payments for a search
+	} elseif( ! empty( $args['s'] ) ) {
+
+		if ( is_email( $args['s'] ) || strlen( $args['s'] ) == 32 ) {
+
+			if( is_email( $args['s'] ) )
+				$field = '_edd_payment_user_email';
+			else
+				$field = '_edd_payment_purchase_key';
+
+
+			$join = "LEFT JOIN $wpdb->postmeta m ON (p.ID = m.post_id)";
+			$where .= "
+				AND m.meta_key = '{$field}'
+				AND m.meta_value = '{$args['s']}'";
+
+		} elseif ( is_numeric( $args['s'] ) ) {
+
+			$join = "LEFT JOIN $wpdb->postmeta m ON (p.ID = m.post_id)";
+			$where .= "
+				AND m.meta_key = '_edd_payment_user_id'
+				AND m.meta_value = '{$args['s']}'";
+
+		} else {
+			$where .= "AND ((p.post_title LIKE '%{$args['s']}%') OR (p.post_content LIKE '%{$args['s']}%'))";
+		}
+
 	}
 
-	$amount = edd_get_download_final_price( $download_id, $user_purchase_info, $amount );
+	$where = apply_filters( 'edd_count_payments_where', $where );
 
-	edd_decrease_earnings( $download_id, $amount );
+	$cache_key = md5( implode( '|', $args ) . $where );
+
+	$query = "SELECT p.post_status,count( * ) AS num_posts
+		FROM $wpdb->posts p
+		$join
+		$where
+		GROUP BY p.post_status
+	";
+
+	$count = wp_cache_get( $cache_key, 'counts');
+	if ( false !== $count )
+		return $count;
+
+	$count = $wpdb->get_results( $query, ARRAY_A );
+
+	$stats = array();
+	foreach ( get_post_stati() as $state )
+		$stats[$state] = 0;
+
+	foreach ( (array) $count as $row )
+		$stats[$row['post_status']] = $row['num_posts'];
+
+	$stats = (object) $stats;
+	wp_cache_set( $cache_key, $stats, 'counts' );
+
+	return $stats;
 }
+
 
 /**
  * Check For Existing Payment
@@ -357,11 +372,13 @@ function edd_check_for_existing_payment( $payment_id ) {
  * Get Payment Status
  *
  * @since 1.0
- * @param obj $payment Payment Object
- * @param bool $return_label Whether to return the payment status or not
- * @return mixed string if payment status exists, false otherwise
+ *
+ * @param WP_Post $payment
+ * @param bool   $return_label Whether to return the payment status or not
+ *
+ * @return bool|mixed if payment status exists, false otherwise
  */
-function edd_get_payment_status( $payment = OBJECT, $return_label = false ) {
+function edd_get_payment_status( $payment, $return_label = false ) {
 	if ( ! is_object( $payment ) || !isset( $payment->post_status ) )
 		return false;
 
@@ -410,6 +427,9 @@ function edd_get_payment_statuses() {
  * @return int $earnings Earnings
  */
 function edd_get_earnings_by_date( $day = null, $month_num, $year = null, $hour = null ) {
+
+	// This is getting deprecated soon. Use EDD_Payment_Stats with the get_earnings() method instead
+
 	$args = array(
 		'post_type'      => 'edd_payment',
 		'nopaging'       => true,
@@ -429,7 +449,6 @@ function edd_get_earnings_by_date( $day = null, $month_num, $year = null, $hour 
 
 	$args     = apply_filters( 'edd_get_earnings_by_date_args', $args );
 	$key      = md5( serialize( $args ) );
-	delete_transient( $key );
 	$earnings = get_transient( $key );
 
 	if( false === $earnings ) {
@@ -460,6 +479,9 @@ function edd_get_earnings_by_date( $day = null, $month_num, $year = null, $hour 
  * @return int $count Sales
  */
 function edd_get_sales_by_date( $day = null, $month_num = null, $year = null, $hour = null ) {
+
+	// This is getting deprecated soon. Use EDD_Payment_Stats with the get_sales() method instead
+
 	$args = array(
 		'post_type'      => 'edd_payment',
 		'nopaging'       => true,
@@ -503,10 +525,11 @@ function edd_get_sales_by_date( $day = null, $month_num = null, $year = null, $h
  */
 function edd_is_payment_complete( $payment_id ) {
 	$payment = get_post( $payment_id );
-	if ( $payment )
-		if ( $payment->post_status == 'publish' )
-			return true;
-	return false;
+	$ret = false;
+	if ( $payment && $payment->post_status == 'publish' ) {
+		$ret = true;
+	}
+	return apply_filters( 'edd_is_payment_complete', $ret, $payment_id, $payment->post_status );
 }
 
 /**
@@ -516,27 +539,9 @@ function edd_is_payment_complete( $payment_id ) {
  * @return int $count Total sales
  */
 function edd_get_total_sales() {
-	$args = apply_filters( 'edd_get_total_sales_args', array(
-		'post_type'              => 'edd_payment',
-		'nopaging'               => true,
-		'meta_key'               => '_edd_payment_mode',
-		'meta_value'             => 'live',
-		'fields'                 => 'ids',
-		'post_status'            => array( 'publish', 'revoked' ),
-		'update_post_meta_cache' => false,
-		'update_post_term_cache' => false
-	) );
 
-	$key   = md5( serialize( $args ) );
-	$count = get_transient( $key );
-
-	if ( false === $count ) {
-		$sales = new WP_Query( $args );
-		$count = (int) $sales->post_count;
-		set_transient( $key, $count, 60 * 60 );
-
-	}
-	return $count;
+	$payments = edd_count_payments();
+	return $payments->revoked + $payments->publish;
 }
 
 /**
@@ -547,31 +552,90 @@ function edd_get_total_sales() {
  */
 function edd_get_total_earnings() {
 
-	$total = get_transient( 'edd_earnings_total' );
+	$total = get_option( 'edd_earnings_total', 0 );
+	// If no total stored in DB, use old method of calculating total earnings
+	if( ! $total ) {
 
-	if( false === $total ) {
+		$total = get_transient( 'edd_earnings_total' );
 
-		$total = (float) 0;
+		if( false === $total ) {
 
-		$args = apply_filters( 'edd_get_total_earnings_args', array(
-			'offset' => 0,
-			'number' => -1,
-			'mode'   => 'live',
-			'status' => array( 'publish', 'revoked' ),
-			'fields' => 'ids'
-		) );
+			$total = (float) 0;
 
-		$payments = edd_get_payments( $args );
-		if ( $payments ) {
-			foreach ( $payments as $payment ) {
-				$total += edd_get_payment_amount( $payment );
+			$args = apply_filters( 'edd_get_total_earnings_args', array(
+				'offset' => 0,
+				'number' => -1,
+				'mode'   => 'live',
+				'status' => array( 'publish', 'revoked' ),
+				'fields' => 'ids'
+			) );
+
+
+			$payments = edd_get_payments( $args );
+			if ( $payments ) {
+
+				/*
+				 * If performing a purchase, we need to skip the very last payment in the database, since it calls
+				 * edd_increase_total_earnings() on completion, which results in duplicated earnings for the very
+				 * first purchase
+				 */
+				
+				$doing_purchase = did_action( 'edd_update_payment_status' );
+				$count = count( $payments );
+				$i = 1;
+				foreach ( $payments as $payment ) {
+					if( $i == $count && $doing_purchase ) {
+						break;
+					}
+					$total += edd_get_payment_amount( $payment );
+					$i++;
+				}
 			}
-		}
 
-		// Cache results for 1 day. This cache is cleared automatically when a payment is made
-		set_transient( 'edd_earnings_total', $total, 86400 );
+			// Cache results for 1 day. This cache is cleared automatically when a payment is made
+			set_transient( 'edd_earnings_total', $total, 86400 );
+			
+			// Store the total for the first time
+			update_option( 'edd_earnings_total', $total );
+		}
 	}
+
+	if( $total < 0 ) {
+		$total = 0; // Don't ever show negative earnings
+	}
+
 	return apply_filters( 'edd_total_earnings', round( $total, 2 ) );
+}
+
+/**
+ * Increase the Total Earnings
+ *
+ * @since 1.8.4
+ * @param $amount int The amount you would like to increase the total earnings by.
+ * @return float $total Total earnings
+ */
+function edd_increase_total_earnings( $amount = 0 ) {
+	$total = edd_get_total_earnings();
+	$total += $amount;
+	update_option( 'edd_earnings_total', $total );
+	return $total;
+}
+
+/**
+ * Decrease the Total Earnings
+ *
+ * @since 1.8.4
+ * @param $amount int The amount you would like to decrease the total earnings by.
+ * @return float $total Total earnings
+ */
+function edd_decrease_total_earnings( $amount = 0 ) {
+	$total = edd_get_total_earnings();
+	$total -= $amount;
+	if( $total < 0 ) {
+		$total = 0;
+	}
+	update_option( 'edd_earnings_total', $total );
+	return $total;
 }
 
 /**
@@ -587,9 +651,6 @@ function edd_get_payment_meta( $payment_id ) {
 	// Payment meta was simplified in EDD v1.5, so these are here for backwards compatibility
 	if ( ! isset( $meta['key'] ) )
 		$meta['key'] = edd_get_payment_key( $payment_id );
-
-	if ( ! isset( $meta['amount'] ) )
-		$meta['amount'] = edd_get_payment_amount( $payment_id );
 
 	if ( ! isset( $meta['email'] ) )
 		$meta['email'] = edd_get_payment_user_email( $payment_id );
@@ -623,7 +684,7 @@ function edd_get_payment_meta_user_info( $payment_id ) {
  */
 function edd_get_payment_meta_downloads( $payment_id ) {
 	$payment_meta = edd_get_payment_meta( $payment_id );
-	$downloads    = maybe_unserialize( $payment_meta['downloads'] );
+	$downloads    = isset( $payment_meta['downloads'] ) ? maybe_unserialize( $payment_meta['downloads'] ) : array();
 
 	return apply_filters( 'edd_payment_meta_downloads', $downloads );
 }
@@ -638,11 +699,17 @@ function edd_get_payment_meta_downloads( $payment_id ) {
  */
 function edd_get_payment_meta_cart_details( $payment_id, $include_bundle_files = false ) {
 	$payment_meta = edd_get_payment_meta( $payment_id );
-	$cart_details = maybe_unserialize( $payment_meta['cart_details'] );
+	$cart_details = (array) maybe_unserialize( $payment_meta['cart_details'] );
 
-	if( $include_bundle_files ) {
 
-		foreach( $cart_details as $cart_item ) {
+	foreach( $cart_details as $key => $cart_item ) {
+
+		// Ensure subtotal is set, for pre-1.9 orders
+		if( ! isset( $cart_item['subtotal'] ) ) {
+			$cart_details[$key]['subtotal'] = $cart_item['price'];
+		}
+
+		if( $include_bundle_files ) {
 
 			if( 'bundle' != edd_get_download_type( $cart_item['id'] ) )
 				continue;
@@ -660,6 +727,7 @@ function edd_get_payment_meta_cart_details( $payment_id, $include_bundle_files =
 						'options' => array(),
 					),
 					'price'       => 0,
+					'subtotal'    => 0,
 					'quantity'    => 1,
 					'tax'         => 0,
 					'in_bundle'   => 1
@@ -684,7 +752,6 @@ function edd_get_payment_user_email( $payment_id ) {
 	return apply_filters( 'edd_payment_user_email', $email );
 }
 
-
 /**
  * Get the user ID associated with a payment
  *
@@ -696,6 +763,18 @@ function edd_get_payment_user_id( $payment_id ) {
 	$user_id = get_post_meta( $payment_id, '_edd_payment_user_id', true );
 
 	return apply_filters( 'edd_payment_user_id', $user_id );
+}
+
+/**
+ * Get the IP address used to make a purchase
+ *
+ * @since 1.9
+ * @param int $payment_id Payment ID
+ * @return string $ip User IP
+ */
+function edd_get_payment_user_ip( $payment_id ) {
+	$ip = get_post_meta( $payment_id, '_edd_payment_user_ip', true );
+	return apply_filters( 'edd_payment_user_ip', $ip );
 }
 
 /**
@@ -746,22 +825,30 @@ function edd_payment_amount( $payment_id = 0 ) {
  */
 function edd_get_payment_amount( $payment_id ) {
 	$amount = get_post_meta( $payment_id, '_edd_payment_total', true );
+	if( empty( $amount ) && '0.00' != $amount ) {
+		$meta   = get_post_meta( $payment_id, '_edd_payment_meta', true );
+		$meta   = maybe_unserialize( $meta );
+		if( isset( $meta['amount'] ) )
+			$amount = $meta['amount'];
+	}
 	return apply_filters( 'edd_payment_amount', $amount );
 }
 
 /**
  * Retrieves subtotal for payment (this is the amount before taxes) and then
- * returns a full formatted amount. This function essentialy calls
+ * returns a full formatted amount. This function essentially calls
  * edd_get_payment_subtotal()
  *
  * @since 1.3.3
- * @see edd_get_payment_subtotal()
+ *
  * @param int $payment_id Payment ID
- * @param bool $payment_meta Payment Meta provided? (default: false)
- * @return string $subtotal Fully formatted payment subtotal
+ *
+ * @see edd_get_payment_subtotal()
+ *
+ * @return array Fully formatted payment subtotal
  */
-function edd_payment_subtotal( $payment_id = 0, $payment_meta = false ) {
-	$subtotal = edd_get_payment_subtotal( $payment_id, $payment_meta );
+function edd_payment_subtotal( $payment_id = 0 ) {
+	$subtotal = edd_get_payment_subtotal( $payment_id );
 
 	return edd_currency_filter( edd_format_amount( $subtotal ) );
 }
@@ -773,32 +860,22 @@ function edd_payment_subtotal( $payment_id = 0, $payment_meta = false ) {
  * @since 1.3.3
  * @global $edd_options Array of all the EDD Options
  * @param int $payment_id Payment ID
- * @param bool $payment_meta Get payment meta?
  * @return float $subtotal Subtotal for payment (non formatted)
  */
-function edd_get_payment_subtotal( $payment_id = 0, $payment_meta = false ) {
+function edd_get_payment_subtotal( $payment_id = 0) {
 	global $edd_options;
 
-	if ( ! $payment_meta )
-		$payment_meta = edd_get_payment_meta( $payment_id );
-
-	$subtotal = isset( $payment_meta['subtotal'] ) ? $payment_meta['subtotal'] : $payment_meta['amount'];
+	$subtotal = edd_get_payment_amount( $payment_id );
 
 	$tax = edd_use_taxes() ? edd_get_payment_tax( $payment_id ) : 0;
-
-	if (
-		( isset( $edd_options['prices_include_tax'] ) && $edd_options['prices_include_tax'] == 'no' && ! edd_prices_show_tax_on_checkout() ) ||
-		( isset( $edd_options['prices_include_tax'] ) && ! edd_prices_show_tax_on_checkout() && $edd_options['prices_include_tax'] == 'yes' )
-	) {
-		$subtotal -= $tax;
-	}
+	$subtotal -= $tax;
 
 	return apply_filters( 'edd_get_payment_subtotal', $subtotal, $payment_id );
 }
 
 /**
  * Retrieves taxed amount for payment and then returns a full formatted amount
- * This function essentialy calls edd_get_payment_tax()
+ * This function essentially calls edd_get_payment_tax()
  *
  * @since 1.3.3
  * @see edd_get_payment_tax()
@@ -897,6 +974,7 @@ function edd_get_payment_notes( $payment_id = 0 ) {
 	return $notes;
 }
 
+
 /**
  * Add a note to a payment
  *
@@ -932,7 +1010,6 @@ function edd_insert_payment_note( $payment_id = 0, $note = '' ) {
 	return $note_id;
 }
 
-
 /**
  * Deletes a payment note
  *
@@ -950,6 +1027,47 @@ function edd_delete_payment_note( $comment_id = 0, $payment_id = 0 ) {
 	do_action( 'edd_post_delete_payment_note', $comment_id, $payment_id );
 
 	return $ret;
+}
+
+/**
+ * Gets the payment note HTML
+ *
+ * @since 1.9
+ * @param object/int $note The comment object or ID
+ * @param int $payment_id The payment ID the note is connected to
+ * @return string
+ */
+function edd_get_payment_note_html( $note, $payment_id = 0 ) {
+
+	if( is_numeric( $note ) ) {
+		$note = get_comment( $note );
+	}
+
+	if ( ! empty( $note->user_id ) ) {
+		$user = get_userdata( $note->user_id );
+		$user = $user->display_name;
+	} else {
+		$user = __( 'EDD Bot', 'edd' );
+	}
+
+	$date_format = get_option( 'date_format' ) . ', ' . get_option( 'time_format' ); 
+
+	$delete_note_url = wp_nonce_url( add_query_arg( array(
+		'edd-action' => 'delete_payment_note',
+		'note_id'    => $note->comment_ID,
+		'payment_id' => $payment_id
+	) ), 'edd_delete_payment_note_' . $note->comment_ID );
+
+	$note_html = '<div class="edd-payment-note" id="edd-payment-note-' . $note->comment_ID . '">';
+		$note_html .='<p>';
+			$note_html .= '<strong>' . $user . '</strong>&nbsp;&ndash;&nbsp;' . date_i18n( $date_format, strtotime( $note->comment_date ) ) . '<br/>';
+			$note_html .= $note->comment_content;
+			$note_html .= '&nbsp;&ndash;&nbsp;<a href="' . esc_url( $delete_note_url ) . '" class="edd-delete-payment-note" data-note-id="' . absint( $note->comment_ID ) . '" data-payment-id="' . absint( $payment_id ) . '" title="' . __( 'Delete this payment note', 'edd' ) . '">' . __( 'Delete', 'edd' ) . '</a>';
+		$note_html .= '</p>';
+	$note_html .= '</div>';
+
+	return $note_html;
+
 }
 
 /**
