@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Admin/Reports
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  */
 
@@ -74,6 +74,9 @@ class EDD_Sales_Log_Table extends WP_List_Table {
 
 			case 'amount' :
 				return edd_currency_filter( edd_format_amount( $item['amount'] ) );
+
+			case 'payment_id' :
+				return '<a href="' . admin_url( 'edit.php?post_type=download&page=edd-payment-history&view=view-order-details&id=' . $item[ 'payment_id' ] ) . '">' . $item[ 'payment_id' ] . '</a>';
 
 			default:
 				return $item[ $column_name ];

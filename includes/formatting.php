@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Functions/Formatting
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.2
 */
@@ -94,7 +94,7 @@ function edd_currency_filter( $price ) {
 	$negative = $price < 0;
 
 	if( $negative ) {
-		$price *= -1; // Turn amount positive
+		$price = substr( $price, 1 ); // Remove proceeding "-" -
 	}
 
 	if ( $position == 'before' ):

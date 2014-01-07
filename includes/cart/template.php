@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Cart
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -19,6 +19,17 @@ if ( !defined( 'ABSPATH' ) ) exit;
  * @return void
  */
 function edd_checkout_cart() {
+
+	// Check if the Update cart button should be shown
+	if( edd_item_quantities_enabled() ) {
+		add_action( 'edd_cart_footer_buttons', 'edd_update_cart_button' );
+	}
+
+	// Check if the Save Cart button should be shown
+	if( ! edd_is_cart_saving_disabled() ) {
+		add_action( 'edd_cart_footer_buttons', 'edd_save_cart_button' );
+	}
+
 	do_action( 'edd_before_checkout_cart' );
 	echo '<!--dynamic-cached-content-->';
 	echo '<form id="edd_checkout_cart_form" method="post">';
@@ -114,7 +125,7 @@ function edd_get_cart_item_template( $cart_key, $item, $ajax = false ) {
 	$item = str_replace( '{remove_url}', $remove_url, $item );
   	$subtotal = '';
   	if ( $ajax ){
-   	 $subtotal = edd_currency_filter( edd_format_amount( edd_get_cart_amount( false ) ) ) ;
+   	 $subtotal = edd_currency_filter( edd_format_amount( edd_get_cart_subtotal() ) ) ;
   	}
  	$item = str_replace( '{subtotal}', $subtotal, $item );
 
@@ -173,13 +184,10 @@ function edd_save_cart_button() {
 	$color = ( $color == 'inherit' ) ? '' : $color;
 
 	if ( edd_is_cart_saved() ) : ?>
-		<a class="edd-cart-saving-button edd-submit button<?php echo ' ' . $color; ?>" id="edd-restore-cart-button" href="<?php echo add_query_arg( 'edd_action', 'restore_cart' ) ?>"><?php _e( 'Restore Previous Cart', 'edd' ); ?></a>
+		<a class="edd-cart-saving-button edd-submit button<?php echo ' ' . $color; ?>" id="edd-restore-cart-button" href="<?php echo add_query_arg( array( 'edd_action' => 'restore_cart', 'edd_cart_token' => edd_get_cart_token() ) ) ?>"><?php _e( 'Restore Previous Cart', 'edd' ); ?></a>
 	<?php endif; ?>
 	<a class="edd-cart-saving-button edd-submit button<?php echo ' ' . $color; ?>" id="edd-save-cart-button" href="<?php echo add_query_arg( 'edd_action', 'save_cart' ) ?>"><?php _e( 'Save Cart', 'edd' ); ?></a>
 	<?php
-}
-if( ! edd_is_cart_saving_disabled() ) {
-	add_action( 'edd_cart_footer_buttons', 'edd_save_cart_button' );
 }
 
 /**
@@ -209,7 +217,7 @@ add_action( 'edd_cart_empty', 'edd_empty_cart_restore_cart_link' );
 function edd_update_cart_button() {
 	global $edd_options;
 
-	if ( ! edd_item_quanities_enabled() )
+	if ( ! edd_item_quantities_enabled() )
 		return;
 
 	$color = isset( $edd_options[ 'checkout_color' ] ) ? $edd_options[ 'checkout_color' ] : 'gray';
@@ -219,9 +227,6 @@ function edd_update_cart_button() {
 	<input type="hidden" name="edd_action" value="update_cart"/>
 <?php
 
-}
-if( edd_item_quanities_enabled() ) {
-	add_action( 'edd_cart_footer_buttons', 'edd_update_cart_button' );
 }
 
 /**

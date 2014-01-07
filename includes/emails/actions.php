@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Emails
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0.8.2
  */
@@ -70,6 +70,9 @@ function edd_send_test_email( $data ) {
 		return;
 
 	// Send a test email
-	edd_email_test_purchase_receipt();
+    edd_email_test_purchase_receipt();
+
+    // Remove the test email query arg
+    wp_redirect( remove_query_arg( 'edd_action' ) ); exit;
 }
 add_action( 'edd_send_test_email', 'edd_send_test_email' );

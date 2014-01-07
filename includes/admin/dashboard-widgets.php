@@ -4,7 +4,7 @@
  *
  * @package     EDD
  * @subpackage  Admin/Dashboard
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -90,7 +90,6 @@ function edd_dashboard_sales_widget() {
 		<?php
 		$p_query = new EDD_Payments_Query( array(
 			'number'   => 5,
-			'mode'     => 'live',
 			'status'   => 'publish'
 		) );
 
