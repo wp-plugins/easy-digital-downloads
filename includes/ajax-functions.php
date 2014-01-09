@@ -6,7 +6,7 @@
  *
  * @package     EDD
  * @subpackage  Functions/AJAX
- * @copyright   Copyright (c) 2013, Pippin Williamson
+ * @copyright   Copyright (c) 2014, Pippin Williamson
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -54,8 +54,16 @@ function edd_get_ajax_url() {
  */
 function edd_ajax_remove_from_cart() {
 	if ( isset( $_POST['cart_item'] ) && check_ajax_referer( 'edd_ajax_nonce', 'nonce' ) ) {
+		
 		edd_remove_from_cart( $_POST['cart_item'] );
-		echo 'removed';
+		
+		$return = array(
+			'removed'  => 1,
+			'subtotal' => html_entity_decode( edd_currency_filter( edd_format_amount( edd_get_cart_subtotal() ) ), ENT_COMPAT, 'UTF-8' ),
+		);
+
+		echo json_encode( $return );
+
 	}
 	edd_die();
 }
@@ -80,28 +88,31 @@ function edd_ajax_add_to_cart() {
 			}
 		}
 
+		$items = '';
+
 		foreach ( $to_add as $options ) {
-			if ( ! edd_item_in_cart( $_POST['download_id'], $options ) ) {
 
-				if( $_POST['download_id'] == $options['price_id'] )
-					$options = array();
+			if( $_POST['download_id'] == $options['price_id'] )
+				$options = array();
 
-				$key          = edd_add_to_cart( $_POST['download_id'], $options );
+			$key = edd_add_to_cart( $_POST['download_id'], $options );
 
-				$item         = array(
-					'id'      => $_POST['download_id'],
-					'options' => $options
-				);
+			$item = array(
+				'id'      => $_POST['download_id'],
+				'options' => $options
+			);
 
-				$item = apply_filters( 'edd_ajax_pre_cart_item_template', $item );
+			$item   = apply_filters( 'edd_ajax_pre_cart_item_template', $item );
+			$items .= html_entity_decode( edd_get_cart_item_template( $key, $item, true ), ENT_COMPAT, 'UTF-8' );
 
-				$cart_item    = edd_get_cart_item_template( $key, $item, true );
-
-				echo $cart_item;
-			} else {
-				echo 'incart';
-			}
 		}
+
+		$return = array(
+			'subtotal'  => html_entity_decode( edd_currency_filter( edd_format_amount( edd_get_cart_subtotal() ) ), ENT_COMPAT, 'UTF-8' ),
+			'cart_item' => $items
+		);
+
+		echo json_encode( $return );
 	}
 	edd_die();
 }
@@ -118,7 +129,7 @@ add_action( 'wp_ajax_nopriv_edd_add_to_cart', 'edd_ajax_add_to_cart' );
  */
 function edd_ajax_get_subtotal() {
   if (  check_ajax_referer( 'edd_ajax_nonce', 'nonce' ) ) {
-    echo edd_currency_filter( edd_get_cart_amount( false ) );
+    echo edd_currency_filter( edd_get_cart_subtotal() );
   }
   edd_die();
 }
@@ -134,32 +145,27 @@ add_action( 'wp_ajax_nopriv_edd_get_subtotal', 'edd_ajax_get_subtotal' );
  */
 function edd_ajax_apply_discount() {
 	if ( isset( $_POST['code'] ) && check_ajax_referer( 'edd_checkout_nonce', 'nonce' ) ) {
-		$user = isset( $_POST['user'] ) ? $_POST['user'] : $_POST['email'];
 
 		$return = array(
 			'msg'  => '',
 			'code' => $_POST['code']
 		);
 
-		if ( edd_is_discount_used( $_POST['code'], $user ) ) {  // Called twice if discount is not used (again by edd_is_discount_valid) but allows for beter usr msg and less execution if discount is used.
-			$return['msg']  = __('This discount code has been used already', 'edd');
-		} else {
-			if ( edd_is_discount_valid( $_POST['code'], $user ) ) {
-				$discount  = edd_get_discount_by_code( $_POST['code'] );
-				$amount    = edd_format_discount_rate( edd_get_discount_type( $discount->ID ), edd_get_discount_amount( $discount->ID ) );
-				$discounts = edd_set_cart_discount( $_POST['code'] );
-				$total     = edd_get_cart_total( $discounts );
+		if ( edd_is_discount_valid( $_POST['code'] ) ) {
+			$discount  = edd_get_discount_by_code( $_POST['code'] );
+			$amount    = edd_format_discount_rate( edd_get_discount_type( $discount->ID ), edd_get_discount_amount( $discount->ID ) );
+			$discounts = edd_set_cart_discount( $_POST['code'] );
+			$total     = edd_get_cart_total( $discounts );
 
-				$return = array(
-					'msg'    => 'valid',
-					'amount' => $amount,
-					'total'  => html_entity_decode( edd_currency_filter( edd_format_amount( $total ) ), ENT_COMPAT, 'UTF-8' ),
-					'code'   => $_POST['code'],
-					'html'   => edd_get_cart_discounts_html( $discounts )
-				);
-			} else {
-				$return['msg']  = __('The discount you entered is invalid', 'edd');
-			}
+			$return = array(
+				'msg'    => 'valid',
+				'amount' => $amount,
+				'total'  => html_entity_decode( edd_currency_filter( edd_format_amount( $total ) ), ENT_COMPAT, 'UTF-8' ),
+				'code'   => $_POST['code'],
+				'html'   => edd_get_cart_discounts_html( $discounts )
+			);
+		} else {
+			$return['msg']  = __('The discount you entered is invalid', 'edd');
 		}
 		echo json_encode($return);
 	}
@@ -167,6 +173,33 @@ function edd_ajax_apply_discount() {
 }
 add_action( 'wp_ajax_edd_apply_discount', 'edd_ajax_apply_discount' );
 add_action( 'wp_ajax_nopriv_edd_apply_discount', 'edd_ajax_apply_discount' );
+
+/**
+ * Removes a discount code from the cart via ajax
+ *
+ * @since 1.7
+ * @return void
+ */
+function edd_ajax_remove_discount() {
+	if ( isset( $_POST['code'] ) ) {
+
+		edd_unset_cart_discount( urldecode( $_POST['code'] ) );
+
+		$total = edd_get_cart_total();
+
+		$return = array(
+			'total'     => html_entity_decode( edd_currency_filter( edd_format_amount( $total ) ), ENT_COMPAT, 'UTF-8' ),
+			'code'      => $_POST['code'],
+			'discounts' => edd_get_cart_discounts(),
+			'html'      => edd_get_cart_discounts_html()
+		);
+
+		echo json_encode( $return );
+	}
+	edd_die();
+}
+add_action( 'wp_ajax_edd_remove_discount', 'edd_ajax_remove_discount' );
+add_action( 'wp_ajax_nopriv_edd_remove_discount', 'edd_ajax_remove_discount' );
 
 /**
  * Loads Checkout Login Fields the via AJAX
@@ -238,7 +271,6 @@ function edd_ajax_recalculate_taxes() {
 add_action( 'wp_ajax_edd_recalculate_taxes', 'edd_ajax_recalculate_taxes' );
 add_action( 'wp_ajax_nopriv_edd_recalculate_taxes', 'edd_ajax_recalculate_taxes' );
 
-
 /**
  * Retrieve a states drop down
  *
@@ -253,7 +285,14 @@ function edd_ajax_get_states_field() {
 
 	if( ! empty( $states ) ) {
 
-		$response = EDD()->html->select( edd_get_shop_states( $_POST['country'] ), $_POST['field_name'] );
+		$args = array(
+			'name'    => $_POST['field_name'],
+			'options' => edd_get_shop_states( $_POST['country'] ),
+			'show_option_all'  => false,
+			'show_option_none' => false
+		);
+
+		$response = EDD()->html->select( $args );
 
 	} else {
 
@@ -268,8 +307,46 @@ add_action( 'wp_ajax_edd_get_shop_states', 'edd_ajax_get_states_field' );
 add_action( 'wp_ajax_nopriv_edd_get_shop_states', 'edd_ajax_get_states_field' );
 
 /**
+ * Retrieve a states drop down
+ *
+ * @since 1.6
+ * @return void
+ */
+function edd_ajax_download_search() {
+
+	$search  = sanitize_text_field( $_GET['s'] );
+	$results = array();
+	$items   = get_posts( array( 'post_type' => 'download', 'posts_per_page' => 30, 's' => $search ) ); 
+
+	if( $items ) {
+
+		foreach( $items as $item ) {
+
+			$results[] = array(
+				'id'   => $item->ID,
+				'name' => $item->post_title
+			);
+		}
+
+	} else {
+		
+		$items[] = array(
+			'id'   => 0,
+			'name' => __( 'No results found', 'edd' )
+		);
+		
+	}
+
+	echo json_encode( $results );
+
+	edd_die();
+}
+add_action( 'wp_ajax_edd_download_search', 'edd_ajax_download_search' );
+add_action( 'wp_ajax_nopriv_edd_download_search', 'edd_ajax_download_search' );
+
+/**
  * Check for Download Price Variations via AJAX (this function can only be used
- * in WordPress Admin). This function isused for the Edit Payment screen when downloads
+ * in WordPress Admin). This function is used for the Edit Payment screen when downloads
  * are added to the purchase. When each download is chosen, an AJAX call is fired
  * to this function which will check if variable prices exist for that download.
  * If they do, it will output a dropdown of all the variable prices available for
@@ -280,16 +357,14 @@ add_action( 'wp_ajax_nopriv_edd_get_shop_states', 'edd_ajax_get_states_field' );
  * @return void
  */
 function edd_check_for_download_price_variations() {
-	if ( ! check_ajax_referer( 'edd_add_downloads_to_purchase_nonce', 'nonce' ) )
-		return false;
 
 	$download_id = intval( $_POST['download_id'] );
 
 	if ( edd_has_variable_prices( $download_id ) ) {
-		$variable_prices = get_post_meta( $download_id, 'edd_variable_prices', true );
+		$variable_prices = edd_get_variable_prices( $download_id );
 
 		if ( $variable_prices ) {
-			$ajax_response = '<select name="downloads[' . intval( $_POST['array_key'] ) . '][options][price_id]" class="edd-variable-prices-select">';
+			$ajax_response = '<select class="edd_price_options_select edd-select edd-select">';
 				foreach ( $variable_prices as $key => $price ) {
 					$ajax_response .= '<option value="' . $key . '">' . $price['name']  . '</option>';
 				}

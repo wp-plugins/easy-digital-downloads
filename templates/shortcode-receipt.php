@@ -66,20 +66,13 @@ $status    = edd_get_payment_status( $payment, true );
 			<?php endif; ?>
 			<tr>
 				<td><strong><?php _e( 'Total Price', 'edd' ); ?>:</strong></td>
-				<td><?php
-
-					echo edd_payment_amount( $payment->ID );
-
-					if ( edd_use_taxes() && $edd_options['checkout_include_tax'] == 'yes' ) :
-						printf( ' ' . __('(includes %s tax)', 'edd'), edd_payment_tax( $payment->ID ) );
-					endif; ?>
-				</td>
+				<td><?php echo edd_payment_amount( $payment->ID ); ?></td>
 			</tr>
 		<?php endif; ?>
 
 		<?php if ( $edd_receipt_args['discount'] && $user['discount'] != 'none' ) : ?>
 			<tr>
-				<td><strong><?php _e( 'Discount', 'edd' ); ?>:</strong></td>
+				<td><strong><?php _e( 'Discount(s)', 'edd' ); ?>:</strong></td>
 				<td><?php echo $user['discount']; ?></td>
 			</tr>
 		<?php endif; ?>
@@ -102,6 +95,8 @@ $status    = edd_get_payment_status( $payment, true );
 	</tbody>
 </table>
 
+<?php do_action( 'edd_payment_receipt_after_table', $payment, $edd_receipt_args ); ?>
+
 <?php if ( $edd_receipt_args[ 'products' ] ) : ?>
 
 	<h3><?php echo apply_filters( 'edd_payment_receipt_products_title', __( 'Products', 'edd' ) ); ?></h3>
@@ -111,6 +106,9 @@ $status    = edd_get_payment_status( $payment, true );
 			<th><?php _e( 'Name', 'edd' ); ?></th>
 			<?php if ( edd_use_skus() ) { ?>
 				<th><?php _e( 'SKU', 'edd' ); ?></th>
+			<?php } ?>
+			<?php if ( edd_item_quantities_enabled() ) { ?>
+				<th><?php _e( 'Quantity', 'edd' ); ?></th>
 			<?php } ?>
 			<th><?php _e( 'Price', 'edd' ); ?></th>
 		</thead>
@@ -128,7 +126,7 @@ $status    = edd_get_payment_status( $payment, true );
 
 					<div class="edd_purchase_receipt_product_name">
 						<?php echo esc_html( $item['name'] ); ?>
-						<?php if( ! empty( $price_id ) && edd_is_payment_complete( $payment->ID ) ) : ?>
+						<?php if( ! is_null( $price_id ) ) : ?>
 						<span class="edd_purchase_receipt_price_name">&nbsp;&ndash;&nbsp;<?php echo edd_get_price_option_name( $item['id'], $price_id ); ?></span>
 						<?php endif; ?>
 					</div>
@@ -137,7 +135,8 @@ $status    = edd_get_payment_status( $payment, true );
 						<div class="edd_purchase_receipt_product_notes"><?php echo edd_get_product_notes( $item['id'] ); ?></div>
 					<?php endif; ?>
 
-					<?php if( edd_is_payment_complete( $payment->ID ) ) : ?>
+					<?php
+					if( edd_is_payment_complete( $payment->ID ) && edd_receipt_show_download_files( $item['id'], $edd_receipt_args ) ) : ?>
 					<ul class="edd_purchase_receipt_files">
 						<?php
 						if ( $download_files && is_array( $download_files ) ) :
@@ -195,9 +194,12 @@ $status    = edd_get_payment_status( $payment, true );
 				<?php if ( edd_use_skus() ) : ?>
 					<td><?php echo edd_get_download_sku( $item['id'] ); ?></td>
 				<?php endif; ?>
+				<?php if ( edd_item_quantities_enabled() ) { ?>
+					<td><?php echo $item['quantity']; ?></td>
+				<?php } ?>
 				<td>
 					<?php if( empty( $item['in_bundle'] ) ) : // Only show price when product is not part of a bundle ?>
-						<?php echo edd_currency_filter( edd_format_amount( $item[ 'price' ] ) ); ?>
+						<?php echo edd_currency_filter( edd_format_amount( $item[ 'subtotal' ] ) ); ?>
 					<?php endif; ?>
 				</td>
 			</tr>
@@ -207,17 +209,16 @@ $status    = edd_get_payment_status( $payment, true );
 
 		<tfoot>
 			<tr>
-				<td<?php echo ( edd_use_skus() ? ' colspan="2"' : '' ); ?>><strong><?php _e( 'Total Price', 'edd' ); ?>:</strong></td>
-
-				<td>
-					<?php
-					echo edd_payment_amount( $payment->ID );
-					if ( edd_use_taxes() && ( ! edd_prices_show_tax_on_checkout() && $edd_options['prices_include_tax'] == 'yes' ) ) {
-						echo ' ' . __( '(ex. tax)', 'edd' );
-					} else if ( edd_use_taxes() && $edd_options['checkout_include_tax'] == 'yes' ) {
-						printf( ' ' . __( '(includes %s tax)', 'edd' ), edd_payment_tax( $payment->ID ) );
-					} ?>
-				</td>
+				<?php
+				$colspan = '';
+				if( edd_use_skus() && edd_item_quantities_enabled() ) {
+					$colspan = ' colspan="3"';
+				} elseif( edd_use_skus() || edd_item_quantities_enabled() ) {
+					$colspan = ' colspan="2"';
+				}
+				?>
+				<td<?php echo $colspan; ?>><strong><?php _e( 'Total Price', 'edd' ); ?>:</strong></td>
+				<td><?php echo edd_payment_amount( $payment->ID ); ?></td>
 			</tr>
 		</tfoot>
 
