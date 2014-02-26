@@ -24,8 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function edd_sanitize_amount( $amount ) {
 	global $edd_options;
 
-	$thousands_sep = ! empty( $edd_options['thousands_separator'] ) ? $edd_options['thousands_separator'] : '';
-	$decimal_sep   = ! empty( $edd_options['decimal_separator'] )   ? $edd_options['decimal_separator'] 	 : '.';
+	$thousands_sep = edd_get_option( 'thousands_separator', ',' );
+	$decimal_sep   = edd_get_option( 'decimal_separator', '.' );
 
 	// Sanitize the amount
 	if ( $decimal_sep == ',' && false !== ( $found = strpos( $amount, $decimal_sep ) ) ) {
@@ -40,6 +40,9 @@ function edd_sanitize_amount( $amount ) {
 		$amount = str_replace( $thousands_sep, '', $amount );
 	}
 
+	$decimals = apply_filters( 'edd_sanitize_amount_decimals', 2, $amount );
+	$amount   = number_format( $amount, $decimals, '.', '' );
+
 	return apply_filters( 'edd_sanitize_amount', $amount );
 }
 
@@ -47,14 +50,17 @@ function edd_sanitize_amount( $amount ) {
  * Returns a nicely formatted amount.
  *
  * @since 1.0
- * @param string $amount Price amount to format
+ * 
+ * @param string $amount   Price amount to format
+ * @param string $decimals Whether or not to use decimals.  Useful when set to false for non-currency numbers.
+ * 
  * @return string $amount Newly formatted amount or Price Not Available
  */
-function edd_format_amount( $amount ) {
+function edd_format_amount( $amount, $decimals = true ) {
 	global $edd_options;
 
-	$thousands_sep 	= ! empty( $edd_options['thousands_separator'] ) ? $edd_options['thousands_separator'] : '';
-	$decimal_sep 	= ! empty( $edd_options['decimal_separator'] )   ? $edd_options['decimal_separator'] 	 : '.';
+	$thousands_sep = edd_get_option( 'thousands_separator', ',' );
+	$decimal_sep   = edd_get_option( 'decimal_separator', '.' );
 
 	// Format the amount
 	if ( $decimal_sep == ',' && false !== ( $found = strpos( $amount, $decimal_sep ) ) ) {
@@ -68,10 +74,11 @@ function edd_format_amount( $amount ) {
 		$amount = str_replace( ',', '', $amount );
 	}
 
-	if( empty( $amount ) )
+	if ( empty( $amount ) ) {
 		$amount = 0;
-
-	$decimals  = apply_filters( 'edd_format_amount_decimals', 2, $amount );
+	}
+	
+	$decimals  = apply_filters( 'edd_format_amount_decimals', $decimals ? 2 : 0, $amount );
 	$formatted = number_format( $amount, $decimals, $decimal_sep, $thousands_sep );
 
 	return apply_filters( 'edd_format_amount', $formatted, $amount, $decimals, $decimal_sep, $thousands_sep );
@@ -175,14 +182,14 @@ function edd_currency_decimal_filter( $decimals = 2 ) {
 
 	switch ( $currency ) {
 		case 'RIAL' :
-			$decimals = 0;
-			break;
-
 		case 'JPY' :
+		case 'TWD' :
+
 			$decimals = 0;
 			break;
 	}
 
 	return $decimals;
 }
+add_filter( 'edd_sanitize_amount_decimals', 'edd_currency_decimal_filter' );
 add_filter( 'edd_format_amount_decimals', 'edd_currency_decimal_filter' );

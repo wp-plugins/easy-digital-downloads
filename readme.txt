@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.7
 Tested up to: 3.9
 
-Stable Tag: 1.9.4
+Stable Tag: 1.9.6
 
 License: GNU Version 2 or Any Later Version
 
@@ -186,6 +186,79 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 9. Checkout screen
 
 == Changelog ==
+
+= 1.9.6: February 26, 2014 =
+
+* Fix: Purchase stats not undone when changing a payment from Revoked to Refunded
+* Fix: Typo on the settings for the Disable Live Credt Card Validation settings
+* Fix: Tax calculation after discounts is incorrect
+* Fix: UPLOADS constant not respected for file downloads
+* Fix: wp_session garbage collection not always working
+* Fix: PayPal IPN gets validated even when validation is disabled
+* Fix: State tax rates can't be set to 0 when default rate is greater than 0
+* Fix: Cart items not properly sanitized when adding them to the  cart
+* Fix: SQL error on very first purchase
+* Fix: PayPal business email comparison sometimes fails when it shouldn't
+* Fix: Decimals shown on currencies that don't support decimals
+* Fix: Custom date ranges for reports greater than 3 months should query by month, not day
+* Fix: Several small typos and capitalization issues
+* Fix: Purchase History page not deleted on uninstall
+* Fix: Refunds not detected by PayPal IPN
+* Fix: Detect when user is done typing in product drop down and only trigger ajax search once done
+
+* Tweak: Some improved coding standards and PHPDoc
+* Tweak: Added discount codes used to sales API response
+* Tweak: Added ini_get( 'arg_separator.output' ) and allow_url_fopen status to System Info
+* Tweak: Improve _edd_deprecated_function() to actually pass the backtrace
+* Tweak: Inline documentation for filters
+* Tweak: Allow the From Name and From Email to be filtered for sale notifications
+* Tweak: Allow the cart contents to be filtered when adding items to the cart
+* Tweak: All receipt visibility to be filtered
+* Tweak: Allow array of download IDs to be passed to EDD_Payments_Query
+* Tweak: Added floatval() to edd_get_payment_amount()
+* Tweak: Properly format number in Sales column
+* Tweak: Color code axes on graphs when there are multiple axes
+* Tweak: Removed error suppression from edd_readfile_chunked()
+* TweaK: Added helper function for reporting views
+
+
+= 1.9.5: February 4, 2014 =
+
+* Fix: Total customer count not showing in Customer Reports
+* Fix: Pagination not working in Customer Reports
+* Fix: Custom date ranges greater than 3 months should query by month, not day
+* Fix: .required class not added to input fields when fields are required
+* Fix: Non published Downloads not deleted on uninstall
+* Fix: Taxes not properly calculated for logged-out customers
+* Fix: Dashboard earnings summary widget uses "edit_pages" capability instead of "view_shop_reports"
+* Fix: Restored functionality of edd_get_purchase_download_links() function
+* Fix: Resend Purchase Receipt button shouldn't show on non-complete purchases
+* Fix: Product drop down doesn't show all products
+* Fix: Item amounts not shown correctly in Order Details when using item quantities
+* Fix: Cart fees not removed when cart is empty
+* Fix: {billing_address} email tag returns empty string
+* Fix: Updated missing language files
+* Fix: Selecting same month for start and end date with custom date ranges results in a 12 month spread
+* Fix: Admin sale notification email has not formatting
+* Fix: Cart sessions loaded in the wp-admin when they shouldn't be
+* Fix: Pages drop downs in settings cause all pages to be queried on every wp-admin page
+* Fix: Format total sales correctly in Reports
+* Fix: Incorrect variable name in edd_get_cart_item_final_price()
+
+* Tweak: Dramatic performance improvement to payment queries throughout the admin
+* Tweak: Rework edd_get_earnings_by_date() to be much more performant
+* Tweak: Rework edd_get_total_earnings() to be much more performant
+* Tweak: Rework EDD_Payment_Stats::get_earnings() to be much more performant
+* Tweak: Removed Files Downloaded count from customer reports due to it being too expensive
+* Tweak: Rework edd_get_purchase_stats_by_user() to be much more performant
+* Tweak: Only filter wp_count_comments() when on the Dashboard to create less performance impact on wp-admin
+* Tweak: Remove plaintext password from new user notification email
+* Tweak: Increase refresh time from 5 to 8 seconds when returning from PayPal to give PayPal IPN longer to complete
+* Tweak: Better separation of sections in settings
+* Tweak: Optimized all images to reduce footprint
+* Tweak: Removed Purchase History widget as it has never worked and is never used
+* Tweak: Send billing address to PayPal
+* Tweak: Change all purchase buttons on page of product to Checkout when one is clicked
 
 = 1.9.4: January 13, 2014 =
 
