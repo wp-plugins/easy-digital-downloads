@@ -57,6 +57,7 @@ function edd_get_cart_content_details() {
 		$quantity   = edd_get_cart_item_quantity( $item['id'], $item['options'] );
 
 		$item_price = round( $item_price, 2 );
+		$discount   = round( $discount * $quantity, 2 );
 		$subtotal   = round( $item_price * $quantity, 2 );
 		$tax        = round( $tax * $quantity, 2 );
 		$total      = round( ( $subtotal - $discount + $tax ), 2 );
@@ -101,7 +102,7 @@ function edd_get_cart_quantity() {
  * @return string Cart key of the new item
  */
 function edd_add_to_cart( $download_id, $options = array() ) {
-	$cart = edd_get_cart_contents();
+	$cart = apply_filters( 'edd_pre_add_to_cart_contents', edd_get_cart_contents() );
 	$download = get_post( $download_id );
 
 	if( 'download' != $download->post_type )
@@ -117,7 +118,9 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 		$options['price_id'] = '0';
 	}
 
-	$to_add = array();
+	$item     = array();
+	$to_add   = array();
+	$new_item = array();
 
 	if( isset( $options['quantity'] ) ) {
 		$quantity = absint( $options['quantity'] );
@@ -136,7 +139,6 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 				),
 				'quantity'     => $quantity
 			);
-			$to_add[] = apply_filters( 'edd_add_to_cart_item', $item  );
 		}
 	} else {
 		// Add a single item
@@ -145,13 +147,22 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 			'options'  => $options,
 			'quantity' => $quantity
 		);
-		$to_add[] = apply_filters( 'edd_add_to_cart_item', $item );
 	}
 
+	$to_add = apply_filters( 'edd_add_to_cart_item', $item );
+
+	if ( ! is_array( $to_add ) )
+		return;
+
+	if ( ! isset( $to_add['id'] ) || empty( $to_add['id'] ) )
+		return;
+
+	$new_item[] = $to_add;
+
 	if ( is_array( $cart ) ) {
-		$cart = array_merge( $cart, $to_add );
+		$cart = array_merge( $cart, $new_item );
 	} else {
-		$cart = $to_add;
+		$cart = $new_item;
 	}
 
 	EDD()->session->set( 'edd_cart', $cart );
@@ -687,7 +698,7 @@ function edd_get_cart_tax() {
 		
 	}
 
-	return apply_filters( 'edd_get_cart_tax', round( $cart_tax, 2 ) );
+	return apply_filters( 'edd_get_cart_tax', $cart_tax );
 }
 
 /**

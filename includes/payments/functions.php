@@ -148,13 +148,19 @@ function edd_update_payment_status( $payment_id, $new_status = 'publish' ) {
 	if ( $old_status === $new_status )
 		return; // Don't permit status changes that aren't changes
 
-	do_action( 'edd_before_payment_status_change', $payment_id, $new_status, $old_status );
+	$do_change = apply_filters( 'edd_should_update_payment_status', true, $payment_id, $new_status, $old_status );
 
-	$update_fields = array( 'ID' => $payment_id, 'post_status' => $new_status, 'edit_date' => current_time( 'mysql' ) );
+	if( $do_change ) {
 
-	wp_update_post( apply_filters( 'edd_update_payment_status_fields', $update_fields ) );
+		do_action( 'edd_before_payment_status_change', $payment_id, $new_status, $old_status );
 
-	do_action( 'edd_update_payment_status', $payment_id, $new_status, $old_status );
+		$update_fields = array( 'ID' => $payment_id, 'post_status' => $new_status, 'edit_date' => current_time( 'mysql' ) );
+
+		wp_update_post( apply_filters( 'edd_update_payment_status_fields', $update_fields ) );
+
+		do_action( 'edd_update_payment_status', $payment_id, $new_status, $old_status );
+
+	}
 }
 
 /**
@@ -588,8 +594,10 @@ function edd_get_total_earnings() {
 					array_pop( $payments );
 				}
 
-				$payments = implode( ',', $payments );
-				$total += $wpdb->get_var( "SELECT SUM(meta_value) FROM $wpdb->postmeta WHERE meta_key = '_edd_payment_total' AND post_id IN({$payments})" );
+				if( ! empty( $payments ) ) {
+					$payments = implode( ',', $payments );
+					$total += $wpdb->get_var( "SELECT SUM(meta_value) FROM $wpdb->postmeta WHERE meta_key = '_edd_payment_total' AND post_id IN({$payments})" );
+				}
 
 			}
 
@@ -731,7 +739,11 @@ function edd_get_payment_meta_cart_details( $payment_id, $include_bundle_files =
 					'subtotal'    => 0,
 					'quantity'    => 1,
 					'tax'         => 0,
-					'in_bundle'   => 1
+					'in_bundle'   => 1,
+					'parent'		=> array(
+							'id' 			=> $cart_item['id'],
+							'options' 		=> isset( $cart_item['item_number']['options'] ) ? $cart_item['item_number']['options'] : array()
+						)
 				);
 			}
 		}
@@ -822,17 +834,21 @@ function edd_payment_amount( $payment_id = 0 ) {
  * @access public
  * @since 1.2
  * @param int $payment_id Payment ID
- * @return string $amount Payment amount
  */
 function edd_get_payment_amount( $payment_id ) {
+	
 	$amount = get_post_meta( $payment_id, '_edd_payment_total', true );
-	if( empty( $amount ) && '0.00' != $amount ) {
+	
+	if ( empty( $amount ) && '0.00' != $amount ) {
 		$meta   = get_post_meta( $payment_id, '_edd_payment_meta', true );
 		$meta   = maybe_unserialize( $meta );
-		if( isset( $meta['amount'] ) )
+
+		if ( isset( $meta['amount'] ) ) {
 			$amount = $meta['amount'];
+		}
 	}
-	return apply_filters( 'edd_payment_amount', $amount );
+
+	return apply_filters( 'edd_payment_amount', floatval( $amount ) );
 }
 
 /**
