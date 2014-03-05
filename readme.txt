@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.7
 Tested up to: 3.9
 
-Stable Tag: 1.9.6
+Stable Tag: 1.9.7
 
 License: GNU Version 2 or Any Later Version
 
@@ -16,6 +16,7 @@ Sell digital downloads through WordPress with this complete digital downloads ma
 == Description ==
 
 Easy Digital Downloads is a complete e-commerce solution for selling digital products in a light, performant, and easy to use plugin. Rather that attempting to provide every feature under the sun, Easy Digital Downloads makes selling digital simple and complete by providing just the features you need.
+
 
 Features of the plugin include:
 
@@ -74,6 +75,7 @@ Easy Digital Downloads as been translated into the following languages:
 14. Japanese
 15. Farsi
 16. Finnish
+16. Hebrew
 
 Would you like to help translate the plugin into more languages? [Join our WP-Translations Community](https://www.transifex.com/projects/p/easy-digital-downloads/).
 
@@ -185,6 +187,18 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 9. Checkout screen
 
 == Changelog ==
+
+= 1.9.7: March 4, 2014 =
+
+* Fix: Problem with prices losing the decimal places
+* Fix: Issue with file URL being obscured in the file URL field
+* Fix: Currency sign added to monthly estimated sale count
+* Fix: Not all payment statuses taken into account  for payment counts
+
+* Tweak: Allow get_germs() arguments to be filtered in categories / tags widget
+* Tweak: Add arguments to purchase link filter
+
+* New: Added Hebrew translation
 
 = 1.9.6: February 26, 2014 =
 
@@ -651,7 +665,7 @@ _REQUIRES WordPress 3.7 or later_
 * New: Improved Order Details screen
 * New: SKU fields for Downloads
 * New: Itemized purchase details for PayPal Standard
-* New: Introduced state / provice fields for 12 additional countries
+* New: Introduced state / province fields for 12 additional countries
 * New: Introduced EDD_Cron class for scheduling routine events
 
 * Tweak: File Name field not set by default
