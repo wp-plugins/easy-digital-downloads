@@ -7,7 +7,7 @@ jQuery(document).ready(function($) {
         var $this = $(this);
         if( 'card_state' != $this.attr('id') ) {
 
-            // If the country field has changed, we need to update the state/provice field
+            // If the country field has changed, we need to update the state/province field
             var postData = {
                 action: 'edd_get_shop_states',
                 country: $this.val(),
@@ -53,7 +53,7 @@ jQuery(document).ready(function($) {
         var postData = {
             action: 'edd_recalculate_taxes',
             nonce: edd_global_vars.checkout_nonce,
-            country: $edd_cc_address.find('#billing_country').val(),
+            billing_country: $edd_cc_address.find('#billing_country').val(),
             state: state
         };
 

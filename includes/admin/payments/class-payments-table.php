@@ -141,7 +141,7 @@ class EDD_Payment_History_Table extends WP_List_Table {
 				<a href="<?php echo admin_url( 'edit.php?post_type=download&page=edd-payment-history' ); ?>" class="button-secondary"><?php _e( 'Clear Filter', 'edd' ); ?></a>
 			<?php endif; ?>
 			<?php $this->search_box( __( 'Search', 'edd' ), 'edd-payments' ); ?>
-		</div>	
+		</div>
 
 <?php
 	}
@@ -300,7 +300,7 @@ class EDD_Payment_History_Table extends WP_List_Table {
 			$row_actions['email_links'] = '<a href="' . add_query_arg( array( 'edd-action' => 'email_links', 'purchase_id' => $payment->ID ), $this->base_url ) . '">' . __( 'Resend Purchase Receipt', 'edd' ) . '</a>';
 
 		}
-		
+
 		$row_actions['delete'] = '<a href="' . wp_nonce_url( add_query_arg( array( 'edd-action' => 'delete_payment', 'purchase_id' => $payment->ID ), $this->base_url ), 'edd_payment_nonce') . '">' . __( 'Delete', 'edd' ) . '</a>';
 
 		$row_actions = apply_filters( 'edd_payment_row_actions', $row_actions, $payment );
@@ -308,7 +308,7 @@ class EDD_Payment_History_Table extends WP_List_Table {
 		if ( ! isset( $payment->user_info['email'] ) ) {
 			$payment->user_info['email'] = __( '(unknown)', 'edd' );
 		}
-		
+
 		$value = $payment->user_info['email'] . $this->row_actions( $row_actions );
 
 		return apply_filters( 'edd_payments_table_column', $value, $payment->ID, 'email' );
@@ -468,7 +468,10 @@ class EDD_Payment_History_Table extends WP_List_Table {
 		$this->failed_count   = $payment_count->failed;
 		$this->revoked_count  = $payment_count->revoked;
 		$this->abandoned_count= $payment_count->abandoned;
-		$this->total_count    = $payment_count->publish + $payment_count->pending + $payment_count->refunded + $payment_count->failed + $payment_count->abandoned + $payment_count->trash;
+
+		foreach( $payment_count as $count ) {
+			$this->total_count += $count;
+		}
 	}
 
 	/**
@@ -484,7 +487,6 @@ class EDD_Payment_History_Table extends WP_List_Table {
 		$page = isset( $_GET['paged'] ) ? $_GET['paged'] : 1;
 
 		$per_page       = $this->per_page;
-		$mode           = edd_is_test_mode()            ? 'test'                                     : 'live';
 		$orderby 		= isset( $_GET['orderby'] )     ? $_GET['orderby']                           : 'ID';
 		$order 			= isset( $_GET['order'] )       ? $_GET['order']                             : 'DESC';
 		$order_inverse 	= $order == 'DESC'              ? 'ASC'                                      : 'DESC';
@@ -503,7 +505,6 @@ class EDD_Payment_History_Table extends WP_List_Table {
 			'output'   => 'payments',
 			'number'   => $per_page,
 			'page'     => isset( $_GET['paged'] ) ? $_GET['paged'] : null,
-			'mode'     => $mode,
 			'orderby'  => $orderby,
 			'order'    => $order,
 			'user'     => $user,

@@ -34,14 +34,14 @@ $address      = ! empty( $user_info['address'] ) ? $user_info['address'] : array
 ?>
 <div class="wrap">
 	<h2><?php printf( __( 'Payment #%d', 'edd' ), $payment_id ); ?></h2>
-	<?php do_action( 'edd_view_order_details_before' ); ?>
+	<?php do_action( 'edd_view_order_details_before', $payment_id ); ?>
 	<form id="edd-edit-order-form" method="post">
 		<?php do_action( 'edd_view_order_details_form_top' ); ?>
 		<div id="poststuff">
 			<div id="post-body" class="metabox-holder columns-2">
 				<div id="postbox-container-1" class="postbox-container">
 					<div id="side-sortables" class="meta-box-sortables ui-sortable">
-						<?php do_action( 'edd_view_order_details_sidebar_before' ); ?>
+						<?php do_action( 'edd_view_order_details_sidebar_before', $payment_id ); ?>
 						
 						<div id="edd-order-totals" class="postbox">
 							<h3 class="hndle">
@@ -161,7 +161,9 @@ $address      = ! empty( $user_info['address'] ) ? $user_info['address'] : array
 								<div id="major-publishing-actions">
 									<div id="publishing-action">
 										<input type="submit" class="button button-primary right" value="<?php esc_attr_e( 'Save Payment', 'edd' ); ?>"/>
-										<a href="<?php echo add_query_arg( array( 'edd-action' => 'email_links', 'purchase_id' => $payment_id ) ); ?>" id="edd-resend-receipt" class="button-secondary right"><?php _e( 'Resend Receipt', 'edd' ); ?></a>
+										<?php if( edd_is_payment_complete( $payment_id ) ) : ?>
+											<a href="<?php echo add_query_arg( array( 'edd-action' => 'email_links', 'purchase_id' => $payment_id ) ); ?>" id="edd-resend-receipt" class="button-secondary right"><?php _e( 'Resend Receipt', 'edd' ); ?></a>
+										<?php endif; ?>
 									</div>
 									<div class="clear"></div>
 								</div>
