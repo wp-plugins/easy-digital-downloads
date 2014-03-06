@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.7
 Tested up to: 3.9
 
-Stable Tag: 1.9.7
+Stable Tag: 1.9.8
 
 License: GNU Version 2 or Any Later Version
 
@@ -188,6 +188,13 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
+= 1.9.8: March 6, 2014 =
+
+* Fix: Problem with guest customers not being able to view purchase receipts
+* Fix: Problem with field alignment in the View Order Details screen on small screens
+* Tweak: Added an option to dismiss the "No Checkout Page" notice
+
+
 = 1.9.7: March 4, 2014 =
 
 * Fix: Problem with prices losing the decimal places
@@ -195,7 +202,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fix: Currency sign added to monthly estimated sale count
 * Fix: Not all payment statuses taken into account  for payment counts
 
-* Tweak: Allow get_germs() arguments to be filtered in categories / tags widget
+* Tweak: Allow get_terms() arguments to be filtered in categories / tags widget
 * Tweak: Add arguments to purchase link filter
 
 * New: Added Hebrew translation
