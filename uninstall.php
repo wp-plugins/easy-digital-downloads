@@ -20,10 +20,12 @@ global $wpdb, $edd_options, $wp_roles;
 if( edd_get_option( 'uninstall_on_delete' ) ) {
 
 	/** Delete All the Custom Post Types */
+	$edd_taxonomies = array( 'download_category', 'download_tag', 'edd_log_type', );
 	$edd_post_types = array( 'download', 'edd_payment', 'edd_discount', 'edd_log' );
 	foreach ( $edd_post_types as $post_type ) {
-
-		$items = get_posts( array( 'post_type' => $post_type, 'numberposts' => -1, 'fields' => 'ids' ) );
+	
+		$edd_taxonomies = array_merge( $edd_taxonomies, get_object_taxonomies( $post_type ) );
+		$items = get_posts( array( 'post_type' => $post_type, 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ) );
 
 		if ( $items ) {
 			foreach ( $items as $item ) {
@@ -32,30 +34,29 @@ if( edd_get_option( 'uninstall_on_delete' ) ) {
 		}
 	}
 
-	/** Delete All the Taxonomies */
-	$edd_taxonomies = array( 'download_tag', 'download_category', 'edd_log_type' );
-	foreach ( $edd_taxonomies as $taxonomy ) {
-		global $wp_taxonomies;
-		$terms = get_terms( $taxonomy );
+	/** Delete All the Terms & Taxonomies */
+	foreach ( array_unique( array_filter( $edd_taxonomies ) ) as $taxonomy ) {
+		
+		$terms = $wpdb->get_results( $wpdb->prepare( "SELECT t.*, tt.* FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.taxonomy IN ('%s') ORDER BY t.name ASC", $taxonomy ) );
+		
+		// Delete Terms
 		if ( $terms ) {
 			foreach ( $terms as $term ) {
-				wp_delete_term( $term->term_id, $taxonomy );
+				$wpdb->delete( $wpdb->term_taxonomy, array( 'term_taxonomy_id' => $term->term_taxonomy_id ) );
+				$wpdb->delete( $wpdb->terms, array( 'term_id' => $term->term_id ) );
 			}
 		}
-		unset( $wp_taxonomies[ $taxonomy ] );
+		
+		// Delete Taxonomies
+		$wpdb->delete( $wpdb->term_taxonomy, array( 'taxonomy' => $taxonomy ), array( '%s' ) );
 	}
 
 	/** Delete the Plugin Pages */
-	if ( isset( $edd_options['purchase_page'] ) ) {
-		wp_delete_post( $edd_options['purchase_page'], true );
-	}
-
-	if ( isset( $edd_options['success_page'] ) ) {
-		wp_delete_post( $edd_options['success_page'], true );
-	}
-
-	if ( isset( $edd_options['failure_page'] ) ) {
-		wp_delete_post( $edd_options['failure_page'], true );
+	$edd_created_pages = array( 'purchase_page', 'success_page', 'failure_page', 'purchase_history_page' );
+	foreach ( $edd_created_pages as $p ) {
+		if ( isset( $edd_options[ $p ] ) ) {
+			wp_delete_post( $edd_options[ $p ], true );
+		}
 	}
 
 	/** Delete all the Plugin Options */
