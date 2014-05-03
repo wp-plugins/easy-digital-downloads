@@ -27,8 +27,6 @@ function edd_load_scripts() {
 
 	$js_dir = EDD_PLUGIN_URL . 'assets/js/';
 
-	wp_enqueue_script( 'jquery' );
-
 	// Use minified libraries if SCRIPT_DEBUG is turned off
 	$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
@@ -65,7 +63,6 @@ function edd_load_scripts() {
 		wp_enqueue_script( 'edd-ajax', $js_dir . 'edd-ajax' . $suffix . '.js', array( 'jquery' ), EDD_VERSION );
 		wp_localize_script( 'edd-ajax', 'edd_scripts', array(
 				'ajaxurl'                 => edd_get_ajax_url(),
-				'ajax_nonce'              => wp_create_nonce( 'edd_ajax_nonce' ),
 				'position_in_cart'        => isset( $position ) ? $position : -1,
 				'already_in_cart_message' => __('You have already added this item to your cart', 'edd'), // Item already in the cart message
 				'empty_cart_message'      => __('Your cart is empty', 'edd'), // Item already in the cart message
@@ -143,6 +140,11 @@ add_action( 'wp_enqueue_scripts', 'edd_register_styles' );
  * @return void
  */
 function edd_load_admin_scripts( $hook ) {
+
+	if ( ! apply_filters( 'edd_load_admin_scripts', edd_is_admin_page(), $hook ) ) {
+		return;
+	}
+	
 	global $wp_version;
 
 	$js_dir  = EDD_PLUGIN_URL . 'assets/js/';

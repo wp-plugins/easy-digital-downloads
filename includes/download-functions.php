@@ -128,7 +128,8 @@ function edd_get_download_final_price( $download_id, $user_purchase_info, $amoun
  * @return array Variable prices
  */
 function edd_get_variable_prices( $download_id ) {
-	return get_post_meta( $download_id, 'edd_variable_prices', true );
+	$variable_prices = get_post_meta( $download_id, 'edd_variable_prices', true );
+	return apply_filters( 'edd_get_variable_prices', $variable_prices, $download_id );
 }
 
 /**
@@ -690,12 +691,12 @@ function edd_get_file_download_limit( $download_id = 0 ) {
 	$ret   = 0;
 	$limit = get_post_meta( $download_id, '_edd_download_limit', true );
 
-	if ( ! empty( $limit ) ) {
+	if ( ! empty( $limit ) || ( is_numeric( $limit ) && (int)$limit == 0 ) ) {
 		// Download specific limit
 		$ret = absint( $limit );
 	} else {
 		// Global limit
-		$ret = ! empty( $edd_options['file_download_limit'] ) ? absint( $edd_options['file_download_limit'] ) : 0;
+		$ret = strlen( $limit ) == 0  || ! empty( $edd_options['file_download_limit'] ) ? absint( $edd_options['file_download_limit'] ) : 0;
 	}
 	return apply_filters( 'edd_file_download_limit', $ret, $download_id );
 }
