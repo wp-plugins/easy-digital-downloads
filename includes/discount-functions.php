@@ -379,7 +379,7 @@ function edd_get_discount_amount( $code_id = null ) {
  * @return float
  */
 function edd_get_discount_type( $code_id = null ) {
-	$type = get_post_meta( $code_id, '_edd_discount_type', true );
+	$type = strtolower( get_post_meta( $code_id, '_edd_discount_type', true ) );
 
 	return apply_filters( 'edd_get_discount_type', $type, $code_id );
 }
@@ -583,7 +583,7 @@ function edd_discount_product_reqs_met( $code_id = null ) {
 	$condition    = edd_get_discount_product_condition( $code_id );
 	$excluded_ps  = edd_get_discount_excluded_products( $code_id );
 	$cart_items   = edd_get_cart_contents();
-	$cart_ids     = wp_list_pluck( $cart_items, 'id' );
+	$cart_ids     = $cart_items ? wp_list_pluck( $cart_items, 'id' ) : null;
 	$ret          = false;
 
 	if ( empty( $product_reqs ) ) {
@@ -772,7 +772,7 @@ function edd_get_discounted_amount( $code, $base_price ) {
 		$discounted_price = $base_price - ( $base_price * ( $rate / 100 ) );
 	}
 
-	return apply_filters( 'edd_discounted_amount', round( $discounted_price, 2 ) );
+	return apply_filters( 'edd_discounted_amount', $discounted_price );
 }
 
 /**
@@ -933,7 +933,86 @@ function edd_get_cart_discounted_amount( $discounts = false ) {
 		
 	}
 
-	return apply_filters( 'edd_get_cart_discounted_amount', round( $amount, 2 ) );
+	return apply_filters( 'edd_get_cart_discounted_amount', $amount );
+}
+
+/**
+ * Get the discounted amount on a price
+ *
+ * @since 1.9
+ * @param array $item Cart item array
+ * @return float The discounted amount
+ */
+function edd_get_cart_item_discount_amount( $item = array() ) {
+
+	$amount           = 0;
+	$price            = edd_get_cart_item_price( $item['id'], $item['options'], edd_prices_include_tax() );
+	$discounted_price = $price;
+
+	// Retrieve all discounts applied to the cart
+	$discounts = edd_get_cart_discounts();
+
+	if( $discounts ) {
+
+		foreach ( $discounts as $discount ) {
+
+			$code_id           = edd_get_discount_id_by_code( $discount );
+			$reqs              = edd_get_discount_product_reqs( $code_id );
+			$excluded_products = edd_get_discount_excluded_products( $code_id );
+
+			// Make sure requirements are set and that this discount shouldn't apply to the whole cart
+			if ( ! empty( $reqs ) && edd_is_discount_not_global( $code_id ) ) {
+
+				// This is a product(s) specific discount
+
+				foreach ( $reqs as $download_id ) {
+					
+					if ( $download_id == $item['id'] && ! in_array( $item['id'], $excluded_products ) ) {
+						$discounted_price = edd_get_discounted_amount( $discount, $price );
+					}
+					
+				}
+
+			} else {
+
+				// This is a global cart discount
+				if( ! in_array( $item['id'], $excluded_products ) ) {
+
+					if( 'flat' === edd_get_discount_type( $code_id ) ) {
+						
+						/* *
+						 * In order to correctly record individual item amounts, global flat rate discounts
+						 * are distributed across all cart items. The discount amount is divided by the number
+						 * of items in the cart and then a portion is evenly applied to each cart item
+						 */
+
+						$discounted_amount = edd_get_discount_amount( $code_id );
+						$discounted_amount = ( $discounted_amount / edd_get_cart_quantity() );
+						$discounted_price -= $discounted_amount;
+					} else {
+					
+						$discounted_price = edd_get_discounted_amount( $discount, $price );
+					
+					}
+
+				}
+
+			}
+
+		}
+
+		$amount = ( $price - apply_filters( 'edd_get_cart_item_discounted_amount', $discounted_price, $discounts, $item, $price ) );
+
+		if( 'flat' !== edd_get_discount_type( $code_id ) ) {
+
+			$amount = $amount * $item['quantity'];
+
+		}
+
+	}
+
+	return $amount;
+
 }
 
 /**

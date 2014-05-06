@@ -91,6 +91,8 @@ class EDD_Payment_Stats extends EDD_Stats {
 	 */
 	public function get_earnings( $download_id = 0, $start_date = false, $end_date = false ) {
 
+		global $wpdb;
+
 		$this->setup_dates( $start_date, $end_date );
 
 		// Make sure start date is valid
@@ -112,29 +114,25 @@ class EDD_Payment_Stats extends EDD_Stats {
 			$args = array(
 				'post_type'              => 'edd_payment',
 				'nopaging'               => true,
-				'meta_key'               => '_edd_payment_mode',
-				'meta_value'             => 'live',
 				'post_status'            => array( 'publish', 'revoked' ),
 				'fields'                 => 'ids',
 				'update_post_term_cache' => false,
 				'suppress_filters'       => false,
 				'start_date'             => $this->start_date, // These dates are not valid query args, but they are used for cache keys
-				'end_date'               => $this->end_date
+				'end_date'               => $this->end_date,
+				'edd_transient_type'     => 'edd_earnings', // This is not a valid query arg, but is used for cache keying
 			);
 
-			$args = apply_filters( 'edd_stats_earnings_args', $args );
+			$args     = apply_filters( 'edd_stats_earnings_args', $args );
+			$key      = md5( serialize( $args ) );
 
-			$key = md5( 'edd_earnings_' . $start_date . $start_date );
 			$earnings = get_transient( $key );
-
 			if( false === $earnings ) {
 				$sales = get_posts( $args );
 				$earnings = 0;
 				if ( $sales ) {
-					foreach ( $sales as $sale ) {
-						$amount    = edd_get_payment_amount( $sale );
-						$earnings  = floatval( $earnings ) +  floatval( $amount );
-					}
+					$sales = implode( ',', $sales );
+					$earnings += $wpdb->get_var( "SELECT SUM(meta_value) FROM $wpdb->postmeta WHERE meta_key = '_edd_payment_total' AND post_id IN({$sales})" );
 				}
 				// Cache the results for one hour
 				set_transient( $key, $earnings, 60*60 );
@@ -147,17 +145,18 @@ class EDD_Payment_Stats extends EDD_Stats {
 			global $edd_logs, $wpdb;
 
 			$args = array(
-				'post_parent'      => $download_id,
-				'nopaging'         => true,
-				'log_type'         => 'sale',
-				'fields'           => 'ids',
-				'suppress_filters' => false,
-				'start_date'       => $this->start_date, // These dates are not valid query args, but they are used for cache keys
-				'end_date'         => $this->end_date
+				'post_parent'        => $download_id,
+				'nopaging'           => true,
+				'log_type'           => 'sale',
+				'fields'             => 'ids',
+				'suppress_filters'   => false,
+				'start_date'         => $this->start_date, // These dates are not valid query args, but they are used for cache keys
+				'end_date'           => $this->end_date,
+				'edd_transient_type' => 'edd_earnings', // This is not a valid query arg, but is used for cache keying
 			);
 
-			$args = apply_filters( 'edd_stats_earnings_args', $args );
-			$key  = md5( serialize( $args ) );
+			$args     = apply_filters( 'edd_stats_earnings_args', $args );
+			$key      = md5( serialize( $args ) );
 
 			$earnings = get_transient( $key );
 			if( false === $earnings ) {

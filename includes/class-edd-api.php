@@ -30,7 +30,7 @@ class EDD_API {
 	/**
 	 * API Version
 	 */
-	const VERSION = '1.1';
+	const VERSION = '1.2';
 
 	/**
 	 * Pretty Print?
@@ -216,6 +216,10 @@ class EDD_API {
 		if( empty( $key ) )
 			$key = urldecode( $wp_query->query_vars['key'] );
 
+		if ( empty( $key ) ) {
+			return false;
+		}
+
 		$user = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'edd_user_public_key' AND meta_value = %s LIMIT 1", $key ) );
 
 		if ( $user != NULL ) {
@@ -297,6 +301,10 @@ class EDD_API {
 		// Only proceed if no errors have been noted
 		if( ! $this->is_valid_request )
 			return;
+
+		if( ! defined( 'EDD_DOING_API' ) ) {
+			define( 'EDD_DOING_API', true );
+		}
 
 		// Determine the kind of query
 		$query_mode = $this->get_query_mode();
@@ -591,6 +599,13 @@ class EDD_API {
 			endswitch;
 		}
 
+		/**
+		 * Returns the filters for the dates used to retreive earnings/sales
+		 *
+		 * @since 1.5.1
+		 * @param object $dates The dates used for retreiving earnings/sales
+		 */
+
 		return apply_filters( 'edd_api_stat_dates', $dates );
 	}
 
@@ -692,7 +707,12 @@ class EDD_API {
 		if ( $product == null ) {
 			$products['products'] = array();
 
-			$product_list = get_posts( array( 'post_type' => 'download', 'posts_per_page' => $this->per_page(), 'paged' => $this->get_paged() ) );
+			$product_list = get_posts( array(
+				'post_type'        => 'download',
+				'posts_per_page'   => $this->per_page(),
+				'suppress_filters' => true,
+				'paged'            => $this->get_paged()
+			) );
 
 			if ( $product_list ) {
 				$i = 0;
@@ -1059,6 +1079,7 @@ class EDD_API {
 
 				$sales['sales'][ $i ]['ID']       = $payment->ID;
 				$sales['sales'][ $i ]['key']      = edd_get_payment_key( $payment->ID );
+				$sales['sales'][ $i ]['discount'] = isset( $user_info['discount'] ) && $user_info['discount'] != 'none' ? explode( ',', $user_info['discount'] ) : array();
 				$sales['sales'][ $i ]['subtotal'] = edd_get_payment_subtotal( $payment->ID );
 				$sales['sales'][ $i ]['tax']      = edd_get_payment_tax( $payment->ID );
 				$sales['sales'][ $i ]['fees']     = edd_get_payment_fees( $payment->ID );
@@ -1071,17 +1092,26 @@ class EDD_API {
 				$c = 0;
 
 				foreach ( $cart_items as $key => $item ) {
-					$price_override = isset( $payment_meta['cart_details'] ) ? $item['price'] : null;
-					$price          = edd_get_download_final_price( $item['id'], $user_info, $price_override );
 
-					if ( isset( $cart_items[ $key ]['item_number'] ) ) {
+					$item_id  = isset( $item['id']    ) ? $item['id']    : $item;
+					$price    = isset( $item['price'] ) ? $item['price'] : false;
+					$price_id = isset( $item['item_number']['options']['price_id'] ) ? $item['item_number']['options']['price_id'] : null;
+					$quantity = isset( $item['quantity'] ) && $item['quantity'] > 0 ? $item['quantity'] : 1;
+
+					if( ! $price ) {
+						// This function is only used on payments with near 1.0 cart data structure
+						$price = edd_get_download_final_price( $item_id, $user_info, null );
+					}
+
+					if ( isset( $item['item_number'] ) && isset( $item['item_number']['options'] ) ) {
 						$price_name     = '';
-						$price_options  = $cart_items[ $key ]['item_number']['options'];
+						$price_options  = $item['item_number']['options'];
 						if ( isset( $price_options['price_id'] ) ) {
 							$price_name = edd_get_price_option_name( $item['id'], $price_options['price_id'], $payment->ID );
 						}
 					}
 
+					$sales['sales'][ $i ]['products'][ $c ]['quantity']   = $quantity;
 					$sales['sales'][ $i ]['products'][ $c ]['name']       = get_the_title( $item['id'] );
 					$sales['sales'][ $i ]['products'][ $c ]['price']      = $price;
 					$sales['sales'][ $i ]['products'][ $c ]['price_name'] = $price_name;
@@ -1314,7 +1344,7 @@ class EDD_API {
 							<?php } else { ?>
 								<strong><?php _e( 'Public key:', 'edd' ); ?>&nbsp;</strong><span id="publickey"><?php echo $user->edd_user_public_key; ?></span><br/>
 								<strong><?php _e( 'Secret key:', 'edd' ); ?>&nbsp;</strong><span id="privatekey"><?php echo $user->edd_user_secret_key; ?></span><br/>
-								<strong><?php _e( 'Token:', 'edd' ); ?>&nbsp;</strong><span id="token"><?php echo hash( 'md5', $user->edd_user_secret_key . $user->edd_user_public_key ); ?></span><br/>
+								<strong><?php _e( 'Token:', 'edd' ); ?>&nbsp;</strong><span id="token"><?php echo $this->get_token( $user->ID ); ?></span><br/>
 								<input name="edd_set_api_key" type="checkbox" id="edd_set_api_key" value="0" />
 								<span class="description"><?php _e( 'Revoke API Keys', 'edd' ); ?></span>
 							<?php } ?>
@@ -1338,22 +1368,62 @@ class EDD_API {
 	 */
 	public function update_key( $user_id ) {
 		if ( current_user_can( 'edit_user', $user_id ) && isset( $_POST['edd_set_api_key'] ) ) {
+
 			$user = get_userdata( $user_id );
 
 			if ( empty( $user->edd_user_public_key ) ) {
-				$public = hash( 'md5', $user->user_email . date( 'U' ) );
-				update_user_meta( $user_id, 'edd_user_public_key', $public );
+				update_user_meta( $user_id, 'edd_user_public_key', $this->generate_public_key( $user->user_email ) );
 			} else {
 				delete_user_meta( $user_id, 'edd_user_public_key' );
 			}
 
 			if ( empty( $user->edd_user_secret_key ) ) {
-				$secret = hash( 'md5', $user->ID . date( 'U' ) );
-				update_user_meta( $user_id, 'edd_user_secret_key', $secret );
+				update_user_meta( $user_id, 'edd_user_secret_key', $this->generate_private_key( $user->ID ) );
 			} else {
 				delete_user_meta( $user_id, 'edd_user_secret_key' );
 			}
 		}
+	}
+
+	/**
+	 * Generate the public key for a user
+	 *
+	 * @access private
+	 * @since 1.9.9
+	 * @param string $user_email
+	 * @return string
+	 */
+	private function generate_public_key( $user_email = '' ) {
+		$auth_key = defined( 'AUTH_KEY' ) ? AUTH_KEY : '';
+		$public   = hash( 'md5', $user_email . $auth_key . date( 'U' ) );
+		return $public;
+	}
+
+	/**
+	 * Generate the secret key for a user
+	 *
+	 * @access private
+	 * @since 1.9.9
+	 * @param int $user_id
+	 * @return string
+	 */
+	private function generate_private_key( $user_id = 0 ) {
+		$auth_key = defined( 'AUTH_KEY' ) ? AUTH_KEY : '';
+		$secret   = hash( 'md5', $user_id . $auth_key . date( 'U' ) );
+		return $secret;
+	}
+
+	/**
+	 * Retrieve the user's token
+	 *
+	 * @access private
+	 * @since 1.9.9
+	 * @param int $user_id
+	 * @return string
+	 */
+	private function get_token( $user_id = 0 ) {
+		$user = get_userdata( $user_id );
+		return hash( 'md5', $user->edd_user_secret_key . $user->edd_user_public_key );
 	}
 
 	/**

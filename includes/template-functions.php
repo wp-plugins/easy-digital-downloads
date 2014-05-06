@@ -54,11 +54,13 @@ function edd_get_purchase_link( $args = array() ) {
 		edd_print_errors();
 		return false;
 	}
+	
+	$post_id = is_object( $post ) ? $post->ID : 0;
 
 	$defaults = apply_filters( 'edd_purchase_link_defaults', array(
-		'download_id' => $post->ID,
+		'download_id' => $post_id,
 		'price'       => (bool) true,
-		'direct'      => edd_get_download_button_behavior( $post->ID ) == 'direct' ? true : false,
+		'direct'      => edd_get_download_button_behavior( $post_id ) == 'direct' ? true : false,
 		'text'        => ! empty( $edd_options[ 'add_to_cart_text' ] ) ? $edd_options[ 'add_to_cart_text' ] : __( 'Purchase', 'edd' ),
 		'style'       => isset( $edd_options[ 'button_style' ] ) 	   ? $edd_options[ 'button_style' ]     : 'button',
 		'color'       => isset( $edd_options[ 'checkout_color' ] ) 	   ? $edd_options[ 'checkout_color' ] 	: 'blue',
@@ -99,6 +101,8 @@ function edd_get_purchase_link( $args = array() ) {
 	}
 
 	$form_id = ! empty( $args['form_id'] ) ? $args['form_id'] : 'edd_purchase_' . $args['download_id'];
+	
+	$args = apply_filters( 'edd_purchase_link_args', $args );
 
 	ob_start();
 ?>
@@ -206,7 +210,7 @@ function edd_purchase_variable_pricing( $download_id = 0 ) {
 			<?php
 			if ( $prices ) :
 				foreach ( $prices as $key => $price ) :
-					echo '<li id="edd_price_option_' . $download_id . '_' . sanitize_key( $price['name'] ) . '">';
+					echo '<li id="edd_price_option_' . $download_id . '_' . sanitize_key( $price['name'] ) . '" itemprop="offers" itemscope itemtype="http://schema.org/Offer">';
 					printf(
 						'<label for="%3$s"><input type="%2$s" %1$s name="edd_options[price_id][]" id="%3$s" class="%4$s" value="%5$s" %7$s/> %6$s</label>',
 						checked( apply_filters( 'edd_price_option_checked', 0, $download_id, $key ), $key, false ),
@@ -214,7 +218,7 @@ function edd_purchase_variable_pricing( $download_id = 0 ) {
 						esc_attr( 'edd_price_option_' . $download_id . '_' . $key ),
 						esc_attr( 'edd_price_option_' . $download_id ),
 						esc_attr( $key ),
-						'<span class="edd_price_option_name">' . esc_html( $price['name'] ) . '</span><span class="edd_price_option_sep">&nbsp;&ndash;&nbsp;</span><span class="edd_price_option_price">' . edd_currency_filter( edd_format_amount( $price[ 'amount' ] ) ) . '</span>',
+						'<span class="edd_price_option_name" itemprop="description">' . esc_html( $price['name'] ) . '</span><span class="edd_price_option_sep">&nbsp;&ndash;&nbsp;</span><span class="edd_price_option_price" itemprop="price">' . edd_currency_filter( edd_format_amount( $price[ 'amount' ] ) ) . '</span>',
 						checked( isset( $_GET['price_option'] ), $key, false )
 					);
 					do_action( 'edd_after_price_option', $key, $price, $download_id );
@@ -381,24 +385,25 @@ add_filter( 'edd_downloads_content', 'edd_downloads_default_content' );
  * Gets the download links for each item purchased
  *
  * @since 1.1.5
- * @param array $purchase_data Purchase data
+ * @param int $payment_id The ID of the payment to retrieve download links for
  * @return string
  */
-function edd_get_purchase_download_links( $purchase_data ) {
-	if ( ! is_array( $purchase_data['downloads'] ) )
-		return '<div class="edd-error">' . __( 'No downloads found', 'edd' ) . '</div>';
+function edd_get_purchase_download_links( $payment_id = 0 ) {
 
-	$links = '<ul class="edd_download_links">';
+	$downloads   = edd_get_payment_meta_cart_details( $payment_id, true );
+	$payment_key = edd_get_payment_key( $payment_id );
+	$email       = edd_get_payment_user_email( $payment_id );
+	$links       = '<ul class="edd_download_links">';
 
-	foreach ( $purchase_data['downloads'] as $download ) {
+	foreach ( $downloads as $download ) {
 		$links .= '<li>';
 			$links .= '<h3 class="edd_download_link_title">' . esc_html( get_the_title( $download['id'] ) ) . '</h3>';
 			$price_id = isset( $download['options'] ) && isset( $download['options']['price_id'] ) ? $download['options']['price_id'] : null;
-			$files = edd_get_download_files( $download['id'], $price_id );
+			$files    = edd_get_download_files( $download['id'], $price_id );
 			if ( is_array( $files ) ) {
 				foreach ( $files as $filekey => $file ) {
 					$links .= '<div class="edd_download_link_file">';
-						$links .= '<a href="' . esc_url( edd_get_download_file_url( $purchase_data['purchase_key'], $purchase_data['user_email'], $filekey, $download['id'], $price_id ) ) . '">';
+						$links .= '<a href="' . esc_url( edd_get_download_file_url( $payment_key, $email, $filekey, $download['id'], $price_id ) ) . '">';
 							if ( isset( $file['name'] ) )
 								$links .= esc_html( $file['name'] );
 							else

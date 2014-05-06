@@ -84,7 +84,7 @@ function edd_process_download() {
 		header("Robots: none");
 		header("Content-Type: " . $ctype . "");
 		header("Content-Description: File Transfer");
-		header("Content-Disposition: attachment; filename=\"" . apply_filters( 'edd_requested_file_name', basename( $requested_file ) ) . "\";");
+		header("Content-Disposition: attachment; filename=\"" . apply_filters( 'edd_requested_file_name', basename( $requested_file ) ) . "\"");
 		header("Content-Transfer-Encoding: binary");
 
 		$method = edd_get_file_download_method();
@@ -107,12 +107,24 @@ function edd_process_download() {
 				$direct       = false;
 				$file_details = parse_url( $requested_file );
 				$schemes      = array( 'http', 'https' ); // Direct URL schemes
+
 				if ( ( ! isset( $file_details['scheme'] ) || ! in_array( $file_details['scheme'], $schemes ) ) && isset( $file_details['path'] ) && file_exists( $requested_file ) ) {
 
 					/** This is an absolute path */
 					$direct    = true;
 					$file_path = $requested_file;
 
+				} else if( defined( 'UPLOADS' ) && strpos( $requested_file, UPLOADS ) !== false ) {
+
+					/** 
+					 * This is a local file given by URL so we need to figure out the path
+					 * UPLOADS is always relative to ABSPATH
+					 * site_url() is the URL to where WordPress is installed
+					 */
+					$file_path  = str_replace( site_url(), '', $requested_file );
+					$file_path  = realpath( ABSPATH . $file_path );
+					$direct     = true;
+					
 				} else if( strpos( $requested_file, WP_CONTENT_URL ) !== false ) {
 
 					/** This is a local file given by URL so we need to figure out the path */
@@ -137,7 +149,7 @@ function edd_process_download() {
 					$file_path = str_ireplace( $_SERVER[ 'DOCUMENT_ROOT' ], '', $file_path );
 					header( "X-Accel-Redirect: /$file_path" );
 
-				} else
+				}
 
 				if( $direct ) {
 					edd_deliver_download( $file_path );
@@ -153,13 +165,12 @@ function edd_process_download() {
 		edd_die();
 	} else {
 		$error_message = __( 'You do not have permission to download this file', 'edd' );
-		wp_die( apply_filters( ' edd_deny_download_message', $error_message, __( 'Purchase Verification Failed', 'edd' ) ) );
+		wp_die( apply_filters( 'edd_deny_download_message', $error_message, __( 'Purchase Verification Failed', 'edd' ) ) );
 	}
 
 	exit;
 }
 add_action( 'init', 'edd_process_download', 100 );
-
 
 /**
  * Deliver the download file
@@ -210,13 +221,13 @@ function edd_deliver_download( $file = '' ) {
 			// Send the browser to the file
 			header( 'Location: ' . $url );
 		} else {
-			@edd_readfile_chunked( $file );
+			edd_readfile_chunked( $file );
 		}
 
 	} else {
 
 		// Read the file and deliver it in chunks
-		@edd_readfile_chunked( $file );
+		edd_readfile_chunked( $file );
 
 	}
 
@@ -525,6 +536,10 @@ function edd_get_file_ctype( $extension ) {
 		default         : $ctype = "application/force-download";
 	endswitch;
 
+	if( wp_is_mobile() ) {
+		$ctype = 'application/octet-stream';
+	}
+
 	return apply_filters( 'edd_file_ctype', $ctype );
 }
 
@@ -535,31 +550,37 @@ function edd_get_file_ctype( $extension ) {
  * @access   public
  * @param    string  $file      The file
  * @param    boolean $retbytes  Return the bytes of file
- * @return   bool|string - If string, $status || $cnt
+ * @return   bool|string        If string, $status || $cnt
  */
-function edd_readfile_chunked( $file, $retbytes = TRUE ) {
+function edd_readfile_chunked( $file, $retbytes = true ) {
 
-	$chunksize = 1 * (1024 * 1024);
+	$chunksize = 1024 * 1024;
 	$buffer    = '';
 	$cnt       = 0;
-	$handle    = fopen( $file, 'r' );
+	$handle    = @fopen( $file, 'r' );
 
-	if( $size = @filesize( $file ) ) header("Content-Length: " . $size );
+	if ( $size = @filesize( $file ) ) {
+		header("Content-Length: " . $size );
+	}
 
-	if ( $handle === FALSE ) return FALSE;
+	if ( false === $handle ) {
+		return false; 
+	}
 
-	while ( ! feof( $handle ) ) :
-	   $buffer = fread( $handle, $chunksize );
-	   echo $buffer;
-	   //ob_flush();
-	   //flush();
+	while ( ! @feof( $handle ) ) {
+		$buffer = @fread( $handle, $chunksize );
+		echo $buffer;
 
-	   if ( $retbytes ) $cnt += strlen( $buffer );
-	endwhile;
+		if ( $retbytes ) {
+	   		$cnt += strlen( $buffer ); 
+   		}
+	}
+	
+	$status = @fclose( $handle );
 
-	$status = fclose( $handle );
-
-	if ( $retbytes AND $status ) return $cnt;
+	if ( $retbytes && $status ) {
+		return $cnt;
+	}
 
 	return $status;
 }

@@ -20,7 +20,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function edd_get_cart_contents() {
 	$cart = EDD()->session->get( 'edd_cart' );
+	$fees = EDD()->session->get( 'edd_cart_fees' );
 	$cart = ! empty( $cart ) ? array_values( $cart ) : false;
+
+	if( empty( $cart ) && ! empty( $fees ) ) {
+		// Remove all fees if cart is empty
+		EDD()->session->set( 'edd_cart_fees', null );
+	}
+
 	return apply_filters( 'edd_cart_contents', $cart );
 }
 
@@ -45,13 +52,15 @@ function edd_get_cart_content_details() {
 	foreach( $cart_items as $key => $item ) {
 
 		$item_price = edd_get_cart_item_price( $item['id'], $item['options'] );
-		$discount   = edd_get_cart_item_discount_amount( $item );
+		$discount   = apply_filters( 'edd_get_cart_content_details_item_discount_amount', edd_get_cart_item_discount_amount( $item ), $item );
 		$tax        = edd_get_cart_item_tax( $item );
 		$quantity   = edd_get_cart_item_quantity( $item['id'], $item['options'] );
 
 		$item_price = round( $item_price, 2 );
+		$discount   = round( $discount, 2 );
 		$subtotal   = round( $item_price * $quantity, 2 );
-		$total      = round( ( $item_price - $discount + $tax ) * $quantity, 2 );
+		$tax        = round( $tax * $quantity, 2 );
+		$total      = round( ( $subtotal - $discount + $tax ), 2 );
 
 		$details[ $key ]  = array(
 			'name'        => get_the_title( $item['id'] ),
@@ -64,6 +73,7 @@ function edd_get_cart_content_details() {
 			'tax'         => $tax,
 			'price'       => $total,
 		);
+
 	}
 
 	return $details;
@@ -92,7 +102,7 @@ function edd_get_cart_quantity() {
  * @return string Cart key of the new item
  */
 function edd_add_to_cart( $download_id, $options = array() ) {
-	$cart = edd_get_cart_contents();
+	$cart = apply_filters( 'edd_pre_add_to_cart_contents', edd_get_cart_contents() );
 	$download = get_post( $download_id );
 
 	if( 'download' != $download->post_type )
@@ -108,7 +118,9 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 		$options['price_id'] = '0';
 	}
 
-	$to_add = array();
+	$item     = array();
+	$to_add   = array();
+	$new_item = array();
 
 	if( isset( $options['quantity'] ) ) {
 		$quantity = absint( $options['quantity'] );
@@ -127,7 +139,6 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 				),
 				'quantity'     => $quantity
 			);
-			$to_add[] = apply_filters( 'edd_add_to_cart_item', $item  );
 		}
 	} else {
 		// Add a single item
@@ -136,13 +147,22 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 			'options'  => $options,
 			'quantity' => $quantity
 		);
-		$to_add[] = apply_filters( 'edd_add_to_cart_item', $item );
 	}
 
+	$to_add = apply_filters( 'edd_add_to_cart_item', $item );
+
+	if ( ! is_array( $to_add ) )
+		return;
+
+	if ( ! isset( $to_add['id'] ) || empty( $to_add['id'] ) )
+		return;
+
+	$new_item[] = $to_add;
+
 	if ( is_array( $cart ) ) {
-		$cart = array_merge( $cart, $to_add );
+		$cart = array_merge( $cart, $new_item );
 	} else {
-		$cart = $to_add;
+		$cart = $new_item;
 	}
 
 	EDD()->session->set( 'edd_cart', $cart );
@@ -376,59 +396,6 @@ function edd_get_cart_item_price( $download_id = 0, $options = array(), $include
 }
 
 /**
- * Get the discounted amount on a price
- *
- * @since 1.9
- * @param array $item Cart item array
- * @return float The discounted amount
- */
-function edd_get_cart_item_discount_amount( $item = array() ) {
-
-	$amount           = 0;
-	$price            = edd_get_cart_item_price( $item['id'], $item['options'], edd_prices_include_tax() );
-	$discounted_price = $price;
-
-	// Retrieve all discounts applied to the cart
-	$discounts = edd_get_cart_discounts();
-
-	if( $discounts ) {
-
-		foreach ( $discounts as $discount ) {
-
-			$code_id           = edd_get_discount_id_by_code( $discount );
-			$reqs              = edd_get_discount_product_reqs( $code_id );
-			$excluded_products = edd_get_discount_excluded_products( $code_id );
-
-			// Make sure requirements are set and that this discount shouldn't apply to the whole cart
-			if ( ! empty( $reqs ) && edd_is_discount_not_global( $code_id ) ) {
-
-				// This is a product(s) specific discount
-
-				foreach ( $reqs as $download_id ) {
-					
-					if ( $download_id == $item['id'] && ! in_array( $item['id'], $excluded_products ) ) {
-						$discounted_price = edd_get_discounted_amount( $discount, $price );
-					}
-					
-				}
-
-			} else {
-
-				// This is a global cart discount
-				if( ! in_array( $item['id'], $excluded_products ) ) {
-					$discounted_price = edd_get_discounted_amount( $discount, $price );
-				}
-			}
-		}
-
-		$amount = round( $price - $discounted_price, 2 );
-	}
-
-	return $amount;
-
-}
-
-/**
  * Get cart item's final price
  *
  * Gets the amount after taxes and discounts
@@ -470,12 +437,8 @@ function edd_get_cart_item_tax( $item = array() ) {
 		}
 
 		if( edd_taxes_after_discounts() ) {
-			$price -= edd_get_cart_item_discount_amount( $item );
+			$price -= apply_filters( 'edd_get_cart_item_tax_item_discount_amount', edd_get_cart_item_discount_amount( $item ), $item );
 		}
-
-		$quantity = edd_item_quantities_enabled() ? $item['quantity'] : 1;
-
-		$price *= $quantity;
 
 		$tax = edd_calculate_tax( $price );
 
@@ -735,7 +698,7 @@ function edd_get_cart_tax() {
 		
 	}
 
-	return apply_filters( 'edd_get_cart_tax', round( $cart_tax, 2 ) );
+	return apply_filters( 'edd_get_cart_tax', $cart_tax );
 }
 
 /**
@@ -811,7 +774,9 @@ function edd_add_collection_to_cart( $taxonomy, $terms ) {
 function edd_remove_item_url( $cart_key, $post, $ajax = false ) {
 	global $post;
 
-	if( is_page() ) {
+	if ( defined('DOING_AJAX') ){	
+		$current_page = edd_get_checkout_uri();
+	} else if( is_page() ) {
 		$current_page = add_query_arg( 'page_id', $post->ID, home_url( 'index.php' ) );
 	} else if( is_singular() ) {
 		$current_page = add_query_arg( 'p', $post->ID, home_url( 'index.php' ) );
@@ -844,74 +809,6 @@ function edd_show_added_to_cart_messages( $download_id ) {
 	}
 }
 add_action('edd_after_download_content', 'edd_show_added_to_cart_messages');
-
-/**
- * Get the URL of the Checkout page
- *
- * @since 1.0.8
- * @global $edd_options Array of all the EDD Options
- * @param array $args Extra query args to add to the URI
- * @return mixed Full URL to the checkout page, if present | null if it doesn't exist
- */
-function edd_get_checkout_uri( $args = array() ) {
-	global $edd_options;
-
-	$uri = isset( $edd_options['purchase_page'] ) ? get_permalink( $edd_options['purchase_page'] ) : NULL;
-
-	if ( ! empty( $args ) ) {
-		// Check for backward compatibility
-		if ( is_string( $args ) )
-			$args = str_replace( '?', '', $args );
-
-		$args = wp_parse_args( $args );
-
-		$uri = add_query_arg( $args, $uri );
-	}
-
-	$scheme = defined( 'FORCE_SSL_ADMIN' ) && FORCE_SSL_ADMIN ? 'https' : 'admin';
-
-	$ajax_url = admin_url( 'admin-ajax.php', $scheme );
-
-	if ( ! preg_match( '/^https/', $uri ) && preg_match( '/^https/', $ajax_url ) ) {
-		$uri = preg_replace( '/^http/', 'https', $uri );
-	}
-
-	if ( isset( $edd_options['no_cache_checkout'] ) && edd_is_caching_plugin_active() )
-		$uri = add_query_arg( 'nocache', 'true', $uri );
-
-	return apply_filters( 'edd_get_checkout_uri', $uri );
-}
-
-/**
- * Get the URL of the Transaction Failed page
- *
- * @since 1.3.4
- * @global $edd_options Array of all the EDD Options
- *
- * @param bool $extras Extras to append to the URL
- * @return mixed|void Full URL to the Transaction Failed page, if present, home page if it doesn't exist
- */
-function edd_get_failed_transaction_uri( $extras = false ) {
-	global $edd_options;
-
-	$uri = isset( $edd_options['failure_page'] ) ? trailingslashit( get_permalink( $edd_options['failure_page'] ) ) : home_url();
-	if ( $extras )
-		$uri .= $extras;
-
-	return apply_filters( 'edd_get_failed_transaction_uri', $uri );
-}
-
-/**
- * Determines if we're currently on the Checkout page
- *
- * @since 1.1.2
- * @return bool True if on the Checkout page, false otherwise
- */
-function edd_is_checkout() {
-	global $edd_options;
-	$is_checkout = isset( $edd_options['purchase_page'] ) ? is_page( $edd_options['purchase_page'] ) : false;
-	return apply_filters( 'edd_is_checkout', $is_checkout );
-}
 
 /**
  * Empties the Cart
