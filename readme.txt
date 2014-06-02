@@ -1,7 +1,7 @@
 === Easy Digital Downloads ===
 Author URI: http://pippinsplugins.com
 Plugin URI: http://easydigitaldownloads.com
-Contributors: mordauk, sunnyratilal, chriscct7, ghost1227, sumobi, sksmatt, SpencerFinnell
+Contributors: mordauk, sunnyratilal, chriscct7, section214, sumobi, sksmatt, SpencerFinnell
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.7
@@ -16,6 +16,7 @@ Sell digital downloads through WordPress with this complete digital downloads ma
 == Description ==
 
 Easy Digital Downloads is a complete e-commerce solution for selling digital products in a light, performant, and easy to use plugin. Rather that attempting to provide every feature under the sun, Easy Digital Downloads makes selling digital simple and complete by providing just the features you need.
+
 
 Features of the plugin include:
 
@@ -174,8 +175,8 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 1. Download products overview
 2. Download configuration
 3. Download configuration details
-4. Download configuration with variable prices
-5. Payment history
+4. Payment History
+5. Payment details
 6. Discount codes
 7. Earnings and sales reports
 8. Add to cart / purchase button
