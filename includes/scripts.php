@@ -27,8 +27,6 @@ function edd_load_scripts() {
 
 	$js_dir = EDD_PLUGIN_URL . 'assets/js/';
 
-	wp_enqueue_script( 'jquery' );
-
 	// Use minified libraries if SCRIPT_DEBUG is turned off
 	$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
@@ -61,11 +59,10 @@ function edd_load_scripts() {
 	}
 
 	// Load AJAX scripts, if enabled
-	if ( edd_is_ajax_enabled() ) {
+	if ( ! edd_is_ajax_disabled() ) {
 		wp_enqueue_script( 'edd-ajax', $js_dir . 'edd-ajax' . $suffix . '.js', array( 'jquery' ), EDD_VERSION );
 		wp_localize_script( 'edd-ajax', 'edd_scripts', array(
 				'ajaxurl'                 => edd_get_ajax_url(),
-				'ajax_nonce'              => wp_create_nonce( 'edd_ajax_nonce' ),
 				'position_in_cart'        => isset( $position ) ? $position : -1,
 				'already_in_cart_message' => __('You have already added this item to your cart', 'edd'), // Item already in the cart message
 				'empty_cart_message'      => __('Your cart is empty', 'edd'), // Item already in the cart message
@@ -139,41 +136,22 @@ add_action( 'wp_enqueue_scripts', 'edd_register_styles' );
  *
  * @since 1.0
  * @global $post
- * @global $pagenow
- * @global $edd_discounts_page
- * @global $edd_payments_page
- * @global $edd_settings_page
- * @global $edd_reports_page
- * @global $edd_system_info_page
- * @global $edd_add_ons_page
- * @global $edd_options
- * @global $edd_upgrades_screen
  * @param string $hook Page hook
  * @return void
  */
 function edd_load_admin_scripts( $hook ) {
-	global $post,
-	$pagenow,
-	$edd_discounts_page,
-	$edd_payments_page,
-	$edd_settings_page,
-	$edd_reports_page,
-	$edd_system_info_page,
-	$edd_add_ons_page,
-	$edd_options,
-	$edd_upgrades_screen,
-	$wp_version;
 
-	$js_dir = EDD_PLUGIN_URL . 'assets/js/';
+	if ( ! apply_filters( 'edd_load_admin_scripts', edd_is_admin_page(), $hook ) ) {
+		return;
+	}
+
+	global $wp_version;
+
+	$js_dir  = EDD_PLUGIN_URL . 'assets/js/';
 	$css_dir = EDD_PLUGIN_URL . 'assets/css/';
 
 	// Use minified libraries if SCRIPT_DEBUG is turned off
-	$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
-
-	$edd_pages = array( $edd_discounts_page, $edd_payments_page, $edd_settings_page, $edd_reports_page, $edd_system_info_page, $edd_add_ons_page, $edd_upgrades_screen, 'index.php', );
-	$edd_pages = apply_filters( 'edd_load_scripts_for_these_pages', $edd_pages );
-
-	$edd_cpt   = apply_filters( 'edd_load_scripts_for_these_types', array( 'download', 'edd_payment', ) );
+	$suffix  = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
 	// These have to be global
 	wp_enqueue_style( 'jquery-chosen', $css_dir . 'chosen' . $suffix . '.css', array(), EDD_VERSION );
@@ -188,7 +166,10 @@ function edd_load_admin_scripts( $hook ) {
 		'delete_payment'          => __( 'Are you sure you wish to delete this payment?', 'edd' ),
 		'delete_payment_note'     => __( 'Are you sure you wish to delete this note?', 'edd' ),
 		'delete_tax_rate'         => __( 'Are you sure you wish to delete this tax rate?', 'edd' ),
+		'revoke_api_key'          => __( 'Are you sure you wish to revoke this API key?', 'edd' ),
+		'regenerate_api_key'      => __( 'Are you sure you wish to regenerate this API key?', 'edd' ),
 		'resend_receipt'          => __( 'Are you sure you wish to resend the purchase receipt?', 'edd' ),
+		'copy_download_link_text' => __( 'Copy these links to your clip board and give them to your customer', 'edd' ),
 		'delete_payment_download' => sprintf( __( 'Are you sure you wish to delete this %s?', 'edd' ), edd_get_label_singular() ),
 		'one_price_min'           => __( 'You must have at least one price', 'edd' ),
 		'one_file_min'            => __( 'You must have at least one file', 'edd' ),
@@ -201,23 +182,14 @@ function edd_load_admin_scripts( $hook ) {
 		'remove_text'             => __( 'Remove', 'edd' ),
 	));
 
-	if ( ! in_array( $hook, $edd_pages ) && ! is_object( $post ) )
-		return;
-
-	if ( is_object( $post ) && ! in_array( $post->post_type, $edd_cpt ) )
-		return;
-
-	if ( $hook == $edd_settings_page ) {
-		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_script( 'wp-color-picker' );
-		wp_enqueue_style( 'colorbox', $css_dir . 'colorbox' . $suffix . '.css', array(), '1.3.20' );
-		wp_enqueue_script( 'colorbox', $js_dir . 'jquery.colorbox-min.js', array( 'jquery' ), '1.3.20' );
-		if( function_exists( 'wp_enqueue_media' ) && version_compare( $wp_version, '3.5', '>=' ) ) {
-			//call for new media manager
-			wp_enqueue_media();
-		}
+	wp_enqueue_style( 'wp-color-picker' );
+	wp_enqueue_script( 'wp-color-picker' );
+	wp_enqueue_style( 'colorbox', $css_dir . 'colorbox' . $suffix . '.css', array(), '1.3.20' );
+	wp_enqueue_script( 'colorbox', $js_dir . 'jquery.colorbox-min.js', array( 'jquery' ), '1.3.20' );
+	if( function_exists( 'wp_enqueue_media' ) && version_compare( $wp_version, '3.5', '>=' ) ) {
+		//call for new media manager
+		wp_enqueue_media();
 	}
-
 	wp_enqueue_script( 'jquery-flot', $js_dir . 'jquery.flot' . $suffix . '.js' );
 	wp_enqueue_script( 'jquery-ui-datepicker' );
 	$ui_style = ( 'classic' == get_user_option( 'admin_color' ) ) ? 'classic' : 'fresh';
@@ -242,11 +214,11 @@ add_action( 'admin_enqueue_scripts', 'edd_load_admin_scripts', 100 );
 function edd_admin_downloads_icon() {
 	global $post_type, $wp_version;
 
-    $images_url  = EDD_PLUGIN_URL . 'assets/images/';
-    $menu_icon   = '\f316';
-	$icon_url    = $images_url . 'edd-icon.png';
-	$icon_cpt_url = $images_url . 'edd-cpt.png';
-	$icon_2x_url = $images_url . 'edd-icon-2x.png';
+    $images_url      = EDD_PLUGIN_URL . 'assets/images/';
+    $menu_icon       = '\f316';
+	$icon_url        = $images_url . 'edd-icon.png';
+	$icon_cpt_url    = $images_url . 'edd-cpt.png';
+	$icon_2x_url     = $images_url . 'edd-icon-2x.png';
 	$icon_cpt_2x_url = $images_url . 'edd-cpt-2x.png';
 	?>
     <style type="text/css" media="screen">
@@ -301,15 +273,3 @@ function edd_admin_downloads_icon() {
 	<?php
 }
 add_action( 'admin_head','edd_admin_downloads_icon' );
-
-/**
- * Adds EDD Version to the <head> tag
- *
- * @since 1.4.2
- * @return void
-*/
-function edd_version_in_header(){
-	// Newline on both sides to avoid being in a blob
-	echo '<meta name="generator" content="Easy Digital Downloads v' . EDD_VERSION . '" />' . "\n";
-}
-add_action( 'wp_head', 'edd_version_in_header' );

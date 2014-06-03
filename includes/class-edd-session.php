@@ -52,30 +52,36 @@ class EDD_Session {
 	 * @since 1.5
 	 */
 	public function __construct() {
-
+		
 		$this->use_php_sessions = defined( 'EDD_USE_PHP_SESSIONS' ) && EDD_USE_PHP_SESSIONS;
 
 		if( $this->use_php_sessions ) {
 
 			// Use PHP SESSION (must be enabled via the EDD_USE_PHP_SESSIONS constant)
 
-			if( ! session_id() )
+			if( ! session_id() ) {
 				add_action( 'init', 'session_start', -2 );
+			}
 
 		} else {
 
 			// Use WP_Session (default)
 
-			if ( ! defined( 'WP_SESSION_COOKIE' ) )
+			if ( ! defined( 'WP_SESSION_COOKIE' ) ) {
 				define( 'WP_SESSION_COOKIE', 'edd_wp_session' );
+			}
 
-			if ( ! class_exists( 'Recursive_ArrayAccess' ) )
+			if ( ! class_exists( 'Recursive_ArrayAccess' ) ) {
 				require_once EDD_PLUGIN_DIR . 'includes/libraries/class-recursive-arrayaccess.php';
+			}
 
 			if ( ! class_exists( 'WP_Session' ) ) {
 				require_once EDD_PLUGIN_DIR . 'includes/libraries/class-wp-session.php';
 				require_once EDD_PLUGIN_DIR . 'includes/libraries/wp-session.php';
 			}
+	
+			add_filter( 'wp_session_expiration_variant', array( $this, 'set_expiration_variant_time' ), 99999 );
+			add_filter( 'wp_session_expiration', array( $this, 'set_expiration_time' ), 99999 );
 
 		}
 
@@ -85,7 +91,6 @@ class EDD_Session {
 			add_action( 'init', array( $this, 'init' ), -1 );
 		}
 
-		add_filter( 'wp_session_expiration', array( $this, 'set_expiration_time' ), 99999 );
 	}
 
 
@@ -98,10 +103,11 @@ class EDD_Session {
 	 */
 	public function init() {
 
-		if( $this->use_php_sessions )
+		if( $this->use_php_sessions ) {
 			$this->session = isset( $_SESSION['edd'] ) && is_array( $_SESSION['edd'] ) ? $_SESSION['edd'] : array();
-		else
+		} else {
 			$this->session = WP_Session::get_instance();
+		}
 
 		$cart     = $this->get( 'edd_cart' );
 		$purchase = $this->get( 'edd_purchase' );
@@ -177,11 +183,23 @@ class EDD_Session {
 	public function set_cart_cookie( $set = true ) {
 		if( ! headers_sent() ) {
 			if( $set ) {
-				setcookie( 'edd_items_in_cart', '1', time() + 30 * 60, COOKIEPATH, COOKIE_DOMAIN, false );
+				@setcookie( 'edd_items_in_cart', '1', time() + 30 * 60, COOKIEPATH, COOKIE_DOMAIN, false );
 			} else {
-				setcookie( 'edd_items_in_cart', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN, false );
+				@setcookie( 'edd_items_in_cart', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN, false );
 			}
 		}
+	}
+
+	/**
+	 * Force the cookie expiration variant time to 23 hours
+	 *
+	 * @access public
+	 * @since 2.0
+	 * @param int $exp Default expiration (1 hour)
+	 * @return int
+	 */
+	public function set_expiration_variant_time( $exp ) {
+		return ( 30 * 60 * 23 );
 	}
 
 	/**
@@ -193,6 +211,6 @@ class EDD_Session {
 	 * @return int
 	 */
 	public function set_expiration_time( $exp ) {
-		return current_time( 'timestamp' ) + ( 30 * 60 * 24 );
+		return ( 30 * 60 * 24 );
 	}
 }

@@ -54,8 +54,11 @@ function edd_admin_messages() {
 		add_settings_error( 'edd-notices', 'edd-payment-sent', sprintf( __( 'Note: Test Mode is enabled, only test payments are shown below. <a href="%s">Settings</a>.', 'edd' ), admin_url( 'edit.php?post_type=download&page=edd-settings' ) ), 'updated' );
 	}
 
-	if ( ( empty( $edd_options['purchase_page'] ) || 'trash' == get_post_status( $edd_options['purchase_page'] ) ) && current_user_can( 'edit_pages' ) ) {
-		add_settings_error( 'edd-notices', 'set-checkout', sprintf( __( 'No checkout page has been configured. Visit <a href="%s">Settings</a> to set one.', 'edd' ), admin_url( 'edit.php?post_type=download&page=edd-settings' ) ) );
+	if ( ( empty( $edd_options['purchase_page'] ) || 'trash' == get_post_status( $edd_options['purchase_page'] ) ) && current_user_can( 'edit_pages' ) && ! get_user_meta( get_current_user_id(), '_edd_set_checkout_dismissed' ) ) {
+		echo '<div class="error">';
+			echo '<p>' . sprintf( __( 'No checkout page has been configured. Visit <a href="%s">Settings</a> to set one.', 'edd' ), admin_url( 'edit.php?post_type=download&page=edd-settings' ) ) . '</p>';
+			echo '<p><a href="' . add_query_arg( array( 'edd_action' => 'dismiss_notices', 'edd_notice' => 'set_checkout' ) ) . '">' . __( 'Dismiss Notice', 'edd' ) . '</a></p>';
+		echo '</div>';
 	}
 
 	if ( isset( $_GET['edd-message'] ) && 'settings-imported' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
@@ -68,6 +71,22 @@ function edd_admin_messages() {
 
 	if ( isset( $_GET['edd-message'] ) && 'payment-updated' == $_GET['edd-message'] && current_user_can( 'edit_shop_payments' ) ) {
 		add_settings_error( 'edd-notices', 'edd-payment-updated', __( 'The payment has been successfully updated.', 'edd' ), 'updated' );
+	}
+
+	if ( isset( $_GET['edd-message'] ) && 'api-key-generated' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
+		add_settings_error( 'edd-notices', 'edd-api-key-generated', __( 'API keys successfully generated.', 'edd' ), 'updated' );
+	}
+
+	if ( isset( $_GET['edd-message'] ) && 'api-key-exists' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
+		add_settings_error( 'edd-notices', 'edd-api-key-exists', __( 'The specified user already has API keys.', 'edd' ), 'error' );
+	}
+
+	if ( isset( $_GET['edd-message'] ) && 'api-key-regenerated' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
+		add_settings_error( 'edd-notices', 'edd-api-key-regenerated', __( 'API keys successfully regenerated.', 'edd' ), 'updated' );
+	}
+
+	if ( isset( $_GET['edd-message'] ) && 'api-key-revoked' == $_GET['edd-message'] && current_user_can( 'manage_shop_settings' ) ) {
+		add_settings_error( 'edd-notices', 'edd-api-key-revoked', __( 'API keys successfully revoked.', 'edd' ), 'updated' );
 	}
 
     if( ! edd_htaccess_exists() && ! get_user_meta( get_current_user_id(), '_edd_htaccess_missing_dismissed', true ) ) {
