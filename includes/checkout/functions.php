@@ -116,7 +116,7 @@ function edd_get_checkout_uri( $args = array() ) {
 	$ajax_url = admin_url( 'admin-ajax.php', $scheme );
 
 	if ( ( ! preg_match( '/^https/', $uri ) && preg_match( '/^https/', $ajax_url ) ) || edd_is_ssl_enforced() ) {
-		$uri = preg_replace( '/^http/', 'https', $uri );
+		$uri = preg_replace( '/^http:/', 'https:', $uri );
 	}
 
 	if ( isset( $edd_options['no_cache_checkout'] ) && edd_is_caching_plugin_active() )
@@ -201,7 +201,9 @@ function edd_get_failed_transaction_uri( $extras = false ) {
 */
 function edd_listen_for_failed_payments() {
 	
-	if( is_page( edd_get_option( 'failure_page', 0 ) ) && ! empty( $_GET['payment-id'] ) ) {
+	$failed_page = edd_get_option( 'failure_page', 0 );
+
+	if( ! empty( $failed_page ) && is_page( $failed_page ) && ! empty( $_GET['payment-id'] ) ) {
 
 		$payment_id = absint( $_GET['payment-id'] );
 		edd_update_payment_status( $payment_id, 'failed' );
