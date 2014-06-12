@@ -345,6 +345,11 @@ function edd_setup_email_tags() {
 			'description' => __( 'Adds a link so users can view their receipt directly on your website if they are unable to view it in the browser correctly.', 'edd' ),
 			'function'    => 'edd_email_tag_receipt_link'
 		),
+		array(
+			'tag'         => 'discount_codes',
+			'description' => __( 'Adds a list of any discount codes applied to this purchase', 'edd' ),
+			'function'    => 'edd_email_tag_discount_codes'
+		),
 	);
 
 	// Apply edd_email_tags filter
@@ -367,9 +372,11 @@ add_action( 'edd_add_email_tags', 'edd_setup_email_tags' );
  * @return string download_list
  */
 function edd_email_tag_download_list( $payment_id ) {
+
 	$payment_data  = edd_get_payment_meta( $payment_id );
 	$download_list = '<ul>';
 	$cart_items    = edd_get_payment_meta_cart_details( $payment_id );
+	$email         = edd_get_payment_user_email( $payment_id );
 
 	if ( $cart_items ) {
 		$show_names = apply_filters( 'edd_email_show_names', true );
@@ -394,7 +401,7 @@ function edd_email_tag_download_list( $payment_id ) {
 					$title .= "&nbsp;&ndash;&nbsp;" . edd_get_price_option_name( $item['id'], $price_id );
 				}
 
-				$download_list .= '<li>' . apply_filters( 'edd_email_receipt_download_title', $title, $item['id'], $price_id ) . '<br/>';
+				$download_list .= '<li>' . apply_filters( 'edd_email_receipt_download_title', $title, $item, $price_id, $payment_id ) . '<br/>';
 				$download_list .= '<ul>';
 			}
 
@@ -403,7 +410,7 @@ function edd_email_tag_download_list( $payment_id ) {
 			if ( $files ) {
 				foreach ( $files as $filekey => $file ) {
 					$download_list .= '<li>';
-					$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $item['id'], $price_id );
+					$file_url = edd_get_download_file_url( $payment_data['key'], $email, $filekey, $item['id'], $price_id );
 					$download_list .= '<a href="' . esc_url( $file_url ) . '">' . edd_get_file_name( $file ) . '</a>';
 					$download_list .= '</li>';
 				}
@@ -420,7 +427,7 @@ function edd_email_tag_download_list( $payment_id ) {
 
 					foreach ( $files as $filekey => $file ) {
 						$download_list .= '<li>';
-						$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $bundle_item, $price_id );
+						$file_url = edd_get_download_file_url( $payment_data['key'], $email, $filekey, $bundle_item, $price_id );
 						$download_list .= '<a href="' . esc_url( $file_url ) . '">' . $file['name'] . '</a>';
 						$download_list .= '</li>';
 					}
@@ -459,6 +466,7 @@ function edd_email_tag_file_urls( $payment_id ) {
 	$payment_data = edd_get_payment_meta( $payment_id );
 	$file_urls    = '';
 	$cart_items   = edd_get_payment_meta_cart_details( $payment_id );
+	$email        = edd_get_payment_user_email( $payment_id );
 
 	foreach ( $cart_items as $item ) {
 
@@ -467,7 +475,7 @@ function edd_email_tag_file_urls( $payment_id ) {
 
 		if ( $files ) {
 			foreach ( $files as $filekey => $file ) {
-				$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $item['id'], $price_id );
+				$file_url = edd_get_download_file_url( $payment_data['key'], $email, $filekey, $item['id'], $price_id );
 
 				$file_urls .= esc_html( $file_url ) . '<br/>';
 			}
@@ -480,7 +488,7 @@ function edd_email_tag_file_urls( $payment_id ) {
 
 				$files = edd_get_download_files( $bundle_item );
 				foreach ( $files as $filekey => $file ) {
-					$file_url = edd_get_download_file_url( $payment_data['key'], $payment_data['email'], $filekey, $bundle_item, $price_id );
+					$file_url = edd_get_download_file_url( $payment_data['key'], $email, $filekey, $bundle_item, $price_id );
 					$file_urls .= esc_html( $file_url ) . '<br/>';
 				}
 
@@ -563,10 +571,10 @@ function edd_email_tag_billing_address( $payment_id ) {
 	if( ! empty( $user_address['line2'] ) ) {
 		$return .= $user_address['line2'] . "\n";
 	}
-	$return = $user_address['city'] . ' ' . $user_address['zip'] . ' ' . $user_address['state'] . "\n";
-	$return = $user_address['country'];
+	$return .= $user_address['city'] . ' ' . $user_address['zip'] . ' ' . $user_address['state'] . "\n";
+	$return .= $user_address['country'];
 
-	return $address;
+	return $return;
 }
 
 /**
@@ -591,7 +599,8 @@ function edd_email_tag_date( $payment_id ) {
  * @return string subtotal
  */
 function edd_email_tag_subtotal( $payment_id ) {
-	return edd_currency_filter( edd_format_amount( edd_get_payment_subtotal( $payment_id ) ) );
+	$subtotal = edd_currency_filter( edd_format_amount( edd_get_payment_subtotal( $payment_id ) ) );
+	return html_entity_decode( $subtotal, ENT_COMPAT, 'UTF-8' );
 }
 
 /**
@@ -603,7 +612,8 @@ function edd_email_tag_subtotal( $payment_id ) {
  * @return string tax
  */
 function edd_email_tag_tax( $payment_id ) {
-	return edd_currency_filter( edd_format_amount( edd_get_payment_tax( $payment_id ) ) );
+	$tax = edd_currency_filter( edd_format_amount( edd_get_payment_tax( $payment_id ) ) );
+	return html_entity_decode( $tax, ENT_COMPAT, 'UTF-8' );
 }
 
 /**
@@ -615,7 +625,8 @@ function edd_email_tag_tax( $payment_id ) {
  * @return string price
  */
 function edd_email_tag_price( $payment_id ) {
-	return edd_currency_filter( edd_format_amount( edd_get_payment_amount( $payment_id ) ) );
+	$price = edd_currency_filter( edd_format_amount( edd_get_payment_amount( $payment_id ) ) );
+	return html_entity_decode( $price, ENT_COMPAT, 'UTF-8' );
 }
 
 /**
@@ -627,7 +638,7 @@ function edd_email_tag_price( $payment_id ) {
  * @return int payment_id
  */
 function edd_email_tag_payment_id( $payment_id ) {
-	return $payment_id;
+	return edd_get_payment_number( $payment_id );
 }
 
 /**
@@ -676,4 +687,24 @@ function edd_email_tag_sitename( $payment_id ) {
  */
 function edd_email_tag_receipt_link( $payment_id ) {
 	return sprintf( __( '%1$sView it in your browser.%2$s', 'edd' ), '<a href="' . add_query_arg( array( 'payment_key' => edd_get_payment_key( $payment_id ), 'edd_action' => 'view_receipt' ), home_url() ) . '">', '</a>' );
+}
+
+/**
+ * Email template tag: discount_codes
+ * Adds a list of any discount codes applied to this purchase
+ *
+ * @param $int payment_id
+ * @since 2.0
+ * @return string $discount_codes
+ */
+function edd_email_tag_discount_codes( $payment_id ) {
+	$user_info = edd_get_payment_meta_user_info( $payment_id );
+
+	$discount_codes = '';
+
+	if( isset( $user_info['discount'] ) && $user_info['discount'] !== 'none' ) {
+		$discount_codes = $user_info['discount'];
+	}
+
+	return $discount_codes;
 }
