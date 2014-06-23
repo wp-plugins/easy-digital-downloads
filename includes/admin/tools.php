@@ -102,6 +102,7 @@ function edd_tools_banned_emails_display() {
 	</div><!-- .postbox -->
 <?php
 	do_action( 'edd_tools_banned_emails_after' );
+	do_action( 'edd_tools_after' );
 }
 add_action( 'edd_tools_tab_general', 'edd_tools_banned_emails_display' );
 
@@ -230,7 +231,7 @@ function edd_tools_import_export_process_export() {
 
 	nocache_headers();
 	header( 'Content-Type: application/json; charset=utf-8' );
-	header( 'Content-Disposition: attachment; filename=edd-settings-export-' . date( 'm-d-Y' ) . '.json' );
+	header( 'Content-Disposition: attachment; filename=' . apply_filters( 'edd_settings_export_filename', 'edd-settings-export-' . date( 'm-d-Y' ) ) . '.json' );
 	header( "Expires: 0" );
 
 	echo json_encode( $settings );
@@ -523,7 +524,7 @@ function edd_tools_sysinfo_get() {
 	// Server configuration (really just versioning)
 	$return .= "\n" . '-- Webserver Configuration' . "\n\n";
 	$return .= 'PHP Version:              ' . PHP_VERSION . "\n";
-	$return .= 'MySQL Version:            ' . mysqli_get_client_version() . "\n";
+	$return .= 'MySQL Version:            ' . $wpdb->db_version() . "\n";
 	$return .= 'Webserver Info:           ' . $_SERVER['SERVER_SOFTWARE'] . "\n";
 
 	$return  = apply_filters( 'edd_sysinfo_after_webserver_config', $return );
