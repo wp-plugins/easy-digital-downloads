@@ -77,7 +77,7 @@ function edd_get_purchase_link( $args = array() ) {
 	$args['color'] = ( $args['color'] == 'inherit' ) ? '' : $args['color'];
 
 	$variable_pricing = edd_has_variable_prices( $args['download_id'] );
-	$data_variable    = $variable_pricing ? ' data-variable-price=yes' : 'data-variable-price=no';
+	$data_variable    = $variable_pricing ? ' data-variable-price="yes"' : 'data-variable-price="no"';
 	$type             = edd_single_price_option_mode( $args['download_id'] ) ? 'data-price-mode=multi' : 'data-price-mode=single';
 
 	if ( $args['price'] && $args['price'] !== 'no' && ! $variable_pricing ) {
@@ -101,19 +101,11 @@ function edd_get_purchase_link( $args = array() ) {
 	}
 
 	global $edd_displayed_form_ids;
-	// Collect any form IDs we've displayed already so we can avoid duplicate IDs
-	if ( isset( $edd_displayed_form_ids[$args['download_id']] ) ) {
-		$edd_displayed_form_ids[$args['download_id']]++;
-	} else {
-		$edd_displayed_form_ids[$args['download_id']] = 1;
-	}
+
+
 
 	$form_id = ! empty( $args['form_id'] ) ? $args['form_id'] : 'edd_purchase_' . $args['download_id'];
 
-	// If we've already generated a form ID for this download ID, apped -#
-	if ( $edd_displayed_form_ids[$args['download_id']] > 1 ) {
-		$form_id .= '-' . $edd_displayed_form_ids[$args['download_id']];
-	}
 
 	$args = apply_filters( 'edd_purchase_link_args', $args );
 
@@ -125,35 +117,16 @@ function edd_get_purchase_link( $args = array() ) {
 
 		<div class="edd_purchase_submit_wrapper">
 			<?php
-			 if ( ! edd_is_ajax_disabled() ) {
-				printf(
-					'<a href="#" class="edd-add-to-cart %1$s" data-action="edd_add_to_cart" data-download-id="%3$s" %4$s %5$s %6$s><span class="edd-add-to-cart-label">%2$s</span> <span class="edd-loading"><i class="edd-icon-spinner edd-icon-spin"></i></span></a>',
-					implode( ' ', array( $args['style'], $args['color'], trim( $args['class'] ) ) ),
-					esc_attr( $args['text'] ),
-					esc_attr( $args['download_id'] ),
-					esc_attr( $data_variable ),
-					esc_attr( $type ),
-					$button_display
-				);
+			$class = implode( ' ', array( $args['style'], $args['color'], trim( $args['class'] ) ) );
+
+			if ( ! edd_is_ajax_disabled() ) {
+
+				echo '<a href="#" class="edd-add-to-cart ' . esc_attr( $class ) . '" data-action="edd_add_to_cart" data-download-id="' . esc_attr( $args['download_id'] ) . '" ' . $data_variable . ' ' . $type . ' ' . $button_display . '><span class="edd-add-to-cart-label">' . $args['text'] . '</span> <span class="edd-loading"><i class="edd-icon-spinner edd-icon-spin"></i></span></a>';
+
 			}
 
-			printf(
-				'<input type="submit" class="edd-add-to-cart edd-no-js %1$s" name="edd_purchase_download" value="%2$s" data-action="edd_add_to_cart" data-download-id="%3$s" %4$s %5$s %6$s/>',
-				implode( ' ', array( $args['style'], $args['color'], trim( $args['class'] ) ) ),
-				esc_attr( $args['text'] ),
-				esc_attr( $args['download_id'] ),
-				esc_attr( $data_variable ),
-				esc_attr( $type ),
-				$button_display
-			);
-
-			printf(
-				'<a href="%1$s" class="%2$s %3$s" %4$s>' . __( 'Checkout', 'edd' ) . '</a>',
-				esc_url( edd_get_checkout_uri() ),
-				esc_attr( 'edd_go_to_checkout' ),
-				implode( ' ', array( $args['style'], $args['color'], trim( $args['class'] ) ) ),
-				$checkout_display
-			);
+			echo '<input type="submit" class="edd-add-to-cart edd-no-js ' . esc_attr( $class ) . '" name="edd_purchase_download" value="' . esc_attr( $args['text'] ) . '" data-action="edd_add_to_cart" data-download-id="' . esc_attr( $args['download_id'] ) . '" ' . $data_variable . ' ' . $type . ' ' . $button_display . '/>';
+			echo '<a href="' . esc_url( edd_get_checkout_uri() ) . '" class="edd_go_to_checkout ' . esc_attr( $class ) . '"' . $checkout_display . '>' . __( 'Checkout', 'edd' ) . '</a>'; 
 			?>
 
 			<?php if ( ! edd_is_ajax_disabled() ) : ?>
