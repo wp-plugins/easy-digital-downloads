@@ -787,17 +787,17 @@ function edd_purchase_form_validate_cc() {
  */
 function edd_get_purchase_cc_info() {
 	$cc_info = array();
-	$cc_info['card_name']   = isset( $_POST['card_name'] )   ? sanitize_text_field( $_POST['card_name'] )   : '';
-	$cc_info['card_number']  = isset( $_POST['card_number'] )  ? sanitize_text_field( $_POST['card_number'] )   : '';
-	$cc_info['card_cvc']   = isset( $_POST['card_cvc'] )   ? sanitize_text_field( $_POST['card_cvc'] )   : '';
-	$cc_info['card_exp_month']  = isset( $_POST['card_exp_month'] ) ? sanitize_text_field( $_POST['card_exp_month'] )  : '';
-	$cc_info['card_exp_year']  = isset( $_POST['card_exp_year'] )  ? sanitize_text_field( $_POST['card_exp_year'] )  : '';
-	$cc_info['card_address']  = isset( $_POST['card_address'] )  ? sanitize_text_field( $_POST['card_address'] )  : '';
-	$cc_info['card_address_2']  = isset( $_POST['card_address_2'] ) ? sanitize_text_field( $_POST['card_address_2'] )  : '';
-	$cc_info['card_city']   = isset( $_POST['card_city'] )   ? sanitize_text_field( $_POST['card_city'] )   : '';
-	$cc_info['card_state']      = isset( $_POST['card_state'] )     ? sanitize_text_field( $_POST['card_state'] )      : '';
-	$cc_info['card_country']  = isset( $_POST['billing_country'] )? sanitize_text_field( $_POST['billing_country'] )  : '';
-	$cc_info['card_zip']   = isset( $_POST['card_zip'] )  ? sanitize_text_field( $_POST['card_zip'] )   : '';
+	$cc_info['card_name']      = isset( $_POST['card_name'] )       ? sanitize_text_field( $_POST['card_name'] )       : '';
+	$cc_info['card_number']    = isset( $_POST['card_number'] )     ? sanitize_text_field( $_POST['card_number'] )     : '';
+	$cc_info['card_cvc']       = isset( $_POST['card_cvc'] )        ? sanitize_text_field( $_POST['card_cvc'] )        : '';
+	$cc_info['card_exp_month'] = isset( $_POST['card_exp_month'] )  ? sanitize_text_field( $_POST['card_exp_month'] )  : '';
+	$cc_info['card_exp_year']  = isset( $_POST['card_exp_year'] )   ? sanitize_text_field( $_POST['card_exp_year'] )   : '';
+	$cc_info['card_address']   = isset( $_POST['card_address'] )    ? sanitize_text_field( $_POST['card_address'] )    : '';
+	$cc_info['card_address_2'] = isset( $_POST['card_address_2'] )  ? sanitize_text_field( $_POST['card_address_2'] )  : '';
+	$cc_info['card_city']      = isset( $_POST['card_city'] )       ? sanitize_text_field( $_POST['card_city'] )       : '';
+	$cc_info['card_state']     = isset( $_POST['card_state'] )      ? sanitize_text_field( $_POST['card_state'] )      : '';
+	$cc_info['card_country']   = isset( $_POST['billing_country'] ) ? sanitize_text_field( $_POST['billing_country'] ) : '';
+	$cc_info['card_zip']       = isset( $_POST['card_zip'] )        ? sanitize_text_field( $_POST['card_zip'] )        : '';
 
 	// Return cc info
 	return $cc_info;
@@ -819,10 +819,12 @@ function edd_purchase_form_validate_cc_zip( $zip = 0, $country_code = '' ) {
 	if ( empty( $zip ) || empty( $country_code ) )
 		return $ret;
 
+	$country_code = strtoupper( $country_code );
+
 	$zip_regex = array(
 		"AD" => "AD\d{3}",
 		"AM" => "(37)?\d{4}",
-		"AR" => "^([A-HJ-TP-Z]{1}\d{4}[A-Z]{3}|[a-z]{1}\d{4}[a-hj-tp-z]{3})$",
+		"AR" => "^([A-Z]{1}\d{4}[A-Z]{3}|[A-Z]{1}\d{4}|\d{4})$",
 		"AS" => "96799",
 		"AT" => "\d{4}",
 		"AU" => "^(0[289][0-9]{2})|([1345689][0-9]{3})|(2[0-8][0-9]{2})|(290[0-9])|(291[0-4])|(7[0-4][0-9]{2})|(7[8-9][0-9]{2})$",
@@ -838,7 +840,7 @@ function edd_purchase_form_validate_cc_zip( $zip = 0, $country_code = '' ) {
 		"BN" => "[A-Z]{2}[ ]?\d{4}",
 		"BR" => "\d{5}[\-]?\d{3}",
 		"BY" => "\d{6}",
-		"CA" => "^([ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ])\ {0,1}(\d[ABCEGHJKLMNPRSTVWXYZ]\d)$",
+		"CA" => "^[ABCEGHJKLMNPRSTVXY]{1}\d{1}[A-Z]{1} *\d{1}[A-Z]{1}\d{1}$",
 		"CC" => "6799",
 		"CH" => "^[1-9][0-9][0-9][0-9]$",
 		"CK" => "\d{4}",

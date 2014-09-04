@@ -24,20 +24,21 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function edd_download_shortcode( $atts, $content = null ) {
 	global $post, $edd_options;
+	
+	$post_id = is_object( $post ) ? $post->ID : 0;
 
-	extract( shortcode_atts( array(
-			'id' 	        => $post->ID,
-			'sku'			=> '',
-			'price'         => '1',
-			'paypal_direct' => '0',
-			'text'	        => isset( $edd_options[ 'add_to_cart_text' ] )  && $edd_options[ 'add_to_cart_text' ]    != '' ? $edd_options[ 'add_to_cart_text' ] : __( 'Purchase', 'edd' ),
-			'style'         => isset( $edd_options[ 'button_style' ] ) 	 	? $edd_options[ 'button_style' ] 		: 'button',
-			'color'         => isset( $edd_options[ 'checkout_color' ] ) 	? $edd_options[ 'checkout_color' ] 		: 'blue',
-			'class'         => 'edd-submit',
-			'form_id'       => ''
-		),
-		$atts, 'purchase_link' )
-	);
+	$atts = shortcode_atts( array(
+		'id' 	        => $post_id,
+		'sku'			=> '',
+		'price'         => '1',
+		'paypal_direct' => '0',
+		'text'	        => isset( $edd_options[ 'add_to_cart_text' ] )  && $edd_options[ 'add_to_cart_text' ]    != '' ? $edd_options[ 'add_to_cart_text' ] : __( 'Purchase', 'edd' ),
+		'style'         => isset( $edd_options[ 'button_style' ] ) 	 	? $edd_options[ 'button_style' ] 		: 'button',
+		'color'         => isset( $edd_options[ 'checkout_color' ] ) 	? $edd_options[ 'checkout_color' ] 		: 'blue',
+		'class'         => 'edd-submit',
+		'form_id'       => ''
+	),
+	$atts, 'purchase_link' );
 
 	// Override color if color == inherit
 	if( isset( $atts['color'] )	)
@@ -255,39 +256,38 @@ add_shortcode( 'purchase_collection', 'edd_purchase_collection_shortcode' );
  * @return string $display Output generated from the downloads queried
  */
 function edd_downloads_query( $atts, $content = null ) {
-	extract( shortcode_atts( array(
-			'category'         => '',
-			'exclude_category' => '',
-			'tags'             => '',
-			'exclude_tags'     => '',
-			'relation'         => 'AND',
-			'number'           => 10,
-			'price'            => 'no',
-			'excerpt'          => 'yes',
-			'full_content'     => 'no',
-			'buy_button'       => 'yes',
-			'columns'          => 3,
-			'thumbnails'       => 'true',
-			'orderby'          => 'post_date',
-			'order'            => 'DESC',
-			'ids'              => ''
-		), $atts, 'downloads' )
-	);
+	$atts = shortcode_atts( array(
+		'category'         => '',
+		'exclude_category' => '',
+		'tags'             => '',
+		'exclude_tags'     => '',
+		'relation'         => 'AND',
+		'number'           => 10,
+		'price'            => 'no',
+		'excerpt'          => 'yes',
+		'full_content'     => 'no',
+		'buy_button'       => 'yes',
+		'columns'          => 3,
+		'thumbnails'       => 'true',
+		'orderby'          => 'post_date',
+		'order'            => 'DESC',
+		'ids'              => ''
+	), $atts, 'downloads' );
 
 	$query = array(
 		'post_type'      => 'download',
-		'posts_per_page' => (int) $number,
-		'orderby'        => $orderby,
-		'order'          => $order
+		'posts_per_page' => (int) $atts['number'],
+		'orderby'        => $atts['orderby'],
+		'order'          => $atts['order']
 	);
 
 	if ( $query['posts_per_page'] < -1 ) {
 		$query['posts_per_page'] = abs( $query['posts_per_page'] );
 	}
 
-	switch ( $orderby ) {
+	switch ( $atts['orderby'] ) {
 		case 'price':
-			$orderby           = 'meta_value';
+			$atts['orderby']   = 'meta_value';
 			$query['meta_key'] = 'edd_price';
 			$query['orderby']  = 'meta_value_num';
 		break;
@@ -309,48 +309,125 @@ function edd_downloads_query( $atts, $content = null ) {
 		break;
 	}
 
-	if ( $tags || $category || $exclude_category || $exclude_tags ) {
+	if ( $atts['tags'] || $atts['category'] || $atts['exclude_category'] || $atts['exclude_tags'] ) {
+
 		$query['tax_query'] = array(
-			'relation'     => $relation
+			'relation' => $atts['relation']
 		);
 
-		if ( $tags ) {
+		if ( $atts['tags'] ) {
+			$tag_list	= explode( ',', $atts['tags'] );
+			$_tax_tags	= array();
+
+			foreach( $tag_list as $tag ) {
+				if( is_numeric( $tag ) ) {
+					$term_id = $tag;
+				} else {
+					$term    = get_term_by( 'slug', $tag, 'download_tag' );
+
+					if( ! $term ) {
+						continue;
+					}
+
+					$term_id = $term->term_id;
+				}
+
+				$_tax_tags[] = $term_id;
+			}
+
 			$query['tax_query'][] = array(
 				'taxonomy' => 'download_tag',
-				'terms'    => explode( ',', $tags ),
-				'field'    => 'slug'
+				'field'    => 'term_id',
+				'terms'    => $_tax_tags
 			);
 		}
 
-		if ( $category ) {
+		if ( $atts['category'] ) {
+			$categories = explode( ',', $atts['category'] );
+			$_tax_cats	= array();
+
+			foreach( $categories as $category ) {
+				if( is_numeric( $category ) ) {
+					$term_id = $category;
+				} else {
+					$term = get_term_by( 'slug', $category, 'download_category' );
+
+					if( ! $term ) {
+						continue;
+					}
+
+					$term_id = $term->term_id;
+				}
+
+				$_tax_cats[] = $term_id;
+			}
+
 			$query['tax_query'][] = array(
 				'taxonomy' => 'download_category',
-				'terms'    => explode( ',', $category ),
-				'field'    => 'slug'
+				'field'    => 'term_id',
+				'terms'    => $_tax_cats
 			);
 		}
 
-		if ( $exclude_category ) {
+		if ( $atts['exclude_category'] ) {
+			$categories = explode( ',', $atts['exclude_category'] );
+			$_tax_cats	= array();
+
+			foreach( $categories as $category ) {
+				if( is_numeric( $category ) ) {
+					$term_id = $category;
+				} else {
+					$term = get_term_by( 'slug', $category, 'download_category' );
+
+					if( ! $term ) {
+						continue;
+					}
+
+					$term_id = $term->term_id;
+				}
+
+				$_tax_cats[] = $term_id;
+			}
+
 			$query['tax_query'][] = array(
 				'taxonomy' => 'download_category',
-				'terms'    => explode( ',', $exclude_category ),
-				'field'    => 'slug',
-				'operator' => 'NOT IN',
+				'field'    => 'term_id',
+				'terms'    => $_tax_cats,
+				'operator' => 'NOT IN'
 			);
 		}
 
-		if ( $exclude_tags ) {
+		if ( $atts['exclude_tags'] ) {
+			$tag_list	= explode( ',', $atts['exclude_tags'] );
+			$_tax_tags	= array();
+
+			foreach( $tag_list as $tag ) {
+				if( is_numeric( $tag ) ) {
+					$term_id = $tag;
+				} else {
+					$term = get_term_by( 'slug', $tag, 'download_tag' );
+
+					if( ! $term ) {
+						continue;
+					}
+
+					$term_id = $term->term_id;
+				}
+
+				$_tax_tags[] = $term_id;
+			}
+
 			$query['tax_query'][] = array(
 				'taxonomy' => 'download_tag',
-				'terms'    => explode( ',', $exclude_tags ),
-				'field'    => 'slug',
-				'operator' => 'NOT IN',
+				'field'    => 'term_id',
+				'terms'    => $_tax_tags,
+				'operator' => 'NOT IN'
 			);
 		}
 	}
 
-	if( ! empty( $ids ) )
-		$query['post__in'] = explode( ',', $ids );
+	if( ! empty( $atts['ids'] ) )
+		$query['post__in'] = explode( ',', $atts['ids'] );
 
 	if ( get_query_var( 'paged' ) )
 		$query['paged'] = get_query_var('paged');
@@ -359,7 +436,7 @@ function edd_downloads_query( $atts, $content = null ) {
 	else
 		$query['paged'] = 1;
 
-	switch( intval( $columns ) ) :
+	switch( intval( $atts['columns'] ) ) :
 	    case 0:
 	        $column_width = 'inherit'; break;
 		case 1:
@@ -367,6 +444,7 @@ function edd_downloads_query( $atts, $content = null ) {
 		case 2:
 			$column_width = '50%'; break;
 		case 3:
+		default:
 			$column_width = '33%'; break;
 		case 4:
 			$column_width = '25%'; break;
@@ -382,7 +460,7 @@ function edd_downloads_query( $atts, $content = null ) {
 	$downloads = new WP_Query( $query );
 	if ( $downloads->have_posts() ) :
 		$i = 1;
-		$wrapper_class = 'edd_download_columns_' . $columns;
+		$wrapper_class = 'edd_download_columns_' . $atts['columns'];
 		ob_start(); ?>
 		<div class="edd_downloads_list <?php echo apply_filters( 'edd_downloads_list_wrapper_class', $wrapper_class, $atts ); ?>">
 			<?php while ( $downloads->have_posts() ) : $downloads->the_post(); ?>
@@ -392,21 +470,21 @@ function edd_downloads_query( $atts, $content = null ) {
 
 						do_action( 'edd_download_before' );
 
-						if ( 'false' != $thumbnails ) :
+						if ( 'false' != $atts['thumbnails'] ) :
 							edd_get_template_part( 'shortcode', 'content-image' );
 						endif;
 
 						edd_get_template_part( 'shortcode', 'content-title' );
 
-						if ( $excerpt == 'yes' && $full_content != 'yes' )
+						if ( $atts['excerpt'] == 'yes' && $atts['full_content'] != 'yes' )
 							edd_get_template_part( 'shortcode', 'content-excerpt' );
-						else if ( $full_content == 'yes' )
+						else if ( $atts['full_content'] == 'yes' )
 							edd_get_template_part( 'shortcode', 'content-full' );
 
-						if ( $price == 'yes' )
+						if ( $atts['price'] == 'yes' )
 							edd_get_template_part( 'shortcode', 'content-price' );
 
-						if ( $buy_button == 'yes' )
+						if ( $atts['buy_button'] == 'yes' )
 							edd_get_template_part( 'shortcode', 'content-cart-button' );
 
 						do_action( 'edd_download_after' );
@@ -414,7 +492,7 @@ function edd_downloads_query( $atts, $content = null ) {
 						?>
 					</div>
 				</div>
-				<?php if ( $columns != 0 && $i % $columns == 0 ) { ?><div style="clear:both;"></div><?php } ?>
+				<?php if ( $atts['columns'] != 0 && $i % $atts['columns'] == 0 ) { ?><div style="clear:both;"></div><?php } ?>
 			<?php $i++; endwhile; ?>
 
 			<div style="clear:both;"></div>
@@ -424,20 +502,20 @@ function edd_downloads_query( $atts, $content = null ) {
 			<div id="edd_download_pagination" class="navigation">
 				<?php
 				if ( is_single() ) {
-					echo paginate_links( array(
+					echo paginate_links( apply_filters( 'edd_download_pagination_args', array(
 						'base'    => get_permalink() . '%#%',
 						'format'  => '?paged=%#%',
 						'current' => max( 1, $query['paged'] ),
 						'total'   => $downloads->max_num_pages
-					) );
+					), $atts, $downloads, $query ) );
 				} else {
 					$big = 999999;
-					echo paginate_links( array(
+					echo paginate_links( apply_filters( 'edd_download_pagination_args', array(
 						'base'    => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
 						'format'  => '?paged=%#%',
 						'current' => max( 1, $query['paged'] ),
 						'total'   => $downloads->max_num_pages
-					) );
+					), $atts, $downloads, $query ) );
 				}
 				?>
 			</div>
@@ -449,7 +527,7 @@ function edd_downloads_query( $atts, $content = null ) {
 		$display = sprintf( _x( 'No %s found', 'download post type name', 'edd' ), edd_get_label_plural() );
 	endif;
 
-	return apply_filters( 'downloads_shortcode', $display, $atts, $buy_button, $columns, $column_width, $downloads, $excerpt, $full_content, $price, $thumbnails, $query );
+	return apply_filters( 'downloads_shortcode', $display, $atts, $atts['buy_button'], $atts['columns'], $column_width, $downloads, $atts['excerpt'], $atts['full_content'], $atts['price'], $atts['thumbnails'], $query );
 }
 add_shortcode( 'downloads', 'edd_downloads_query' );
 
@@ -596,10 +674,10 @@ function edd_process_profile_editor_updates( $data ) {
 	$user_id       = get_current_user_id();
 	$old_user_data = get_userdata( $user_id );
 
-	$display_name = sanitize_text_field( $data['edd_display_name'] );
-	$first_name   = sanitize_text_field( $data['edd_first_name'] );
-	$last_name    = sanitize_text_field( $data['edd_last_name'] );
-	$email        = sanitize_email( $data['edd_email'] );
+	$display_name = isset( $data['edd_display_name'] ) ? sanitize_text_field( $data['edd_display_name'] ) : $old_user_data->display_name;
+	$first_name   = isset( $data['edd_first_name'] ) ? sanitize_text_field( $data['edd_first_name'] ) : $old_user_data->first_name;
+	$last_name    = isset( $data['edd_last_name'] ) ? sanitize_text_field( $data['edd_last_name'] ) : $old_user_data->last_name;
+	$email        = isset( $data['edd_email'] ) ? sanitize_email( $data['edd_email'] ) : $old_user_data->user_email;
 	$line1        = ( isset( $data['edd_address_line1'] ) ? sanitize_text_field( $data['edd_address_line1'] ) : '' );
 	$line2        = ( isset( $data['edd_address_line2'] ) ? sanitize_text_field( $data['edd_address_line2'] ) : '' );
 	$city         = ( isset( $data['edd_address_city'] ) ? sanitize_text_field( $data['edd_address_city'] ) : '' );
