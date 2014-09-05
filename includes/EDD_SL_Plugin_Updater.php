@@ -15,6 +15,7 @@ class EDD_SL_Plugin_Updater {
 	private $api_data = array();
 	private $name     = '';
 	private $slug     = '';
+	private $version  = '';
 	private $do_check = false;
 
 	/**
@@ -30,7 +31,7 @@ class EDD_SL_Plugin_Updater {
 	 */
 	function __construct( $_api_url, $_plugin_file, $_api_data = null ) {
 		$this->api_url  = trailingslashit( $_api_url );
-		$this->api_data = urlencode_deep( $_api_data );
+		$this->api_data = $_api_data;
 		$this->name     = plugin_basename( $_plugin_file );
 		$this->slug     = basename( $_plugin_file, '.php');
 		$this->version  = $_api_data['version'];
@@ -49,7 +50,7 @@ class EDD_SL_Plugin_Updater {
 	private function hook() {
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'pre_set_site_transient_update_plugins_filter' ) );
 		add_filter( 'plugins_api', array( $this, 'plugins_api_filter' ), 10, 3 );
-		add_filter( 'http_request_args', array( $this, 'http_request_args' ), 10, 2 );
+		//add_filter( 'http_request_args', array( $this, 'http_request_args' ), 10, 2 );
 	}
 
 	/**
@@ -66,6 +67,7 @@ class EDD_SL_Plugin_Updater {
 	 * @return array Modified update array with custom plugin data.
 	 */
 	function pre_set_site_transient_update_plugins_filter( $_transient_data ) {
+
 		if( empty( $_transient_data ) || ! $this->do_check ) {
 
 			// This ensures that the custom API request only runs on the second time that WP fires the update check
@@ -84,6 +86,7 @@ class EDD_SL_Plugin_Updater {
 				$_transient_data->response[$this->name] = $api_response;
 			}
 		}
+
 		return $_transient_data;
 	}
 
