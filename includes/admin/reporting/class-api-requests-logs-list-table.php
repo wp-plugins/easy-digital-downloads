@@ -231,7 +231,7 @@ class EDD_API_Request_Log_Table extends WP_List_Table {
 	 * @since 1.5
 	 * @return void
 	 */
-	function bulk_actions() {
+	function bulk_actions( $which='' ) {
 		// These aren't really bulk actions but this outputs the markup in the right place
 		edd_log_views();
 	}
@@ -250,7 +250,7 @@ class EDD_API_Request_Log_Table extends WP_List_Table {
 		$logs_data = array();
 		$paged     = $this->get_paged();
 		$log_query = array(
-			'log_type'    => 'api_requests',
+			'log_type'    => 'api_request',
 			'paged'       => $paged,
 			'meta_query'  => $this->get_meta_query()
 		);
@@ -291,7 +291,6 @@ class EDD_API_Request_Log_Table extends WP_List_Table {
 		$hidden                = array(); // No hidden columns
 		$sortable              = $this->get_sortable_columns();
 		$this->_column_headers = array( $columns, $hidden, $sortable );
-		$current_page          = $this->get_pagenum();
 		$this->items           = $this->get_logs();
 		$total_items           = $edd_logs->get_log_count( 0, 'api_requests' );
 

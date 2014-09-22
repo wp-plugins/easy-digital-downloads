@@ -110,13 +110,13 @@ class EDD_Fees {
 	 * @return array $fees
 	 */
 	public function remove_fee( $id = '' ) {
+
 		$fees = $this->get_fees( 'all' );
 
 		if ( isset( $fees[ $id ] ) ) {
 			unset( $fees[ $id ] );
+			EDD()->session->set( 'edd_cart_fees', $fees );
 		}
-
-		EDD()->session->set( 'edd_cart_fees', $fees );
 
 		return $fees;
 	}
@@ -131,6 +131,15 @@ class EDD_Fees {
 	 * @return bool
 	 */
 	public function has_fees( $type = 'fee' ) {
+
+		if( 'all' == $type || 'fee' == $type ) {
+		
+			if( ! edd_get_cart_contents() ) {
+				$type = 'item';
+			}
+
+		}
+
 		$fees = $this->get_fees( $type );
 		return ! empty( $fees ) && is_array( $fees );
 	}
@@ -146,7 +155,14 @@ class EDD_Fees {
 	 */
 	public function get_fees( $type = 'fee' ) {
 		$fees = EDD()->session->get( 'edd_cart_fees' );
+
+		if( ! edd_get_cart_contents() ) {
+			// We can only get item type fees when the cart is empty
+			$type = 'item';
+		}
+
 		if( ! empty( $fees ) && ! empty( $type ) && 'all' !== $type ) {
+
 			foreach( $fees as $key => $fee ) {
 				if( ! empty( $fee['type'] ) && $type != $fee['type'] ) {
 					unset( $fees[ $key ] );

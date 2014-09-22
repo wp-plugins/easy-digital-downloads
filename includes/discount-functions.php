@@ -203,8 +203,8 @@ function edd_store_discount( $details, $discount_id = null ) {
 		'uses'              => isset( $details['uses'] )             ? $details['uses']              : '',
 		'max_uses'          => isset( $details['max'] )              ? $details['max']               : '',
 		'amount'            => isset( $details['amount'] )           ? $details['amount']            : '',
-		'start'             => isset( $details['start'] )            ? $details['start']             : false,
-		'expiration'        => isset( $details['expiration'] )       ? $details['expiration']        : false,
+		'start'             => isset( $details['start'] )            ? $details['start']             : '',
+		'expiration'        => isset( $details['expiration'] )       ? $details['expiration']        : '',
 		'type'              => isset( $details['type'] )             ? $details['type']              : '',
 		'min_price'         => isset( $details['min_price'] )        ? $details['min_price']         : '',
 		'product_reqs'      => isset( $details['products'] )         ? $details['products']          : array(),
@@ -214,11 +214,11 @@ function edd_store_discount( $details, $discount_id = null ) {
 		'is_single_use'     => isset( $details['use_once'] )         ? $details['use_once']          : false,
 	);
 
-	if( $meta['start'] ) {
+	if( ! empty( $meta['start'] ) ) {
 		$meta['start']      = date( 'm/d/Y H:i:s', strtotime( $meta['start'] ) );
 	}
 
-	if( $meta['expiration'] ) {
+	if( ! empty( $meta['expiration'] ) ) {
 		$meta['expiration'] = date( 'm/d/Y H:i:s', strtotime(  date( 'm/d/Y', strtotime( $meta['expiration'] ) ) . ' 23:59:59' ) );
 		if( ! empty( $meta['start'] ) && $meta['start'] > $meta['expiration'] ) {
 			// Set the expiration date to the start date if start is later than expiration
@@ -1265,21 +1265,38 @@ function edd_multiple_discounts_allowed() {
  */
 function edd_listen_for_cart_discount() {
 
-	if( ! edd_is_checkout() ) {
-		return;
-	}
-
-	if( empty( $_REQUEST['discount'] ) ) {
+	if ( empty( $_REQUEST['discount'] ) ) {
 		return;
 	}
 
 	$code = sanitize_text_field( $_REQUEST['discount'] );
 
-	if( ! edd_is_discount_valid( $code ) ) {
+	EDD()->session->set( 'preset_discount', $code );
+}
+add_action( 'init', 'edd_listen_for_cart_discount', 0 );
+
+/**
+ * Applies the preset discount, if any. This is separated from edd_listen_for_cart_discount() in order to allow items to be
+ * added to the cart and for it to presist across page loads if necessary
+ *
+ * @return void
+ */
+function edd_apply_preset_discount() {
+
+	$code = sanitize_text_field( EDD()->session->get( 'preset_discount' ) );
+
+	if ( ! $code ) {
 		return;
 	}
 
+	if ( ! edd_is_discount_valid( $code ) ) {
+		return;
+	}
+
+	$code = apply_filters( 'edd_apply_preset_discount', $code, $download_id, $options );
+
 	edd_set_cart_discount( $code );
 
+	EDD()->session->set( 'preset_discount', null );
 }
-add_action( 'template_redirect', 'edd_listen_for_cart_discount', 500 );
+add_action( 'init', 'edd_apply_preset_discount', 999 );
