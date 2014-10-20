@@ -1097,6 +1097,7 @@ function edd_get_cart_item_discount_amount( $item = array() ) {
 						$discounted_amount = edd_get_discount_amount( $code_id );
 						$discounted_amount = ( $discounted_amount / edd_get_cart_quantity() );
 						$discounted_price -= $discounted_amount;
+
 					} else {
 
 						$discounted_price -= $price - edd_get_discounted_amount( $discount, $price );
@@ -1277,7 +1278,7 @@ add_action( 'init', 'edd_listen_for_cart_discount', 0 );
 
 /**
  * Applies the preset discount, if any. This is separated from edd_listen_for_cart_discount() in order to allow items to be
- * added to the cart and for it to presist across page loads if necessary
+ * added to the cart and for it to persist across page loads if necessary
  *
  * @return void
  */

@@ -1,13 +1,13 @@
 === Easy Digital Downloads ===
 Author URI: http://pippinsplugins.com
 Plugin URI: http://easydigitaldownloads.com
-Contributors: mordauk, sunnyratilal, chriscct7, section214, sumobi, sksmatt, SpencerFinnell
+Contributors: mordauk, sunnyratilal, chriscct7, section214, sumobi, sdavis2702, sksmatt, SpencerFinnell
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.7
 Tested up to: 4.1
 
-Stable Tag: 2.1.4
+Stable Tag: 2.1.6
 
 License: GNU Version 2 or Any Later Version
 
@@ -184,6 +184,36 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
+= 2.1.6, October 20, 2014 =
+
+* Fix: Do not allow item prices to go negative when using flat rate discounts
+* Fix: Pagination doesn't work on /edd-api/customers
+* Fix: Do not overwrite existing price IDs when adding, rearranging, and then re-adding price options
+* Fix: Compare PayPal currency to the currency in payment meta, not the overall store currency
+* Tweak: Improve the display of Download Notes on purchase receipts
+* Tweak: Add Today to the default response for /edd-api/stats
+* Tweak: Improve checkout CSS to allow some generic HTML elements
+
+= 2.1.5, October 8, 2014 =
+
+* Fix: Flat rate discounts can result in negative amounts in PayPal, causing the purchase to be rejected
+* Fix: Cart items that are tax exclusive still display the tax rate
+* Fix: console.log() left erroneously in Heartbeat API integration
+* Fix: microdata tag was missing from the shortcode-content-price.php template
+* Fix: Plugin text domain loaded too early, needed to be done on plugins_loaded
+* Fix: Cart fees incorrectly attached to all cart items
+* Fix: edd_settings_sanitize filter returning incorrect value
+* Fix: HTML encoding issue with email subjects
+* Fix: Subtotal should be amount before discounts, not after
+* Fix: Incorrect item amount on the Sales log tag
+* Fix: Item quantities not displayed on email purchase receipts
+* Tweak: Introduced edd_email_tag_bundled_products filter
+* Tweak: Pass the payment ID to the edd_get_price_option_name function() calls
+* Tweak: Add the price ID to the edd_get_price_option_name filter
+* Tweak: Added the transaction ID to the sales endpoint for the REST API
+* Tweak: Display the Price ID on each row of variable prices
+* Tweak: Verify payment update was successful during edd_update_payment_details
+
 = 2.1.4, September 22, 2014 =
 
 * Fix: New sale notification emails not sending for some users
@@ -218,7 +248,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Fix: Incorrect item price on checkout when taxes are enabled
 * Fix: Incorrect subtotal displayed on purchase receipt when taxes are enabled
 * Fix: Customer records not getting created due to SQL syntax error
-* Fix: Aposthrophes in site name not being decoded in emails
+* Fix: Apostrophes in site name not being decoded in emails
 * Fix: card_state class not kept on select when when switching countries on checkout 
 
 = 2.1, September 3, 2014 =
