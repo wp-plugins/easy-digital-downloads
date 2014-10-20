@@ -1,13 +1,13 @@
 === Easy Digital Downloads ===
 Author URI: http://pippinsplugins.com
 Plugin URI: http://easydigitaldownloads.com
-Contributors: mordauk, sunnyratilal, chriscct7, section214, sumobi, sksmatt, SpencerFinnell
+Contributors: mordauk, sunnyratilal, chriscct7, section214, sumobi, sdavis2702, sksmatt, SpencerFinnell
 Donate link: http://pippinsplugins.com/support-the-site
 Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecommerce, e commerce, e-commerce, selling, wp-ecommerce, wp ecommerce, mordauk, Pippin Williamson, pippinsplugins
 Requires at least: 3.7
 Tested up to: 4.1
 
-Stable Tag: 2.1.5
+Stable Tag: 2.1.6
 
 License: GNU Version 2 or Any Later Version
 
@@ -183,6 +183,16 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 9. Checkout screen
 
 == Changelog ==
+
+= 2.1.6, October 20, 2014 =
+
+* Fix: Do not allow item prices to go negative when using flat rate discounts
+* Fix: Pagination doesn't work on /edd-api/customers
+* Fix: Do not overwrite existing price IDs when adding, rearranging, and then re-adding price options
+* Fix: Compare PayPal currency to the currency in payment meta, not the overall store currency
+* Tweak: Improve the display of Download Notes on purchase receipts
+* Tweak: Add Today to the default response for /edd-api/stats
+* Tweak: Improve checkout CSS to allow some generic HTML elements
 
 = 2.1.5, October 8, 2014 =
 

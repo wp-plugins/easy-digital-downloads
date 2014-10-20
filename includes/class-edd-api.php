@@ -48,7 +48,7 @@ class EDD_API {
 	 * @access private
 	 * @since 1.5
 	 */
-	private $log_requests = true;
+	public $log_requests = true;
 
 	/**
 	 * Is this a valid request?
@@ -652,7 +652,7 @@ class EDD_API {
 			$field = 'email';
 		}
 
-		$customer_query = EDD()->customers->get_customers( array( 'number' => $per_page, $field => $customer ) );
+		$customer_query = EDD()->customers->get_customers( array( 'number' => $per_page, 'offset' => $offset, $field => $customer ) );
 		$customer_count = 0;
 
 		if( $customer_query ) {
@@ -677,7 +677,7 @@ class EDD_API {
 				$customers['customers'][$customer_count]['info']['email']        = $customer_obj->email;
 
 				if ( ! empty( $customer_obj->user_id ) ) {
-				
+
 					$user_data = get_userdata( $customer_obj->user_id );
 
 					// Customer with registered account
@@ -1387,8 +1387,8 @@ class EDD_API {
 						</th>
 						<td>
 							<?php if ( empty( $user->edd_user_public_key ) ) { ?>
-							<input name="edd_set_api_key" type="checkbox" id="edd_set_api_key" value="0" />
-							<span class="description"><?php _e( 'Generate API Key', 'edd' ); ?></span>
+								<input name="edd_set_api_key" type="checkbox" id="edd_set_api_key" value="0" />
+								<span class="description"><?php _e( 'Generate API Key', 'edd' ); ?></span>
 							<?php } else { ?>
 								<strong><?php _e( 'Public key:', 'edd' ); ?>&nbsp;</strong><span id="publickey"><?php echo $user->edd_user_public_key; ?></span><br/>
 								<strong><?php _e( 'Secret key:', 'edd' ); ?>&nbsp;</strong><span id="privatekey"><?php echo $user->edd_user_secret_key; ?></span><br/>
@@ -1412,6 +1412,12 @@ class EDD_API {
 	 * @return void
 	 */
 	public function process_api_key( $args ) {
+
+		if( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'edd-api-nonce' ) ) {
+
+			wp_die( __( 'Nonce verification failed', 'edd' ) );
+
+		}
 
 		if( is_numeric( $args['user_id'] ) ) {
 			$user_id    = isset( $args['user_id'] ) ? absint( $args['user_id'] ) : get_current_user_id();
@@ -1576,6 +1582,7 @@ class EDD_API {
 
 		// Default sales return
 
+		$sales['sales']['today']         = $this->stats->get_sales( 0, 'today' );
 		$sales['sales']['current_month'] = $this->stats->get_sales( 0, 'this_month' );
 		$sales['sales']['last_month']    = $this->stats->get_sales( 0, 'last_month' );
 		$sales['sales']['totals']        = edd_get_total_sales();
@@ -1594,6 +1601,7 @@ class EDD_API {
 
 		// Default earnings return
 
+		$earnings['earnings']['today']         = $this->stats->get_earnings( 0, 'today' );
 		$earnings['earnings']['current_month'] = $this->stats->get_earnings( 0, 'this_month' );
 		$earnings['earnings']['last_month']    = $this->stats->get_earnings( 0, 'last_month' );
 		$earnings['earnings']['totals']        = edd_get_total_earnings();
