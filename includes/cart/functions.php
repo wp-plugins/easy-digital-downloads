@@ -47,17 +47,22 @@ function edd_get_cart_content_details() {
 		$item['quantity'] = edd_item_quantities_enabled() ? absint( $item['quantity'] ) : 1;
 
 		$item_price = edd_get_cart_item_price( $item['id'], $item['options'] );
-		$discount   = apply_filters( 'edd_get_cart_content_details_item_discount_amount', edd_get_cart_item_discount_amount( $item ), $item );
+		$discount   = edd_get_cart_item_discount_amount( $item );
+		$discount   = apply_filters( 'edd_get_cart_content_details_item_discount_amount', $discount, $item );
 		$quantity   = edd_get_cart_item_quantity( $item['id'], $item['options'] );
-		$fees       = edd_get_cart_fees( 'fee', $item['id'] );
-		$subtotal   = ( $item_price * $quantity ) - $discount;
-		$tax        = edd_get_cart_item_tax( $item['id'], $item['options'], $subtotal );
+		$subtotal   = $item_price * $quantity;
+		$tax        = edd_get_cart_item_tax( $item['id'], $item['options'], $subtotal - $discount );
 
 		if( edd_prices_include_tax() ) {
 			$subtotal -= $tax;
 		}
 
-		$total      = round( ( $subtotal + $tax ), edd_currency_decimal_filter() );
+		$total      = $subtotal - $discount + $tax;
+
+		// Do not allow totals to go negatve
+		if( $total < 0 ) {
+			$total = 0;
+		}
 
 		$details[ $key ]  = array(
 			'name'        => get_the_title( $item['id'] ),
@@ -68,8 +73,8 @@ function edd_get_cart_content_details() {
 			'discount'    => round( $discount, edd_currency_decimal_filter() ),
 			'subtotal'    => round( $subtotal, edd_currency_decimal_filter() ),
 			'tax'         => round( $tax, edd_currency_decimal_filter() ),
-			'fees'        => $fees,
-			'price'       => $total
+			'fees'        => array(),
+			'price'       => round( $total, edd_currency_decimal_filter() )
 		);
 
 	}
@@ -348,27 +353,32 @@ function edd_cart_item_price( $item_id = 0, $options = array() ) {
 	$price = edd_get_cart_item_price( $item_id, $options );
 	$label = '';
 
-	if( edd_prices_show_tax_on_checkout() && ! edd_prices_include_tax() ) {
-		
-		$price += edd_get_cart_item_tax( $item_id, $options, $price );		
+	$price_id = isset( $options['price_id'] ) ? $options['price_id'] : false;
 
-	} if( ! edd_prices_show_tax_on_checkout() && edd_prices_include_tax() ) {
+	if ( ! edd_is_free_download( $item_id, $price_id ) && ! edd_download_is_tax_exclusive( $item_id ) ) {
 
-		$price -= edd_get_cart_item_tax( $item_id, $options, $price );		
-		
+		if( edd_prices_show_tax_on_checkout() && ! edd_prices_include_tax() ) {
+
+			$price += edd_get_cart_item_tax( $item_id, $options, $price );
+
+		} if( ! edd_prices_show_tax_on_checkout() && edd_prices_include_tax() ) {
+
+			$price -= edd_get_cart_item_tax( $item_id, $options, $price );
+
+		}
+
+		if( edd_display_tax_rate() ) {
+			$label = '&nbsp;&ndash;&nbsp;';
+			if( edd_prices_show_tax_on_checkout() ) {
+				$label .= sprintf( __( 'includes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
+			} else {
+				$label .= sprintf( __( 'excludes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
+			}
+
+		}
 	}
 
 	$price = edd_currency_filter( edd_format_amount( $price ) );
-
-	if( edd_display_tax_rate() ) {
-		$label = '&nbsp;&ndash;&nbsp;';
-		if( edd_prices_show_tax_on_checkout() ) {
-			$label .= sprintf( __( 'includes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
-		} else {
-			$label .= sprintf( __( 'excludes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
-		}
-
-	}
 
 	return esc_html( $price . $label );
 }
@@ -498,7 +508,7 @@ function edd_get_cart_item_price_id( $item = array() ) {
 function edd_get_cart_item_price_name( $item = array() ) {
 	$price_id = (int) edd_get_cart_item_price_id( $item );
 	$prices   = edd_get_variable_prices( $item['id'] );
-	$name     = ! empty( $prices ) ? $prices[ $price_id ]['name'] : '';
+	$name     = ! empty( $prices[ $price_id ] ) ? $prices[ $price_id ]['name'] : '';
 	return apply_filters( 'edd_get_cart_item_price_name', $name, $item['id'], $price_id, $item );
 }
 
@@ -569,10 +579,11 @@ function edd_get_cart_subtotal() {
 function edd_get_cart_total( $discounts = false ) {
 	global $edd_options;
 
-	$subtotal = edd_get_cart_subtotal();
-	$cart_tax = edd_get_cart_tax();
-	$fees     = edd_get_cart_fee_total();
-	$total    = $subtotal + $cart_tax + $fees;
+	$subtotal  = edd_get_cart_subtotal();
+	$discounts = edd_get_cart_discounted_amount();
+	$cart_tax  = edd_get_cart_tax();
+	$fees      = edd_get_cart_fee_total();
+	$total     = $subtotal - $discounts + $cart_tax + $fees;
 
 	if( $total < 0 )
 		$total = 0.00;
