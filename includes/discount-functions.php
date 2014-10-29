@@ -800,7 +800,7 @@ function edd_is_discount_used( $code = null, $user = '', $code_id = 0 ) {
  * @param string $user User info
  * @return bool
  */
-function edd_is_discount_valid( $code = '', $user = '' ) {
+function edd_is_discount_valid( $code = '', $user = '', $set_error = true ) {
 
 
 	$return      = false;
@@ -820,7 +820,7 @@ function edd_is_discount_valid( $code = '', $user = '' ) {
 			) {
 				$return = true;
 			}
-		} else {
+		} elseif( $set_error ) {
 			edd_set_error( 'edd-discount-error', __( 'This discount is invalid.', 'edd' ) );
 		}
 
@@ -1097,6 +1097,7 @@ function edd_get_cart_item_discount_amount( $item = array() ) {
 						$discounted_amount = edd_get_discount_amount( $code_id );
 						$discounted_amount = ( $discounted_amount / edd_get_cart_quantity() );
 						$discounted_price -= $discounted_amount;
+
 					} else {
 
 						$discounted_price -= $price - edd_get_discounted_amount( $discount, $price );
@@ -1277,7 +1278,7 @@ add_action( 'init', 'edd_listen_for_cart_discount', 0 );
 
 /**
  * Applies the preset discount, if any. This is separated from edd_listen_for_cart_discount() in order to allow items to be
- * added to the cart and for it to presist across page loads if necessary
+ * added to the cart and for it to persist across page loads if necessary
  *
  * @return void
  */
@@ -1289,11 +1290,11 @@ function edd_apply_preset_discount() {
 		return;
 	}
 
-	if ( ! edd_is_discount_valid( $code ) ) {
+	if ( ! edd_is_discount_valid( $code, '', false ) ) {
 		return;
 	}
 
-	$code = apply_filters( 'edd_apply_preset_discount', $code, $download_id, $options );
+	$code = apply_filters( 'edd_apply_preset_discount', $code );
 
 	edd_set_cart_discount( $code );
 
