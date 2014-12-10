@@ -181,6 +181,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 8. Add to cart / purchase button
 9. Checkout screen
 
+
 == Changelog ==
 
 = 2.2.1, December 10, 2014 =
