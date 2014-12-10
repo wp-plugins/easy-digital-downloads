@@ -34,15 +34,22 @@ function edd_get_cart_contents() {
  */
 function edd_get_cart_content_details() {
 
+	global $edd_is_last_cart_item, $edd_flat_discount_total;
+
 	$cart_items = edd_get_cart_contents();
 
 	if ( empty( $cart_items ) ) {
 		return false;
 	}
 
-	$details  = array();
+	$details = array();
+	$length  = count( $cart_items ) - 1;
 
 	foreach( $cart_items as $key => $item ) {
+
+		if( $key >= $length ) {
+			$edd_is_last_cart_item = true;
+		}
 
 		$item['quantity'] = edd_item_quantities_enabled() ? absint( $item['quantity'] ) : 1;
 
@@ -50,6 +57,7 @@ function edd_get_cart_content_details() {
 		$discount   = edd_get_cart_item_discount_amount( $item );
 		$discount   = apply_filters( 'edd_get_cart_content_details_item_discount_amount', $discount, $item );
 		$quantity   = edd_get_cart_item_quantity( $item['id'], $item['options'] );
+		$fees       = edd_get_cart_fees( 'fee', $item['id'] );
 		$subtotal   = $item_price * $quantity;
 		$tax        = edd_get_cart_item_tax( $item['id'], $item['options'], $subtotal - $discount );
 
@@ -73,9 +81,15 @@ function edd_get_cart_content_details() {
 			'discount'    => round( $discount, edd_currency_decimal_filter() ),
 			'subtotal'    => round( $subtotal, edd_currency_decimal_filter() ),
 			'tax'         => round( $tax, edd_currency_decimal_filter() ),
-			'fees'        => array(),
+			'fees'        => $fees,
 			'price'       => round( $total, edd_currency_decimal_filter() )
 		);
+
+		if( $edd_is_last_cart_item ) {
+
+			$edd_is_last_cart_item   = false;
+			$edd_flat_discount_total = 0.00;
+		}
 
 	}
 
@@ -138,7 +152,7 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 			$item = array(
 				'id'           => $download_id,
 				'options'      => array(
-					'price_id' => preg_replace( '/[^0-9\.]/', '', $price )
+					'price_id' => preg_replace( '/[^0-9\.-]/', '', $price )
 				),
 				'quantity'     => $quantity
 			);
@@ -174,7 +188,7 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 	if( edd_item_in_cart( $to_add['id'], $to_add['options'] ) && edd_item_quantities_enabled() ) {
 
 		$key = edd_get_item_position_in_cart( $to_add['id'], $to_add['options'] );
-		$cart[ $key ]['quantity']++;
+		$cart[ $key ]['quantity'] += $quantity;
 
 	} else {
 
@@ -368,19 +382,23 @@ function edd_cart_item_price( $item_id = 0, $options = array() ) {
 		}
 
 		if( edd_display_tax_rate() ) {
+
 			$label = '&nbsp;&ndash;&nbsp;';
+
 			if( edd_prices_show_tax_on_checkout() ) {
 				$label .= sprintf( __( 'includes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
 			} else {
 				$label .= sprintf( __( 'excludes %s tax', 'edd' ), edd_get_formatted_tax_rate() );
 			}
 
+			$label = apply_filters( 'edd_cart_item_tax_description', $label, $item_id, $options );
+
 		}
 	}
 
 	$price = edd_currency_filter( edd_format_amount( $price ) );
 
-	return esc_html( $price . $label );
+	return $price . $label;
 }
 
 /**
@@ -397,18 +415,31 @@ function edd_cart_item_price( $item_id = 0, $options = array() ) {
  * @return float|bool Price for this item
  */
 function edd_get_cart_item_price( $download_id = 0, $options = array() ) {
-	global $edd_options;
 
 	$price = 0;
+	$variable_prices = edd_has_variable_prices( $download_id );
 
-	if ( edd_has_variable_prices( $download_id ) && ! empty( $options ) ) {
+	if ( $variable_prices ) {
+
 		$prices = edd_get_variable_prices( $download_id );
+
 		if ( $prices ) {
-			$price = isset( $prices[ $options['price_id'] ] ) ? $prices[ $options['price_id'] ]['amount'] : 0;
+
+			if( ! empty( $options ) ) {
+
+				$price = isset( $prices[ $options['price_id'] ] ) ? $prices[ $options['price_id'] ]['amount'] : false;
+
+			} else {
+
+				$price = false;
+
+			}
+
 		}
+
 	}
 
-	if( ! $price ) {
+	if( ! $variable_prices || false === $price ) {
 		// Get the standard Download price if not using variable prices
 		$price = edd_get_download_price( $download_id );
 	}
@@ -639,11 +670,12 @@ function edd_cart_has_fees( $type = 'all' ) {
  *
  * @since 1.5
  * @param string $type
+ * @param int $download_id
  * @uses EDD()->fees->get_fees()
  * @return array All the cart fees that have been applied
  */
-function edd_get_cart_fees( $type = 'all' ) {
-	return EDD()->fees->get_fees( $type );
+function edd_get_cart_fees( $type = 'all', $download_id = 0 ) {
+	return EDD()->fees->get_fees( $type, $download_id );
 }
 
 /**
