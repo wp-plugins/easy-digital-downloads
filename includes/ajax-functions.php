@@ -43,20 +43,28 @@ function edd_test_ajax_works() {
 	$ajax  = wp_remote_get( add_query_arg( 'action', 'edd_test_ajax', edd_get_ajax_url() ), $params );
 	$works = true;
 
-	if( empty( $ajax['response'] ) ) {
-		$works = false;
-	}
+	if( is_wp_error( $ajax ) ) {
 
-	if( empty( $ajax['response']['code'] ) || 200 !== (int) $ajax['response']['code'] ) {
 		$works = false;
-	}
 
-	if( empty( $ajax['response']['message'] ) || 'OK' !== $ajax['response']['message'] ) {
-		$works = false;
-	}
+	} else {
 
-	if( ! isset( $ajax['body'] ) || 0 !== (int) $ajax['body'] ) {
-		$works = false;
+		if( empty( $ajax['response'] ) ) {
+			$works = false;
+		}
+
+		if( empty( $ajax['response']['code'] ) || 200 !== (int) $ajax['response']['code'] ) {
+			$works = false;
+		}
+
+		if( empty( $ajax['response']['message'] ) || 'OK' !== $ajax['response']['message'] ) {
+			$works = false;
+		}
+
+		if( ! isset( $ajax['body'] ) || 0 !== (int) $ajax['body'] ) {
+			$works = false;
+		}
+
 	}
 
 	return $works;
@@ -150,7 +158,7 @@ function edd_ajax_add_to_cart() {
 
 			} else {
 
-				$options['quantity'] = $post_data['edd_download_quantity'];
+				$options['quantity'] = isset( $post_data['edd_download_quantity'] ) ? absint( $post_data['edd_download_quantity'] ) : 1;
 
 			}
 
