@@ -35,12 +35,17 @@ function edd_is_ajax_enabled() {
  */
 function edd_test_ajax_works() {
 
+	add_filter( 'block_local_requests', '__return_false' );
+
 	$params = array(
-		'sslverify'     => false,
-		'timeout'       => 60,
+		'sslverify'  => false,
+		'timeout'    => 30,
+		'body'       => array(
+			'action' => 'edd_test_ajax'
+		) 
 	);
 
-	$ajax  = wp_remote_get( add_query_arg( 'action', 'edd_test_ajax', edd_get_ajax_url() ), $params );
+	$ajax  = wp_remote_post( edd_get_ajax_url(), $params );
 	$works = true;
 
 	if( is_wp_error( $ajax ) ) {
@@ -65,6 +70,10 @@ function edd_test_ajax_works() {
 			$works = false;
 		}
 
+	}
+
+	if( $works ) {
+		set_transient( '_edd_ajax_works', '1', DAY_IN_SECONDS );
 	}
 
 	return $works;
