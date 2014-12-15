@@ -92,7 +92,7 @@ function edd_get_purchase_link( $args = array() ) {
 		if ( $variable_pricing && false !== $args['price_id'] ) {
 
 			$price_id = $args['price_id'];
-			$prices   = $download->prices();
+			$prices   = $download->prices;
 
 			$price = isset( $prices[$price_id] ) ? $prices[$price_id]['amount'] : false;
 
@@ -263,7 +263,15 @@ function edd_download_purchase_form_quantity_field( $download_id = 0, $args = ar
 		return;
 	}
 
-	if ( ( edd_item_in_cart( $download_id ) && ! edd_has_variable_prices( $download_id ) ) || ( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && ! edd_item_in_cart( $download_id ) ) ) {
+	if( edd_item_in_cart( $download_id ) && ! edd_has_variable_prices( $download_id ) ) { 
+		return;
+	}
+
+	if( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && ! edd_item_in_cart( $download_id ) ) {
+		return;
+	}
+
+	if( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && edd_item_in_cart( $download_id ) ) {
 		return;
 	}
 

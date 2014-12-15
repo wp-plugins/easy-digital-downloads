@@ -1439,7 +1439,7 @@ class EDD_API {
 					delete_transient( 'edd-total-api-keys' );
 					wp_redirect( add_query_arg( 'edd-message', 'api-key-generated', 'edit.php?post_type=download&page=edd-tools&tab=api_keys' ) ); exit();
 				} else {
-					wp_redirect( add_query_arg( 'edd-message', 'api-key-exists', 'edit.php?post_type=download&page=edd-tools&tab=api_keys' ) ); exit();
+					wp_redirect( add_query_arg( 'edd-message', 'api-key-failed', 'edit.php?post_type=download&page=edd-tools&tab=api_keys' ) ); exit();
 				}
 				break;
 			case 'regenerate':
@@ -1465,8 +1465,17 @@ class EDD_API {
 	 * @param array $args
 	 * @return string
 	 */
-	public function generate_api_key( $user_id, $regenerate = false ) {
+	public function generate_api_key( $user_id = 0, $regenerate = false ) {
+
+		if( empty( $user_id ) ) {
+			return false;
+		}
+
 		$user = get_userdata( $user_id );
+
+		if( ! $user ) {
+			return false;
+		}
 
 		if ( empty( $user->edd_user_public_key ) ) {
 			update_user_meta( $user_id, 'edd_user_public_key', $this->generate_public_key( $user->user_email ) );
@@ -1490,8 +1499,17 @@ class EDD_API {
 	 * @param int $args
 	 * @return string
 	 */
-	public function revoke_api_key( $user_id ) {
+	public function revoke_api_key( $user_id = 0 ) {
+
+		if( empty( $user_id ) ) {
+			return false;
+		}
+
 		$user = get_userdata( $user_id );
+
+		if( ! $user ) {
+			return false;
+		}
 
 		if ( ! empty( $user->edd_user_public_key ) ) {
 			delete_transient( md5( 'edd_api_user_' . $user->edd_user_public_key ) );

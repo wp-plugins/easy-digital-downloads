@@ -7,7 +7,7 @@
  * Allows plugins to use their own update API.
  *
  * @author Pippin Williamson
- * @version 1.5
+ * @version 1.6
  */
 class EDD_SL_Plugin_Updater {
     private $api_url   = '';
@@ -68,8 +68,14 @@ class EDD_SL_Plugin_Updater {
      */
     function check_update( $_transient_data ) {
 
+        global $pagenow;
+
         if( ! is_object( $_transient_data ) ) {
             $_transient_data = new stdClass;
+        }
+
+        if( 'plugins.php' == $pagenow && is_multisite() ) {
+            return $_transient_data;
         }
 
         if ( empty( $_transient_data->response ) || empty( $_transient_data->response[ $this->name ] ) ) {
@@ -148,6 +154,10 @@ class EDD_SL_Plugin_Updater {
             $update_cache->checked[ $this->name ] = $this->version;
 
             set_site_transient( 'update_plugins', $update_cache );
+
+        } else {
+
+            $version_info = $update_cache->response[ $this->name ];
 
         }
 
@@ -275,7 +285,7 @@ class EDD_SL_Plugin_Updater {
             'license'    => $data['license'],
             'item_name'  => isset( $data['item_name'] ) ? $data['item_name'] : false,
             'item_id'    => isset( $data['item_id'] ) ? $data['item_id'] : false,
-            'slug'       => $this->slug,
+            'slug'       => $data['slug'],
             'author'     => $data['author'],
             'url'        => home_url()
         );
