@@ -49,12 +49,10 @@ add_filter( 'manage_edit-download_columns', 'edd_download_columns' );
  */
 function edd_render_download_columns( $column_name, $post_id ) {
 	if ( get_post_type( $post_id ) == 'download' ) {
-		global $edd_options;
-
-		$style 			= isset( $edd_options['button_style'] ) ? $edd_options['button_style'] : 'button';
-		$color 			= isset( $edd_options['checkout_color'] ) ? $edd_options['checkout_color'] : 'blue';
-		$color			= ( $color == 'inherit' ) ? '' : $color;
-		$purchase_text 	= ! empty( $edd_options['add_to_cart_text'] ) ? $edd_options['add_to_cart_text'] : __( 'Purchase', 'edd' );
+		$style          = edd_get_option( 'button_style', 'button' );
+		$color          = edd_get_option( 'checkout_color', 'blue' );
+		$color          = ( $color == 'inherit' ) ? '' : $color;
+		$purchase_text  = edd_get_option( 'add_to_cart_text', __( 'Purchase', 'edd' ) );
 
 		switch ( $column_name ) {
 			case 'download_category':
@@ -328,7 +326,7 @@ add_action( 'save_post', 'edd_price_save_quick_edit' );
  */
 function edd_save_bulk_edit() {
 
-	$post_ids = ( isset( $_POST[ 'post_ids' ] ) && ! empty( $_POST[ 'post_ids' ] ) ) ? $_POST[ 'post_ids' ] : array();
+	$post_ids = ( isset( $_POST['post_ids'] ) && ! empty( $_POST['post_ids'] ) ) ? $_POST['post_ids'] : array();
 
 	if ( ! empty( $post_ids ) && is_array( $post_ids ) ) {
 		$price = isset( $_POST['price'] ) ? strip_tags( stripslashes( $_POST['price'] ) ) : 0;
