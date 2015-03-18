@@ -71,6 +71,11 @@ function edd_get_purchase_link( $args = array() ) {
 
 	$args = wp_parse_args( $args, $defaults );
 
+	// Override the stright_to_gateway if the shop doesn't support it
+	if ( ! edd_shop_supports_buy_now() ) {
+		$args['direct'] = false;
+	}
+
 	$download = new EDD_Download( $args['download_id'] );
 
 	if( empty( $download->ID ) ) {
@@ -84,6 +89,7 @@ function edd_get_purchase_link( $args = array() ) {
 	// Override color if color == inherit
 	$args['color'] = ( $args['color'] == 'inherit' ) ? '' : $args['color'];
 
+	$options          = array();
 	$variable_pricing = $download->has_variable_prices();
 	$data_variable    = $variable_pricing ? ' data-variable-price="yes"' : 'data-variable-price="no"';
 	$type             = $download->is_single_price_mode() ? 'data-price-mode=multi' : 'data-price-mode=single';
@@ -92,10 +98,10 @@ function edd_get_purchase_link( $args = array() ) {
 
 		if ( $variable_pricing && false !== $args['price_id'] ) {
 
-			$price_id = $args['price_id'];
-			$prices   = $download->prices;
-
-			$price = isset( $prices[$price_id] ) ? $prices[$price_id]['amount'] : false;
+			$price_id            = $args['price_id'];
+			$prices              = $download->prices;
+			$options['price_id'] = $args['price_id'];
+			$price               = isset( $prices[$price_id] ) ? $prices[$price_id]['amount'] : false;
 
 		} elseif ( ! $variable_pricing ) {
 
@@ -104,7 +110,7 @@ function edd_get_purchase_link( $args = array() ) {
 		}
 	}
 
-	$data_price       = isset( $price ) && false !== $price ? 'data-price="' . $price . '"' : 'data-price="' . 0 . '"';
+	$data_price  = isset( $price ) && false !== $price ? 'data-price="' . $price . '"' : 'data-price="' . 0 . '"';
 
 	$button_text = ! empty( $args['text'] ) ? '&nbsp;&ndash;&nbsp;' . $args['text'] : '';
 
@@ -118,7 +124,7 @@ function edd_get_purchase_link( $args = array() ) {
 
 	}
 
-	if ( edd_item_in_cart( $download->ID ) && ( ! $variable_pricing || ! $download->is_single_price_mode() ) ) {
+	if ( edd_item_in_cart( $download->ID, $options ) && ( ! $variable_pricing || ! $download->is_single_price_mode() ) ) {
 		$button_display   = 'style="display:none;"';
 		$checkout_display = '';
 	} else {
@@ -241,7 +247,7 @@ function edd_purchase_variable_pricing( $download_id = 0, $args = array() ) {
 					echo '<li id="edd_price_option_' . $download_id . '_' . sanitize_key( $price['name'] ) . '"' . $schema . '>';
 						echo '<label for="'	. esc_attr( 'edd_price_option_' . $download_id . '_' . $key ) . '">';
 							echo '<input type="' . $type . '" ' . checked( apply_filters( 'edd_price_option_checked', $checked_key, $download_id, $key ), $key, false ) . ' name="edd_options[price_id][]" id="' . esc_attr( 'edd_price_option_' . $download_id . '_' . $key ) . '" class="' . esc_attr( 'edd_price_option_' . $download_id ) . '" value="' . esc_attr( $key ) . '" data-price="' . edd_get_price_option_amount( $download_id, $key ) .'"/>&nbsp;';
-							echo '<span class="edd_price_option_name" itemprop="description">' . esc_html( $price['name'] ) . '</span><span class="edd_price_option_sep">&nbsp;&ndash;&nbsp;</span><span class="edd_price_option_price" itemprop="price">' . edd_currency_filter( edd_format_amount( $price[ 'amount' ] ) ) . '</span>';
+							echo '<span class="edd_price_option_name" itemprop="description">' . esc_html( $price['name'] ) . '</span><span class="edd_price_option_sep">&nbsp;&ndash;&nbsp;</span><span class="edd_price_option_price" itemprop="price">' . edd_currency_filter( edd_format_amount( $price['amount'] ) ) . '</span>';
 						echo '</label>';
 						do_action( 'edd_after_price_option', $key, $price, $download_id );
 					echo '</li>';
@@ -266,6 +272,11 @@ add_action( 'edd_purchase_link_top', 'edd_purchase_variable_pricing', 10, 2 );
  */
 function edd_download_purchase_form_quantity_field( $download_id = 0, $args = array() ) {
 
+	$options = array();
+	if( false !== $args['price_id'] ) {
+		$options['price_id'] = $args['price_id'];
+	}
+
 	if ( ! edd_item_quantities_enabled() ) {
 		return;
 	}
@@ -274,15 +285,15 @@ function edd_download_purchase_form_quantity_field( $download_id = 0, $args = ar
 		return;
 	}
 
-	if ( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && ! edd_item_in_cart( $download_id ) ) {
+	if ( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && ! edd_item_in_cart( $download_id, $options ) ) {
 		return;
 	}
 
-	if ( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && edd_item_in_cart( $download_id ) ) {
+	if ( edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && edd_item_in_cart( $download_id, $options ) ) {
 		return;
 	}
 
-	if ( ! edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && edd_item_in_cart( $download_id ) ) {
+	if ( ! edd_single_price_option_mode( $download_id ) && edd_has_variable_prices( $download_id ) && edd_item_in_cart( $download_id, $options ) ) {
 		return;
 	}
 
@@ -308,7 +319,7 @@ function edd_variable_price_quantity_field( $key, $price, $download_id ) {
 		return;
 	}
 
-	if( ! edd_single_price_option_mode() ) {
+	if( ! edd_single_price_option_mode( $download_id ) ) {
 		return;
 	}
 
