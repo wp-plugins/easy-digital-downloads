@@ -7,7 +7,7 @@ Tags: download, downloads, e-store, eshop, digital downloads, e-downloads, ecomm
 Requires at least: 3.9.2
 Tested up to: 4.2
 
-Stable Tag: 2.3.4
+Stable Tag: 2.3.5
 
 License: GNU Version 2 or Any Later Version
 
@@ -192,6 +192,12 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 == Changelog ==
 
+= 2.3.5, March 24, 2015 =
+
+* Fix: Make home_url consistently unslashed in token generation
+* Fix: Better checks in edd_get_payment_tax()
+* Tweak: Allow clearing of edd_doing_upgrade
+
 = 2.3.4, March 20, 2015 =
 
 * Fix: Cannot add new tax rates
@@ -215,7 +221,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 
 = 2.3.2, March 14, 2015 =
 
-* Fix: Slow performance in admin area dur to edd_test_ajax_works() function
+* Fix: Slow performance in admin area due to edd_test_ajax_works() function
 
 = 2.3.1, March 13, 2015 =
 
@@ -252,7 +258,7 @@ Yes, through the addition of one or more of the add-on payment gateways, you can
 * Tweak: Added line breaks to edd.css file in favor of single-line rules
 * Tweak: Improved performance of edd_get_users_purchases() by querying the customer table directly
 * Tweak: Dashboard sales / earnings widget is now loaded via Ajax to improve performance
-* Tweak: PayPal payments made through Buy Now buttons do not show up 
+* Tweak: PayPal payments made through Buy Now buttons do not show up
 * Tweak: Removed the "You must have at least one file" alert when deleting file rows
 * Tweak: Improved text alignment in repeatable file / price rows
 * Tweak: Updated HTTP Protocal version in PayPal Standard gateway
