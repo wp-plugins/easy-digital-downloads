@@ -175,7 +175,7 @@ function edd_email_template_tags( $message, $payment_data, $payment_id, $admin_n
 	$message = str_replace( '{billing_address}', $address, $message );
 
 	if( ! $admin_notice ) {
-		$message = str_replace( '{receipt_link}', sprintf( __( '%1$sView it in your browser.%2$s', 'edd' ), '<a href="' . add_query_arg( array ( 'payment_key' => $receipt_id, 'edd_action' => 'view_receipt' ), home_url() ) . '">', '</a>' ), $message );
+		$message = str_replace( '{receipt_link}', sprintf( __( '%1$sView it in your browser.%2$s', 'edd' ), '<a href="' . esc_url( add_query_arg( array ( 'payment_key' => $receipt_id, 'edd_action' => 'view_receipt' ), home_url() ) ) . '">', '</a>' ), $message );
 	}
 
 	$message = apply_filters( 'edd_email_template_tags', $message, $payment_data, $payment_id, $admin_notice );
@@ -233,7 +233,7 @@ function edd_email_preview_template_tags( $message ) {
 	$message = str_replace( '{sitename}', get_bloginfo( 'name' ), $message );
 	$message = str_replace( '{product_notes}', $notes, $message );
 	$message = str_replace( '{payment_id}', $payment_id, $message );
-	$message = str_replace( '{receipt_link}', sprintf( __( '%1$sView it in your browser.%2$s', 'edd' ), '<a href="' . add_query_arg( array ( 'payment_key' => $receipt_id, 'edd_action' => 'view_receipt' ), home_url() ) . '">', '</a>' ), $message );
+	$message = str_replace( '{receipt_link}', sprintf( __( '%1$sView it in your browser.%2$s', 'edd' ), '<a href="' . esc_url( add_query_arg( array ( 'payment_key' => $receipt_id, 'edd_action' => 'view_receipt' ), home_url() ) ) . '">', '</a>' ), $message );
 
 	return wpautop( apply_filters( 'edd_email_preview_template_tags', $message ) );
 }
