@@ -57,10 +57,16 @@ function edd_get_enabled_payment_gateways( $sort = false ) {
 	if ( true === $sort ) {
 		// Reorder our gateways so the default is first
 		$default_gateway_id = edd_get_default_gateway();
-		$default_gateway    = array( $default_gateway_id => $gateway_list[ $default_gateway_id ] );
-		unset( $gateway_list[ $default_gateway_id ] );
 
-		$gateway_list = array_merge( $default_gateway, $gateway_list );
+		if( edd_is_gateway_active( $default_gateway_id ) ) {
+
+			$default_gateway    = array( $default_gateway_id => $gateway_list[ $default_gateway_id ] );
+			unset( $gateway_list[ $default_gateway_id ] );
+
+			$gateway_list = array_merge( $default_gateway, $gateway_list );
+
+		}
+
 	}
 
 	return apply_filters( 'edd_enabled_payment_gateways', $gateway_list );
@@ -75,7 +81,6 @@ function edd_get_enabled_payment_gateways( $sort = false ) {
 */
 function edd_is_gateway_active( $gateway ) {
 	$gateways = edd_get_enabled_payment_gateways();
-
 	$ret = array_key_exists( $gateway, $gateways );
 	return apply_filters( 'edd_is_gateway_active', $ret, $gateway, $gateways );
 }
@@ -87,8 +92,13 @@ function edd_is_gateway_active( $gateway ) {
  * @return string Gateway ID
  */
 function edd_get_default_gateway() {
-	$gateway = edd_get_option( 'default_gateway', 'paypal' );
-	$default = edd_is_gateway_active( $gateway ) ? $gateway : 'paypal';
+	$default = edd_get_option( 'default_gateway', 'paypal' );
+
+	if( ! edd_is_gateway_active( $default ) ) {
+		$gateways = edd_get_enabled_payment_gateways();
+		$gateways = array_keys( $gateways );
+		$default  = reset( $gateways );
+	}
 
 	return apply_filters( 'edd_default_gateway', $default );
 }
@@ -101,7 +111,7 @@ function edd_get_default_gateway() {
  * @return string Gateway admin label
  */
 function edd_get_gateway_admin_label( $gateway ) {
-	$gateways = edd_get_enabled_payment_gateways();
+	$gateways = edd_get_payment_gateways();
 	$label    = isset( $gateways[ $gateway ] ) ? $gateways[ $gateway ]['admin_label'] : $gateway;
 	$payment  = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : false;
 
@@ -122,7 +132,7 @@ function edd_get_gateway_admin_label( $gateway ) {
  * @return string Checkout label for the gateway
  */
 function edd_get_gateway_checkout_label( $gateway ) {
-	$gateways = edd_get_enabled_payment_gateways();
+	$gateways = edd_get_payment_gateways();
 	$label    = isset( $gateways[ $gateway ] ) ? $gateways[ $gateway ]['checkout_label'] : $gateway;
 
 	if( $gateway == 'manual' ) {
@@ -311,15 +321,6 @@ function edd_send_to_gateway( $gateway, $payment_data ) {
 function edd_show_gateways() {
 	$gateways = edd_get_enabled_payment_gateways();
 	$show_gateways = false;
-
-	$gateways        = edd_get_payment_gateways();
-	$active_gateways = array();
-
-	foreach ( $gateways as $gateway => $data ) {
-		if ( edd_is_gateway_active( $gateway ) ) {
-			$active_gateways[] = $gateway;
-		}
-	}
 
 	$chosen_gateway = isset( $_GET['payment-mode'] ) ? preg_replace('/[^a-zA-Z0-9-_]+/', '', $_GET['payment-mode'] ) : false;
 
